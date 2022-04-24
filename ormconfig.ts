@@ -1,7 +1,9 @@
 import { SqliteConnectionOptions } from 'typeorm/driver/sqlite/SqliteConnectionOptions';
 import { MysqlConnectionOptions } from 'typeorm/driver/mysql/MysqlConnectionOptions';
 import { User } from './src/entities/user.entity';
+import { config } from 'dotenv';
 
+config();
 /*
   Be careful!
     "synchronize: true" should only be used for early development.
@@ -10,7 +12,7 @@ import { User } from './src/entities/user.entity';
  */
 const entities = [User];
 
-export const config: MysqlConnectionOptions = {
+export const dbConfig: MysqlConnectionOptions = {
   type: 'mysql',
   host: process.env.DB_HOST,
   port: +process.env.DB_PORT,
