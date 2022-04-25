@@ -10,7 +10,7 @@ config();
 
 export type GoogleUser = { email: string, id: string };
 
-const baseUrl: string = 'http://https://graderef.bieda.it/';
+const baseUrl: string = 'https://graderef.bieda.it/';
 // const baseUrl: string = 'http://localhost:3000/google/redirect';
 
 @Injectable()
