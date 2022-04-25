@@ -10,9 +10,6 @@ config();
 
 export type GoogleUser = { email: string, id: string };
 
-const baseUrl: string = 'https://graderef.bieda.it/';
-// const baseUrl: string = 'http://localhost:3000/google/redirect';
-
 @Injectable()
 export class GoogleStrategy extends PassportStrategy(Strategy) {
 
@@ -20,7 +17,7 @@ export class GoogleStrategy extends PassportStrategy(Strategy) {
     super({
       clientID: process.env.OAUTH_CLIENT_ID,
       clientSecret: process.env.OAUTH_KEY,
-      callbackURL: baseUrl,
+      callbackURL: process.env.DOMAIN + '/google/redirect',
       scope: ['email', 'profile'],
     });
   }
