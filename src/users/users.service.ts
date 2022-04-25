@@ -12,7 +12,11 @@ export class UsersService {
     return this.usersRepository.find();
   }
 
-  async create(email: string, role: Role) {
+  async getOneByEmail(email: string): Promise<User | undefined> {
+    return this.usersRepository.findOne({ where: { email: email } });
+  }
+
+  async create(email: string, role: Role): Promise<User> {
     const newUser = this.usersRepository.create({ email, role });
     return this.usersRepository.save(newUser);
   }
