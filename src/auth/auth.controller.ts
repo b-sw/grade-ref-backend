@@ -1,7 +1,13 @@
-import { Controller, Get, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { ApiTags } from '@nestjs/swagger';
 import { GoogleAuthGuard } from './guards/google-auth.guard';
+import { ApiProperty } from '@nestjs/swagger';
+
+export class AuthBody {
+  @ApiProperty({ type: String })
+  googleToken: string;
+}
 
 @ApiTags('auth')
 @Controller('google')
@@ -18,5 +24,10 @@ export class AuthController {
   @UseGuards(GoogleAuthGuard)
   async googleAuthRedirect(@Req() req) {
     return this.authService.login(req.user);
+  }
+
+  @Post('auth')
+  async authenticateUser(@Body() authBody: AuthBody) {
+    return this.authService.googleLogin(authBody.googleToken);
   }
 }
