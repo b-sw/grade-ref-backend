@@ -37,4 +37,4 @@ jobs:
           script: |
             docker stop $(docker ps -q --filter ancestor=bswitals/graderef )
             docker pull bswitals/graderef
-            docker run -e OAUTH_CLIENT_ID=${{secrets.OAUTH_CLIENT_ID}} -e OAUTH_KEY=${{secrets.OAUTH_KEY}} -e JWT_SECRET=${{secrets.JWT_SECRET}} -e DB_HOST=${{secrets.DB_HOST}} -e DB_PORT=${{secrets.DB_PORT}} -e DB_USERNAME=${{secrets.DB_USERNAME}} -e DB_PASSWORD=${{secrets.DB_PASSWORD}} -e DB_DATABASE=${{secrets.DB_DATABASE}} -e DOMAIN=${{secrets.DOMAIN}} -d -p 3001:3001 bswitals/graderef
+            docker run -e OAUTH_CLIENT_ID=${{secrets.OAUTH_CLIENT_ID}} -e OAUTH_KEY=${{secrets.OAUTH_KEY}} -e JWT_SECRET=${{secrets.JWT_SECRET}} -e DB_HOST=${{secrets.DB_HOST}} -e DB_PORT=${{secrets.DB_PORT}} -e DB_USERNAME=${{secrets.DB_USERNAME}} -e DB_PASSWORD=${{secrets.DB_PASSWORD}} -e DB_DATABASE=${{secrets.DB_DATABASE}} -e DOMAIN=${{secrets.DOMAIN}} -d -p 3000:3000 bswitals/graderef
