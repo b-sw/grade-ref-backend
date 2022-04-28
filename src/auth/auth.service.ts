@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { GoogleUser } from './strategies/google.strategy';
 import { UsersService } from '../users/users.service';
@@ -30,7 +30,7 @@ export class AuthService {
     const user: User | undefined = await this.validateUser(email);
 
     if (!user) {
-      throw new UnauthorizedException();
+      throw new NotFoundException();
     }
 
     const payload = { email: user.email, sub: user.id };
