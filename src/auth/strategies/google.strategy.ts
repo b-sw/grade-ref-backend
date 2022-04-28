@@ -2,7 +2,7 @@ import { PassportStrategy } from '@nestjs/passport';
 import { Strategy, VerifyCallback } from 'passport-google-oauth20';
 import { config } from 'dotenv';
 
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { User } from '../../entities/user.entity';
 import { AuthService } from '../auth.service';
 
@@ -28,7 +28,7 @@ export class GoogleStrategy extends PassportStrategy(Strategy) {
     const user: User | undefined = await this.authService.validateUser(email);
 
     if (!user) {
-      throw new UnauthorizedException();
+      throw new NotFoundException(email);
     }
 
     return {
