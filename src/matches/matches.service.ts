@@ -50,6 +50,11 @@ export class MatchesService {
   }
 
   async getUserMatches(params: UserParams) {
-
+    return this.matchRepository.find({
+      where: [
+        { refereeId: params.id },
+        { observerId: params.id }
+      ]
+    });
   }
 }

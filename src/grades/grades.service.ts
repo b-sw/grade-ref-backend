@@ -46,6 +46,9 @@ export class GradesService {
   }
 
   async getUserGrades(params: UserParams) {
-
+    return this.gradeRepository.find({
+      where:
+        { observerId: params.id }
+    });
   }
 }
