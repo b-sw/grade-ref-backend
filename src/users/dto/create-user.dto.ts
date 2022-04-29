@@ -9,4 +9,8 @@ export class CreateUserDto {
 
   @ApiProperty()
   role: Role;
+
+  @ApiProperty()
+  @MaxLength(15, { message: 'Phone number too long.' })
+  phoneNumber: string
 }

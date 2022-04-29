@@ -2,6 +2,9 @@ import { SqliteConnectionOptions } from 'typeorm/driver/sqlite/SqliteConnectionO
 import { MysqlConnectionOptions } from 'typeorm/driver/mysql/MysqlConnectionOptions';
 import { User } from './src/entities/user.entity';
 import { config } from 'dotenv';
+import { Team } from './src/entities/team.entity';
+import { Match } from './src/entities/match.entity';
+import { Grade } from './src/entities/grade.entity';
 
 config();
 /*
@@ -10,7 +13,7 @@ config();
     It causes db schema to sync if it detects there's a mismatch between db schema and entities.
     This behaviour may lead to an automatic table drop.
  */
-const entities = [User];
+const entities = [User, Team, Match, Grade];
 
 export const dbConfig: MysqlConnectionOptions = {
   type: 'mysql',
