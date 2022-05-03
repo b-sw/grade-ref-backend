@@ -13,10 +13,10 @@ import { UserParams } from '../users/params/UserParams';
 export class GradesController {
   constructor(private readonly gradesService: GradesService) {}
 
-  @Post('grades')
+  @Post('users/:userId/grades')
   @UseGuards(JwtAuthGuard)
-  create(@Body() dto: CreateGradeDto) {
-    return this.gradesService.create(dto);
+  create(@Param() params: UserParams, @Body() dto: CreateGradeDto) {
+    return this.gradesService.create(params, dto);
   }
 
   @Get('grades')
@@ -25,27 +25,27 @@ export class GradesController {
     return this.gradesService.getAll();
   }
 
-  @Get('grades/:id')
+  @Get('users/:userId/grades')
+  @UseGuards(JwtAuthGuard)
+  getUserGrades(@Param() params: UserParams) {
+    return this.gradesService.getUserGrades(params);
+  }
+
+  @Get('users/:userId/grades/:gradeId')
   @UseGuards(JwtAuthGuard)
   getById(@Param() params: GradeParams) {
     return this.gradesService.getById(params);
   }
 
-  @Put('grades/:id')
+  @Put('users/:userId/grades/:gradeId')
   @UseGuards(JwtAuthGuard)
   update(@Param() params: GradeParams, @Body() dto: UpdateGradeDto) {
     return this.gradesService.update(params, dto);
   }
 
-  @Delete('grades/:id')
+  @Delete('users/:userId/grades/:gradeId')
   @UseGuards(JwtAuthGuard)
   remove(@Param() params: GradeParams) {
     return this.gradesService.remove(params);
-  }
-
-  @Get('users/:id/grades')
-  @UseGuards(JwtAuthGuard)
-  getUserGrades(@Param() params: UserParams) {
-    return this.gradesService.getUserGrades(params);
   }
 }

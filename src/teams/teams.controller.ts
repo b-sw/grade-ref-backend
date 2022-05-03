@@ -24,19 +24,19 @@ export class TeamsController {
     return this.teamsService.getAll();
   }
 
-  @Get(':id')
+  @Get(':teamId')
   @UseGuards(JwtAuthGuard)
   findOne(@Param() params: TeamParams) {
     return this.teamsService.getById(params);
   }
 
-  @Put(':id')
+  @Put(':teamId')
   @UseGuards(JwtAuthGuard)
   update(@Param() params: TeamParams, @Body() dto: UpdateTeamDto) {
     return this.teamsService.update(params, dto);
   }
 
-  @Delete(':id')
+  @Delete(':teamId')
   @UseGuards(JwtAuthGuard)
   remove(@Param() params: TeamParams) {
     return this.teamsService.remove(params);

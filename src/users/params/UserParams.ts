@@ -5,5 +5,5 @@ import { IsUUID } from 'class-validator';
 export class UserParams {
   @ApiProperty({ type: String })
   @IsUUID()
-  id: uuid;
+  userId: uuid;
 }

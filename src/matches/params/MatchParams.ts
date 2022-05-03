@@ -5,5 +5,5 @@ import { IsUUID } from 'class-validator';
 export class MatchParams {
   @ApiProperty({ type: String })
   @IsUUID()
-  id: uuid;
+  matchId: uuid;
 }

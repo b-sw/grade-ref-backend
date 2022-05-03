@@ -13,6 +13,7 @@ import { AuthModule } from '../auth/auth.module';
     UsersModule
   ],
   controllers: [MatchesController],
-  providers: [MatchesService]
+  providers: [MatchesService],
+  exports: [MatchesService]
 })
 export class MatchesModule {}

@@ -15,4 +15,10 @@ export class User {
 
   @Column()
   phoneNumber: string;
+
+  @Column()
+  firstName: string;
+
+  @Column()
+  lastName: string;
 }

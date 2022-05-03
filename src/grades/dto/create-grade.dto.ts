@@ -11,10 +11,6 @@ export class CreateGradeDto {
   @IsUUID()
   matchId: uuid;
 
-  @ApiProperty({ type: String })
-  @IsUUID()
-  observerId: uuid;
-
   @ApiProperty()
   @Min(0)
   @Max(10)

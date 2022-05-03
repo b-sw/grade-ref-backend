@@ -22,17 +22,17 @@ export class TeamsService {
   }
 
   async getById(params: TeamParams) {
-    return this.teamRepository.findOne({ where: { id: params.id } });
+    return this.teamRepository.findOne({ where: { id: params.teamId } });
   }
 
   async update(params: TeamParams, dto: UpdateTeamDto) {
-    await this.teamRepository.update(params.id, { name: dto.name });
+    await this.teamRepository.update(params.teamId, { name: dto.name });
     return this.getById(params);
   }
 
   async remove(params: TeamParams) {
     const team: Team = await this.getById(params);
-    await this.teamRepository.delete(params.id);
+    await this.teamRepository.delete(params.teamId);
     return team;
   }
 }

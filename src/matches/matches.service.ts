@@ -28,11 +28,11 @@ export class MatchesService {
   }
 
   async getById(params: MatchParams) {
-    return this.matchRepository.findOne({ where: { id: params.id } });
+    return this.matchRepository.findOne({ where: { id: params.matchId } });
   }
 
   async update(params: MatchParams, dto: UpdateMatchDto) {
-    await this.matchRepository.update(params.id, {
+    await this.matchRepository.update(params.matchId, {
       date: dto.date,
       stadium: dto.stadium,
       homeTeamId: dto.homeTeamId,
@@ -45,15 +45,15 @@ export class MatchesService {
 
   async remove(params: MatchParams) {
     const match: Match = await this.getById(params);
-    await this.matchRepository.delete(params.id);
+    await this.matchRepository.delete(params.matchId);
     return match;
   }
 
   async getUserMatches(params: UserParams) {
     return this.matchRepository.find({
       where: [
-        { refereeId: params.id },
-        { observerId: params.id }
+        { refereeId: params.userId },
+        { observerId: params.userId }
       ]
     });
   }

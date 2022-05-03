@@ -25,25 +25,25 @@ export class MatchesController {
     return this.matchesService.getAll();
   }
 
-  @Get('matches/:id')
+  @Get('matches/:matchId')
   @UseGuards(JwtAuthGuard)
   getById(@Param() params: MatchParams) {
     return this.matchesService.getById(params);
   }
 
-  @Put('matches/:id')
+  @Put('matches/:matchId')
   @UseGuards(JwtAuthGuard)
   update(@Param() params: MatchParams, @Body() dto: UpdateMatchDto) {
     return this.matchesService.update(params, dto);
   }
 
-  @Delete('matches/:id')
+  @Delete('matches/:matchId')
   @UseGuards(JwtAuthGuard)
   remove(@Param() params: MatchParams) {
     return this.matchesService.remove(params);
   }
 
-  @Get('users/:id/matches')
+  @Get('users/:userId/matches')
   @UseGuards(JwtAuthGuard)
   getAssignedMatches(@Param() params: UserParams) {
     return this.matchesService.getUserMatches(params);

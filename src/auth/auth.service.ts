@@ -43,6 +43,6 @@ export class AuthService {
   }
 
   async validateUser(email: string): Promise<User | undefined> {
-    return await this.usersService.getOneByEmail(email);
+    return await this.usersService.getByEmail(email);
   }
 }
