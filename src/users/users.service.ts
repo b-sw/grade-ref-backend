@@ -5,6 +5,8 @@ import { Repository } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
 import { Role } from '../types/role';
 import { uuid } from '../types/uuid';
+import { UserParams } from './params/UserParams';
+import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
 export class UsersService {
@@ -35,5 +37,21 @@ export class UsersService {
       lastName: dto.lastName
     });
     return this.usersRepository.save(newUser);
+  }
+
+  async update(params: UserParams, dto: UpdateUserDto) {
+    await this.usersRepository.update(params.userId, {
+      email: dto.email,
+      phoneNumber: dto.phoneNumber,
+      firstName: dto.firstName,
+      lastName: dto.lastName
+    });
+    return this.getById(params.userId);
+  }
+
+  async remove(params: UserParams) {
+    const user: User = await this.getById(params.userId);
+    await this.usersRepository.delete(params.userId);
+    return user;
   }
 }
