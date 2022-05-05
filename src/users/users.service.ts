@@ -10,12 +10,12 @@ import { uuid } from '../types/uuid';
 export class UsersService {
   constructor(@InjectRepository(User) private usersRepository: Repository<User>) {}
 
-  async findAll(): Promise<User[]> {
+  async getAll(): Promise<User[]> {
     return this.usersRepository.find();
   }
 
-  async findAllAdmins(): Promise<User[]> {
-    return this.usersRepository.find({ where: { role: Role.Admin } });
+  async getAllByRole(role: Role): Promise<User[]> {
+    return this.usersRepository.find({ where: { role: role } });
   }
 
   async getByEmail(email: string): Promise<User | undefined> {
