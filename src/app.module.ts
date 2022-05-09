@@ -6,6 +6,7 @@ import { AuthModule } from './auth/auth.module';
 import { TeamsModule } from './teams/teams.module';
 import { MatchesModule } from './matches/matches.module';
 import { GradesModule } from './grades/grades.module';
+import { LeaguesModule } from './leagues/leagues.module';
 
 @Module({
   imports: [
@@ -14,7 +15,8 @@ import { GradesModule } from './grades/grades.module';
     AuthModule,
     TeamsModule,
     MatchesModule,
-    GradesModule
+    GradesModule,
+    LeaguesModule
   ],
   controllers: [],
   providers: [],
