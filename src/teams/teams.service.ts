@@ -1,18 +1,20 @@
 import { Injectable } from '@nestjs/common';
 import { CreateTeamDto } from './dto/create-team.dto';
 import { UpdateTeamDto } from './dto/update-team.dto';
-import { TeamParams } from './params/TeamParams';
 import { Team } from '../entities/team.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { LeagueTeamParams } from './params/LeagueTeamParams';
+import { uuid } from '../types/uuid';
 
 @Injectable()
 export class TeamsService {
   constructor(@InjectRepository(Team) private teamRepository: Repository<Team>) {}
 
-  async create(dto: CreateTeamDto) {
+  async create(leagueId: uuid, dto: CreateTeamDto) {
     const team: Team = this.teamRepository.create({
-      name: dto.name
+      name: dto.name,
+      leagueId: leagueId
     });
     return this.teamRepository.save(team);
   }
@@ -21,17 +23,23 @@ export class TeamsService {
     return this.teamRepository.find();
   }
 
-  async getById(params: TeamParams) {
-    return this.teamRepository.findOne({ where: { id: params.teamId } });
+  async getAllByLeagueId(leagueId: uuid) {
+    return this.teamRepository.find({ where: { leagueId: leagueId } });
   }
 
-  async update(params: TeamParams, dto: UpdateTeamDto) {
-    await this.teamRepository.update(params.teamId, { name: dto.name });
-    return this.getById(params);
+  async getById(teamId: uuid) {
+    return this.teamRepository.findOne({ where: { id: teamId } });
   }
 
-  async remove(params: TeamParams) {
-    const team: Team = await this.getById(params);
+  async update(params: LeagueTeamParams, dto: UpdateTeamDto) {
+    await this.teamRepository.update(params.teamId, {
+      name: dto.name
+    });
+    return this.getById(params.teamId);
+  }
+
+  async remove(params: LeagueTeamParams) {
+    const team: Team = await this.getById(params.teamId);
     await this.teamRepository.delete(params.teamId);
     return team;
   }

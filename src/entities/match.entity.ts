@@ -3,6 +3,7 @@ import { uuid } from '../types/uuid';
 import { User } from './user.entity';
 import { Team } from './team.entity';
 import { Type } from 'class-transformer';
+import { League } from './league.entity';
 
 @Entity()
 export class Match {
@@ -28,6 +29,9 @@ export class Match {
   @Column()
   observerId: uuid;
 
+  @Column()
+  leagueId: uuid;
+
   @ManyToOne(() => Team, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'homeTeamId' })
   homeTeam: Team
@@ -43,4 +47,8 @@ export class Match {
   @ManyToOne(() => User, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'observerId' })
   observer: User
+
+  @ManyToOne(() => League, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'leagueId' })
+  league: League
 }

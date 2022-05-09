@@ -3,42 +3,48 @@ import { TeamsService } from './teams.service';
 import { CreateTeamDto } from './dto/create-team.dto';
 import { UpdateTeamDto } from './dto/update-team.dto';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { TeamParams } from './params/TeamParams';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { LeagueParams } from '../leagues/params/LeagueParams';
+import { LeagueTeamParams } from './params/LeagueTeamParams';
+import { LeaguesService } from '../leagues/leagues.service';
+import { League } from '../entities/league.entity';
 
 @ApiTags('teams')
-@Controller('teams')
+@Controller('')
 @ApiBearerAuth()
 export class TeamsController {
-  constructor(private readonly teamsService: TeamsService) {}
+  constructor(private readonly teamsService: TeamsService,
+              private readonly leaguesService: LeaguesService) {}
 
-  @Post()
+  @Get('teams')
   @UseGuards(JwtAuthGuard)
-  create(@Body() createTeamDto: CreateTeamDto) {
-    return this.teamsService.create(createTeamDto);
-  }
-
-  @Get()
-  @UseGuards(JwtAuthGuard)
-  findAll() {
+  async getAll() {
     return this.teamsService.getAll();
   }
 
-  @Get(':teamId')
+  @Get('leagues/:leagueId/teams')
   @UseGuards(JwtAuthGuard)
-  findOne(@Param() params: TeamParams) {
-    return this.teamsService.getById(params);
+  async getAllByLeagueId(@Param() params: LeagueParams) {
+    const league: League = await this.leaguesService.getById(params);
+    return this.teamsService.getAllByLeagueId(league.id);
   }
 
-  @Put(':teamId')
+  @Post('leagues/:leagueId/teams')
   @UseGuards(JwtAuthGuard)
-  update(@Param() params: TeamParams, @Body() dto: UpdateTeamDto) {
+  async create(@Param() params: LeagueParams, @Body() createTeamDto: CreateTeamDto) {
+    const league: League = await this.leaguesService.getById(params);
+    return this.teamsService.create(league.id, createTeamDto);
+  }
+
+  @Put('leagues/:leagueId/teams/:teamId')
+  @UseGuards(JwtAuthGuard)
+  async update(@Param() params: LeagueTeamParams, @Body() dto: UpdateTeamDto) {
     return this.teamsService.update(params, dto);
   }
 
-  @Delete(':teamId')
+  @Delete('leagues/:leagueId/teams/:teamId')
   @UseGuards(JwtAuthGuard)
-  remove(@Param() params: TeamParams) {
+  async remove(@Param() params: LeagueTeamParams) {
     return this.teamsService.remove(params);
   }
 }

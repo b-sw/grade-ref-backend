@@ -11,6 +11,7 @@ import { League } from '../entities/league.entity';
     AuthModule,
   ],
   controllers: [LeaguesController],
-  providers: [LeaguesService]
+  providers: [LeaguesService],
+  exports: [LeaguesService],
 })
 export class LeaguesModule {}
