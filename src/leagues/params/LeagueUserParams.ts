@@ -1,11 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { uuid } from '../../types/uuid';
+import { uuid } from '../../shared/types/uuid';
 import { IsUUID } from 'class-validator';
 
-export class GradeParams {
+export class LeagueUserParams {
   @ApiProperty({ type: String })
   @IsUUID()
-  gradeId: uuid;
+  leagueId: uuid;
 
   @ApiProperty({ type: String })
   @IsUUID()

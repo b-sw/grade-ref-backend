@@ -3,13 +3,13 @@ import { TeamsService } from './teams.service';
 import { TeamsController } from './teams.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Team } from '../entities/team.entity';
-import { AuthModule } from '../auth/auth.module';
 import { LeaguesModule } from '../leagues/leagues.module';
+import { UsersModule } from '../users/users.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Team]),
-    AuthModule,
+    UsersModule,
     LeaguesModule,
   ],
   controllers: [TeamsController],

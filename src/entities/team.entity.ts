@@ -1,5 +1,5 @@
 import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
-import { uuid } from '../types/uuid';
+import { uuid } from '../shared/types/uuid';
 import { League } from './league.entity';
 
 @Entity()

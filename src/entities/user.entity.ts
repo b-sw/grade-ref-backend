@@ -1,6 +1,6 @@
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
-import { uuid } from '../types/uuid';
-import { Role } from '../types/role';
+import { uuid } from '../shared/types/uuid';
+import { Role } from '../shared/types/role';
 
 @Entity()
 export class User {

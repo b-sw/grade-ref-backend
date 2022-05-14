@@ -3,8 +3,8 @@ import { User } from '../entities/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
-import { Role } from '../types/role';
-import { uuid } from '../types/uuid';
+import { Role } from '../shared/types/role';
+import { uuid } from '../shared/types/uuid';
 import { UserParams } from './params/UserParams';
 import { UpdateUserDto } from './dto/update-user.dto';
 
@@ -39,7 +39,7 @@ export class UsersService {
     return this.usersRepository.save(newUser);
   }
 
-  async update(params: UserParams, dto: UpdateUserDto) {
+  async update(params: UserParams, dto: UpdateUserDto): Promise<User> {
     await this.usersRepository.update(params.userId, {
       email: dto.email,
       phoneNumber: dto.phoneNumber,
@@ -49,7 +49,7 @@ export class UsersService {
     return this.getById(params.userId);
   }
 
-  async remove(params: UserParams) {
+  async remove(params: UserParams): Promise<User> {
     const user: User = await this.getById(params.userId);
     await this.usersRepository.delete(params.userId);
     return user;
