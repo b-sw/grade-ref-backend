@@ -31,12 +31,12 @@ export class LeaguesService {
     });
   }
 
-  async getLeaguesByUser(userId: uuid): Promise<League[]> {
+  async getLeaguesByUser(user: User): Promise<League[]> {
+    const tables = { 'Admin': 'admins', 'Referee': 'referees', 'Observer': 'observers' };
+    const table: string = tables[user.role];
     let query = this.leagueRepository.createQueryBuilder('league');
-    query.innerJoinAndSelect('league.admins', 'adm');
-    query.innerJoinAndSelect('league.referees', 'ref');
-    query.innerJoinAndSelect('league.observers', 'obs');
-    query.where('adm.id = :userId or ref.id = :userId or obs.id = :userId', { userId: userId });
+    query.innerJoinAndSelect(`league.${table}`, `${table}Alias`);
+    query.where(`${table}Alias.id = :userId`, { userId: user.id });
     query.select('league.id');
 
     const ids = (await query.getMany()).map((league) => league.id);

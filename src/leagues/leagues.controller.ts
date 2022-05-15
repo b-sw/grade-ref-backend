@@ -11,6 +11,8 @@ import { AdminGuard } from '../shared/guards/admin.guard';
 import { LeagueAdminGuard } from '../shared/guards/league-admin.guard';
 import { UsersService } from '../users/users.service';
 import { User } from '../entities/user.entity';
+import { UserParams } from '../users/params/UserParams';
+import { SelfGuard } from '../shared/guards/self.guard';
 
 @ApiTags('leagues')
 @Controller('')
@@ -35,27 +37,28 @@ export class LeaguesController {
   }
 
   @Get('users/:userId/leagues')
-  @UseGuards(JwtAuthGuard, OwnerGuard)
+  @UseGuards(JwtAuthGuard, SelfGuard)
   @ApiOperation({ summary: 'Get leagues by user' })
-  async getLeaguesByAdmin(@Request() req): Promise<League[]> {
-    return this.leaguesService.getLeaguesByUser(req.user.id);
+  async getLeaguesByUser(@Param() params: UserParams): Promise<League[]> {
+    const user: User = await this.usersService.getById(params.userId);
+    return this.leaguesService.getLeaguesByUser(user);
   }
 
-  @Get(':leagueId')
+  @Get('leagues/:leagueId')
   @UseGuards(JwtAuthGuard, LeagueAdminGuard)
   @ApiOperation({ summary: 'Get league' })
   async findOne(@Param() params: LeagueParams): Promise<League> {
     return this.leaguesService.getLeagueById(params.leagueId);
   }
 
-  @Put(':leagueId')
+  @Put('leagues/:leagueId')
   @UseGuards(JwtAuthGuard, LeagueAdminGuard)
   @ApiOperation({ summary: 'Update league' })
   async update(@Param() params: LeagueParams, @Body() updateLeagueDto: UpdateLeagueDto): Promise<League> {
     return this.leaguesService.updateLeague(params, updateLeagueDto);
   }
 
-  @Delete(':leagueId')
+  @Delete('leagues/:leagueId')
   @UseGuards(JwtAuthGuard, LeagueAdminGuard)
   @ApiOperation({ summary: 'Delete league' })
   async remove(@Param() params: LeagueParams): Promise<League> {
