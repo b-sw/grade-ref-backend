@@ -14,4 +14,4 @@ jobs:
       - name: Install modules
         run: npm install
       - name: Run tests
-        run: cross-env JWT_SECRET=test OAUTH_CLIENT_ID=${{secrets.OAUTH_CLIENT_ID}} OAUTH_KEY=${{secrets.OAUTH_KEY}} DOMAIN=${{secrets.DOMAIN}} npm run test:e2e
+        run: JWT_SECRET=test OAUTH_CLIENT_ID=${{secrets.OAUTH_CLIENT_ID}} OAUTH_KEY=${{secrets.OAUTH_KEY}} DOMAIN=${{secrets.DOMAIN}} npm run test:e2e
