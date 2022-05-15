@@ -1,5 +1,5 @@
 import { Test } from '@nestjs/testing';
-import { INestApplication } from '@nestjs/common';
+import { HttpStatus, INestApplication } from '@nestjs/common';
 import { AppModule } from '../../src/app.module';
 import { Role } from '../../src/shared/types/role';
 import { getRepository } from 'typeorm';
@@ -8,6 +8,9 @@ import * as jwt from 'jsonwebtoken';
 import { MockUser } from '../shared/MockUser';
 import { v4 as randomUuid } from 'uuid';
 import * as request from 'supertest';
+import { CreateLeagueDto } from '../../src/leagues/dto/create-league.dto';
+import { MockCreateLeagueDto } from '../shared/MockLeague';
+import { League } from '../../src/entities/league.entity';
 
 describe('e2e leagues', () => {
   const mockOwner: User = MockUser({ id: randomUuid(), role: Role.Owner, email: 'mock@mail.com' });
@@ -38,7 +41,16 @@ describe('e2e leagues', () => {
   });
 
   it('should create league', async () => {
+    const dto: CreateLeagueDto = MockCreateLeagueDto({});
+    const expectedLeague: League = { ...dto, id: expect.any(String), admins: [mockAdmin], referees: [], observers: [] };
 
+    const response = await request(app.getHttpServer())
+      .post('/leagues')
+      .auth(adminAccessToken, { type: 'bearer' })
+      .send(dto);
+
+    expect(response.status).toBe(HttpStatus.CREATED);
+    expect(response.body).toMatchObject(expectedLeague);
   });
 
   it('should not create league', async () => {

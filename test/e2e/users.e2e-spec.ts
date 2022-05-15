@@ -134,7 +134,7 @@ describe('e2e users', () => {
   });
 
   const createUser = async (dto: CreateUserDto, token: string) => {
-    const expectedUser: User = {...dto, id: expect.any(String)};
+    const expectedUser: User = { ...dto, id: expect.any(String) };
 
     const response = await request(app.getHttpServer())
       .post('/users')
@@ -153,7 +153,7 @@ describe('e2e users', () => {
       email: 'jaime@mail.com',
     });
 
-    const expectedUser: User = {...dto, id: referee.id};
+    const expectedUser: User = { ...dto, id: referee.id };
 
     const response = await request(app.getHttpServer())
       .put(`/users/${referee.id}`)
