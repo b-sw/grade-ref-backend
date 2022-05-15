@@ -5,7 +5,6 @@ import { dbConfig, e2eConfig } from '../ormconfig';
 import { AuthModule } from './auth/auth.module';
 import { TeamsModule } from './teams/teams.module';
 import { MatchesModule } from './matches/matches.module';
-import { GradesModule } from './grades/grades.module';
 import { LeaguesModule } from './leagues/leagues.module';
 
 @Module({
@@ -15,10 +14,10 @@ import { LeaguesModule } from './leagues/leagues.module';
     AuthModule,
     TeamsModule,
     MatchesModule,
-    GradesModule,
     LeaguesModule
   ],
   controllers: [],
   providers: [],
+  exports: [],
 })
 export class AppModule {}

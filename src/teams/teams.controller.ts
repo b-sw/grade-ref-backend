@@ -8,6 +8,8 @@ import { LeagueParams } from '../leagues/params/LeagueParams';
 import { LeagueTeamParams } from './params/LeagueTeamParams';
 import { LeaguesService } from '../leagues/leagues.service';
 import { League } from '../entities/league.entity';
+import { OwnerGuard } from '../shared/guards/owner.guard';
+import { LeagueAdminGuard } from '../shared/guards/league-admin.guard';
 
 @ApiTags('teams')
 @Controller('')
@@ -17,33 +19,33 @@ export class TeamsController {
               private readonly leaguesService: LeaguesService) {}
 
   @Get('teams')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, OwnerGuard)
   async getAll() {
     return this.teamsService.getAll();
   }
 
   @Get('leagues/:leagueId/teams')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, LeagueAdminGuard)
   async getAllByLeagueId(@Param() params: LeagueParams) {
-    const league: League = await this.leaguesService.getById(params);
+    const league: League = await this.leaguesService.getLeagueById(params.leagueId);
     return this.teamsService.getAllByLeagueId(league.id);
   }
 
   @Post('leagues/:leagueId/teams')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, LeagueAdminGuard)
   async create(@Param() params: LeagueParams, @Body() createTeamDto: CreateTeamDto) {
-    const league: League = await this.leaguesService.getById(params);
+    const league: League = await this.leaguesService.getLeagueById(params.leagueId);
     return this.teamsService.create(league.id, createTeamDto);
   }
 
   @Put('leagues/:leagueId/teams/:teamId')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, LeagueAdminGuard)
   async update(@Param() params: LeagueTeamParams, @Body() dto: UpdateTeamDto) {
     return this.teamsService.update(params, dto);
   }
 
   @Delete('leagues/:leagueId/teams/:teamId')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, LeagueAdminGuard)
   async remove(@Param() params: LeagueTeamParams) {
     return this.teamsService.remove(params);
   }

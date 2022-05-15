@@ -1,5 +1,6 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
-import { uuid } from '../types/uuid';
+import { Column, Entity, JoinTable, ManyToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { uuid } from '../shared/types/uuid';
+import { User } from './user.entity';
 
 @Entity()
 export class League {
@@ -14,4 +15,16 @@ export class League {
 
   @Column()
   country: string;
+
+  @ManyToMany(() => User, { onDelete: 'CASCADE' })
+  @JoinTable()
+  observers: User[];
+
+  @ManyToMany(() => User, { onDelete: 'CASCADE' })
+  @JoinTable()
+  referees: User[];
+
+  @ManyToMany(() => User, { onDelete: 'CASCADE' })
+  @JoinTable()
+  admins: User[];
 }

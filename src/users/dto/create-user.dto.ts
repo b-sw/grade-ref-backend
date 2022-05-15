@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEnum, MaxLength } from 'class-validator';
-import { Role } from '../../types/role';
+import { Role } from '../../shared/types/role';
 
 export class CreateUserDto {
   @ApiProperty()

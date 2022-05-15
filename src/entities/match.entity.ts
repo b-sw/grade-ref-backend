@@ -1,5 +1,5 @@
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn, JoinColumn } from 'typeorm';
-import { uuid } from '../types/uuid';
+import { uuid } from '../shared/types/uuid';
 import { User } from './user.entity';
 import { Team } from './team.entity';
 import { Type } from 'class-transformer';
@@ -12,7 +12,7 @@ export class Match {
 
   @Column()
   @Type(() => Date)
-  date: Date
+  matchDate: Date
 
   @Column()
   stadium: string;
@@ -31,6 +31,13 @@ export class Match {
 
   @Column()
   leagueId: uuid;
+
+  @Column()
+  refereeGrade: number;
+
+  @Column()
+  @Type(() => Date)
+  refereeGradeDate: Date;
 
   @ManyToOne(() => Team, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'homeTeamId' })
