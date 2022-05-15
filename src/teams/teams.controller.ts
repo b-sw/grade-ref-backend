@@ -26,7 +26,7 @@ export class TeamsController {
   }
 
   @Get('leagues/:leagueId/teams')
-  @UseGuards(JwtAuthGuard, LeagueAdminGuard)
+  @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Get all teams in a league' })
   async getAllByLeagueId(@Param() params: LeagueParams) {
     const league: League = await this.leaguesService.getLeagueById(params.leagueId);

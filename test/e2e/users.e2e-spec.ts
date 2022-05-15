@@ -5,12 +5,12 @@ import { Role } from '../../src/shared/types/role';
 import { getRepository } from 'typeorm';
 import { User } from '../../src/entities/user.entity';
 import * as jwt from 'jsonwebtoken';
-import { MockCreateUserDto, MockUser } from '../shared/MockUser';
+import { MockCreateUserDto, MockUser } from '../shared/mockUser';
 import { CreateUserDto } from '../../src/users/dto/create-user.dto';
 import * as request from 'supertest';
 import { UpdateUserDto } from '../../src/users/dto/update-user.dto';
 import { League } from '../../src/entities/league.entity';
-import { MockLeague } from '../shared/MockLeague';
+import { MockLeague } from '../shared/mockLeague';
 
 describe('e2e users', () => {
   const mockUser: User = MockUser({ role: Role.Owner, email: 'mock@mail.com' });
