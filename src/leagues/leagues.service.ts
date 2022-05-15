@@ -19,6 +19,8 @@ export class LeaguesService {
       shortName: dto.shortName,
       country: dto.country,
       admins: [initialLeagueAdmin],
+      referees: [],
+      observers: [],
     });
     return this.leagueRepository.save(league);
   }

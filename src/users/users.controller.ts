@@ -12,6 +12,7 @@ import { LeagueUserParams } from '../leagues/params/LeagueUserParams';
 import { LeaguesService } from '../leagues/leagues.service';
 import { OwnerGuard } from '../shared/guards/owner.guard';
 import { LeagueAdminGuard } from '../shared/guards/league-admin.guard';
+import { AdminGuard } from '../shared/guards/admin.guard';
 
 @ApiTags('users')
 @Controller('')
@@ -27,13 +28,13 @@ export class UsersController {
   }
 
   @Get('users/referees')
-  @UseGuards(JwtAuthGuard, OwnerGuard)
+  @UseGuards(JwtAuthGuard, AdminGuard)
   async getAllReferees(): Promise<User[]> {
     return this.usersService.getAllByRole(Role.Referee);
   }
 
   @Get('users/observers')
-  @UseGuards(JwtAuthGuard, OwnerGuard)
+  @UseGuards(JwtAuthGuard, AdminGuard)
   async getAllObservers(): Promise<User[]> {
     return this.usersService.getAllByRole(Role.Observer);
   }
@@ -42,7 +43,7 @@ export class UsersController {
   @UseGuards(JwtAuthGuard, OwnerGuard)
   // todo: describe other endpoints
   @ApiOperation({ summary: 'Summary goes here' })
-  @ApiResponse({ status: HttpStatus.CREATED, description: 'Some description'})
+  // @ApiResponse({ status: HttpStatus.CREATED, description: 'Some description', type: User})
   async create(@Body() dto: CreateUserDto): Promise<User> {
     return this.usersService.create(dto);
   }
@@ -92,7 +93,7 @@ export class UsersController {
   }
 
   @Post('leagues/:leagueId/admins/:userId')
-  @UseGuards(JwtAuthGuard, LeagueAdminGuard)
+  @UseGuards(JwtAuthGuard, OwnerGuard)
   async assignAdmin(@Param() params: LeagueUserParams): Promise<User[]> {
     const user: User = await this.usersService.getById(params.userId);
     return this.leaguesService.assignAdminToLeague(params, user);
