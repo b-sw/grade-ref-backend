@@ -16,15 +16,15 @@ export class League {
   @Column()
   country: string;
 
-  @ManyToMany(() => User, { cascade: true })
+  @ManyToMany(() => User, { cascade: true/*, eager: true*/ })
   @JoinTable()
   observers: User[];
 
-  @ManyToMany(() => User, { cascade: true })
+  @ManyToMany(() => User, { cascade: true/*, eager: true*/ })
   @JoinTable()
   referees: User[];
 
-  @ManyToMany(() => User, { cascade: true })
+  @ManyToMany(() => User, { cascade: true/*, eager: true*/ })
   @JoinTable()
   admins: User[];
 }

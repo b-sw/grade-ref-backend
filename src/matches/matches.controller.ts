@@ -2,7 +2,7 @@ import { Controller, Get, Post, Body, Param, Delete, Put, UseGuards } from '@nes
 import { MatchesService } from './matches.service';
 import { CreateMatchDto } from './dto/create-match.dto';
 import { UpdateMatchDto } from './dto/update-match.dto';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { UserParams } from '../users/params/UserParams';
 import { LeagueMatchParams } from './params/LeagueMatchParams';
@@ -20,42 +20,49 @@ export class MatchesController {
 
   @Get('matches')
   @UseGuards(JwtAuthGuard, OwnerGuard)
+  @ApiOperation({ summary: 'Get all matches' })
   async getAllMatches(): Promise<Match[]> {
     return this.matchesService.getAllMatches();
   }
 
   @Get('leagues/:leagueId/matches')
   @UseGuards(JwtAuthGuard, LeagueAdminGuard)
+  @ApiOperation({ summary: 'Get all matches in a league' })
   async getByLeague(@Param() params: LeagueParams): Promise<Match[]> {
     return this.matchesService.getByLeague(params.leagueId);
   }
 
   @Post('leagues/:leagueId/matches')
   @UseGuards(JwtAuthGuard, LeagueAdminGuard)
+  @ApiOperation({ summary: 'Create match' })
   async createMatch(@Param() params: LeagueParams, @Body() dto: CreateMatchDto): Promise<Match> {
     return this.matchesService.createMatch(params.leagueId, dto);
   }
 
   @Put('leagues/:leagueId/matches/:matchId')
   @UseGuards(JwtAuthGuard, LeagueAdminGuard)
+  @ApiOperation({ summary: 'Update match' })
   async updateMatch(@Param() params: LeagueMatchParams, @Body() dto: UpdateMatchDto): Promise<Match> {
     return this.matchesService.updateMatch(params, dto);
   }
 
   @Put('leagues/:leagueId/matches/:matchId/grade')
   @UseGuards(JwtAuthGuard, LeagueAdminGuard)
+  @ApiOperation({ summary: 'Update referee match grade' })
   async updateMatchGrade(@Param() params: LeagueMatchParams, @Body() dto: UpdateMatchDto): Promise<Match> {
     return this.matchesService.updateGrade(params, dto);
   }
 
   @Delete('leagues/:leagueId/matches/:matchId')
   @UseGuards(JwtAuthGuard, LeagueAdminGuard)
+  @ApiOperation({ summary: 'Delete match' })
   async removeMatch(@Param() params: LeagueMatchParams): Promise<Match> {
     return this.matchesService.removeMatch(params);
   }
 
   @Get('users/:userId/matches')
   @UseGuards(JwtAuthGuard, SelfGuard)
+  @ApiOperation({ summary: 'Get user matches' })
   async getUserMatches(@Param() params: UserParams): Promise<Match[]> {
     return this.matchesService.getUserMatches(params);
   }

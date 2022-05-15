@@ -4,7 +4,7 @@ import { UpdateLeagueDto } from './dto/update-league.dto';
 import { LeagueParams } from './params/LeagueParams';
 import { InjectRepository } from '@nestjs/typeorm';
 import { League } from '../entities/league.entity';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { uuid } from '../shared/types/uuid';
 import { User } from '../entities/user.entity';
 import { LeagueUserParams } from './params/LeagueUserParams';
@@ -26,11 +26,28 @@ export class LeaguesService {
   }
 
   async getLeagues(): Promise<League[]> {
-    return this.leagueRepository.find();
+    return this.leagueRepository.find({
+      relations: ['admins', 'referees', 'observers']
+    });
+  }
+
+  async getLeaguesByUser(userId: uuid): Promise<League[]> {
+    let query = this.leagueRepository.createQueryBuilder('league');
+    query.innerJoinAndSelect('league.admins', 'adm');
+    query.innerJoinAndSelect('league.referees', 'ref');
+    query.innerJoinAndSelect('league.observers', 'obs');
+    query.where('adm.id = :userId or ref.id = :userId or obs.id = :userId', { userId: userId });
+    query.select('league.id');
+
+    const ids = (await query.getMany()).map((league) => league.id);
+    return this.leagueRepository.find({ where: { id: In(ids) } });
   }
 
   async getLeagueById(leagueId: uuid): Promise<League> {
-    return this.leagueRepository.findOne({ where: { id: leagueId } });
+    return this.leagueRepository.findOne({
+      where: { id: leagueId },
+      relations: ['admins', 'referees', 'observers']
+    });
   }
 
   async updateLeague(params: LeagueParams, dto: UpdateLeagueDto): Promise<League> {

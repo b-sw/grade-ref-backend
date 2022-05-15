@@ -2,7 +2,7 @@ import { Controller, Get, Post, Body, Param, Delete, Put, UseGuards } from '@nes
 import { TeamsService } from './teams.service';
 import { CreateTeamDto } from './dto/create-team.dto';
 import { UpdateTeamDto } from './dto/update-team.dto';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { LeagueParams } from '../leagues/params/LeagueParams';
 import { LeagueTeamParams } from './params/LeagueTeamParams';
@@ -20,12 +20,14 @@ export class TeamsController {
 
   @Get('teams')
   @UseGuards(JwtAuthGuard, OwnerGuard)
+  @ApiOperation({ summary: 'Get all teams' })
   async getAll() {
     return this.teamsService.getAll();
   }
 
   @Get('leagues/:leagueId/teams')
   @UseGuards(JwtAuthGuard, LeagueAdminGuard)
+  @ApiOperation({ summary: 'Get all teams in a league' })
   async getAllByLeagueId(@Param() params: LeagueParams) {
     const league: League = await this.leaguesService.getLeagueById(params.leagueId);
     return this.teamsService.getAllByLeagueId(league.id);
@@ -33,6 +35,7 @@ export class TeamsController {
 
   @Post('leagues/:leagueId/teams')
   @UseGuards(JwtAuthGuard, LeagueAdminGuard)
+  @ApiOperation({ summary: 'Create team' })
   async create(@Param() params: LeagueParams, @Body() createTeamDto: CreateTeamDto) {
     const league: League = await this.leaguesService.getLeagueById(params.leagueId);
     return this.teamsService.create(league.id, createTeamDto);
@@ -40,12 +43,14 @@ export class TeamsController {
 
   @Put('leagues/:leagueId/teams/:teamId')
   @UseGuards(JwtAuthGuard, LeagueAdminGuard)
+  @ApiOperation({ summary: 'Update team' })
   async update(@Param() params: LeagueTeamParams, @Body() dto: UpdateTeamDto) {
     return this.teamsService.update(params, dto);
   }
 
   @Delete('leagues/:leagueId/teams/:teamId')
   @UseGuards(JwtAuthGuard, LeagueAdminGuard)
+  @ApiOperation({ summary: 'Delete team' })
   async remove(@Param() params: LeagueTeamParams) {
     return this.teamsService.remove(params);
   }
