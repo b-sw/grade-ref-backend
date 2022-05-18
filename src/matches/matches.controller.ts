@@ -18,6 +18,7 @@ import { Team } from '../entities/team.entity';
 import { uuid } from '../shared/types/uuid';
 import { RefereeObserverGuard } from '../shared/guards/referee-observer-guard.service';
 import { ObserverGuard } from '../shared/guards/observer.guard';
+import { LeagueUserParams } from '../leagues/params/LeagueUserParams';
 
 @ApiTags('matches')
 @Controller('')
@@ -76,6 +77,13 @@ export class MatchesController {
   @ApiOperation({ summary: 'Get user matches' })
   async getUserMatches(@Param() params: UserParams): Promise<Match[]> {
     return this.matchesService.getUserMatches(params);
+  }
+
+  @Get('users/:userId/leagues/:leagueId/matches')
+  @UseGuards(JwtAuthGuard, LeagueAdminGuard)
+  @ApiOperation({ summary: 'Get user league matches' })
+  async getUserLeagueMatches(@Param() params: LeagueUserParams): Promise<Match[]> {
+    return this.matchesService.getUserLeagueMatches(params);
   }
 
   async getUserReadableKeyParams(homeTeamId: uuid): Promise<{ leagueIdx: number, homeTeamIdx: number }> {

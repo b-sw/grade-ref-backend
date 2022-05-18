@@ -7,6 +7,7 @@ import { Match } from '../entities/match.entity';
 import { UserParams } from '../users/params/UserParams';
 import { uuid } from '../shared/types/uuid';
 import { LeagueMatchParams } from './params/LeagueMatchParams';
+import { LeagueUserParams } from '../leagues/params/LeagueUserParams';
 
 @Injectable()
 export class MatchesService {
@@ -75,6 +76,15 @@ export class MatchesService {
       where: [
         { refereeId: params.userId },
         { observerId: params.userId }
+      ]
+    });
+  }
+
+  async getUserLeagueMatches(params: LeagueUserParams): Promise<Match[]> {
+    return this.matchRepository.find({
+      where: [
+        { refereeId: params.userId, leagueId: params.leagueId },
+        { observerId: params.userId, leagueId: params.leagueId }
       ]
     });
   }
