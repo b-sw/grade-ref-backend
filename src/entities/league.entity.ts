@@ -7,10 +7,10 @@ export class League {
   @PrimaryGeneratedColumn('uuid')
   id: uuid;
 
-  @Column()
+  @Column({ unique: true })
   name: string;
 
-  @Column()
+  @Column({ unique: true })
   shortName: string;
 
   @Column()

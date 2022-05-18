@@ -7,6 +7,7 @@ import { LeagueParams } from './params/LeagueParams';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { League } from '../entities/league.entity';
 import { OwnerGuard } from '../shared/guards/owner.guard';
+import { AdminGuard } from '../shared/guards/admin.guard';
 import { LeagueAdminGuard } from '../shared/guards/league-admin.guard';
 import { UsersService } from '../users/users.service';
 import { User } from '../entities/user.entity';
@@ -21,7 +22,7 @@ export class LeaguesController {
               private readonly usersService: UsersService) {}
 
   @Post('leagues')
-  @UseGuards(JwtAuthGuard, OwnerGuard)
+  @UseGuards(JwtAuthGuard, AdminGuard)
   @ApiOperation({ summary: 'Create league' })
   async create(@Request() req, @Body() createLeagueDto: CreateLeagueDto): Promise<League> {
     const initialLeagueAdmin: User = await this.usersService.getById(req.user.id);
