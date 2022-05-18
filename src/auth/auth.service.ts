@@ -20,10 +20,9 @@ export class AuthService {
   }
 
   async googleLogin(googleToken: string) {
-    const client = new OAuth2Client(process.env.REACT_APP_GOOGLE_CLIENT_ID);
+    const client = new OAuth2Client();
     const ticket = await client.verifyIdToken({
       idToken: googleToken,
-      audience: process.env.OAUTH_CLIENT_ID
     });
     const { email } = ticket.getPayload();
 

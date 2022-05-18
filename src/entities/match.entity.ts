@@ -1,4 +1,4 @@
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn, JoinColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { uuid } from '../shared/types/uuid';
 import { User } from './user.entity';
 import { Team } from './team.entity';
@@ -10,7 +10,10 @@ export class Match {
   @PrimaryGeneratedColumn('uuid')
   id: uuid;
 
-  @Column()
+  @Column({ unique: true })
+  userReadableKey: string;
+
+  @Column({ type: 'datetime' })
   @Type(() => Date)
   matchDate: Date
 
@@ -32,12 +35,18 @@ export class Match {
   @Column()
   leagueId: uuid;
 
-  @Column()
+  @Column({ nullable: true })
   refereeGrade: number;
 
-  @Column()
+  @Column({ type: 'datetime', nullable: true })
   @Type(() => Date)
   refereeGradeDate: Date;
+
+  @Column({ nullable: true })
+  refereeSmsId: uuid;
+
+  @Column({ nullable: true })
+  observerSmsId: uuid;
 
   @ManyToOne(() => Team, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'homeTeamId' })

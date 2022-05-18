@@ -1,8 +1,7 @@
 import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiProperty, ApiTags } from '@nestjs/swagger';
 import { GoogleAuthGuard } from './guards/google-auth.guard';
-import { ApiProperty } from '@nestjs/swagger';
 
 export class AuthBody {
   @ApiProperty({ type: String })

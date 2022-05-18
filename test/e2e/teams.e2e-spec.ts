@@ -37,9 +37,9 @@ describe('e2e teams', () => {
     await app.init();
 
     const usersRepository = await getRepository(User);
-    await Promise.all(users.map(async (user) => await usersRepository.insert(user)));
+    await Promise.all(users.map(async (user) => await usersRepository.save(user)));
     const leagueRepository = await getRepository(League);
-    await leagueRepository.insert(mockLeague);
+    await leagueRepository.save(mockLeague);
 
     ownerAccessToken = jwt.sign({ email: mockOwner.email, sub: mockOwner.id }, process.env.JWT_SECRET);
     adminAccessToken = jwt.sign({ email: mockAdmin.email, sub: mockAdmin.id }, process.env.JWT_SECRET);

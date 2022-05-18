@@ -12,9 +12,10 @@ import { LeagueMatchParams } from './params/LeagueMatchParams';
 export class MatchesService {
   constructor(@InjectRepository(Match) private matchRepository: Repository<Match>) {}
 
-  async createMatch(leagueId: uuid, dto: CreateMatchDto): Promise<Match> {
+  async createMatch(leagueId: uuid, dto: CreateMatchDto, leagueIdx: number, homeTeamIdx: number): Promise<Match> {
     const match: Match = this.matchRepository.create({
       matchDate: dto.matchDate,
+      userReadableKey: this.getUserReadableKey(dto.matchDate, leagueIdx, homeTeamIdx),
       stadium: dto.stadium,
       homeTeamId: dto.homeTeamId,
       awayTeamId: dto.awayTeamId,
@@ -23,6 +24,19 @@ export class MatchesService {
       leagueId: leagueId,
     });
     return this.matchRepository.save(match);
+  }
+
+  getUserReadableKey(dtoDate: Date, leagueIdx: number, homeTeamIdx: number) {
+    dtoDate = new Date(dtoDate);
+    const day: String = String(dtoDate.getDay()).slice(-2);
+    const month: String = String(dtoDate.getMonth()).slice(-2);
+    const year: String = String(dtoDate.getFullYear()).slice(-2);
+
+    return day.padStart(2, '0') +
+      month.padStart(2, '0') +
+      year.padStart(2, '0') +
+      String(leagueIdx).padStart(2, '0') +
+      String(homeTeamIdx).padStart(2, '0');
   }
 
   async getAllMatches(): Promise<Match[]> {
@@ -37,9 +51,10 @@ export class MatchesService {
     return this.matchRepository.findOne({ where: { id: matchId } });
   }
 
-  async updateMatch(params: LeagueMatchParams, dto: UpdateMatchDto): Promise<Match> {
+  async updateMatch(params: LeagueMatchParams, dto: UpdateMatchDto, leagueIdx: number, homeTeamIdx: number): Promise<Match> {
     await this.matchRepository.update(params.matchId, {
       matchDate: dto.matchDate,
+      userReadableKey: this.getUserReadableKey(dto.matchDate, leagueIdx, homeTeamIdx),
       stadium: dto.stadium,
       homeTeamId: dto.homeTeamId,
       awayTeamId: dto.awayTeamId,
@@ -67,6 +82,7 @@ export class MatchesService {
   async updateGrade(params: LeagueMatchParams, dto: UpdateMatchDto): Promise<Match> {
     const match: Match = await this.getById(params.matchId);
     match.refereeGrade = dto.refereeGrade;
+    match.refereeGradeDate = new Date();
     await this.matchRepository.save(match);
     return match;
   }

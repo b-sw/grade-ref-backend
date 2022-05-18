@@ -3,7 +3,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { IsDate, IsUUID, Length, Max, Min } from 'class-validator';
 
 export class CreateMatchDto {
-  @ApiProperty()
+  @ApiProperty({ type: Date })
   @IsDate()
   matchDate: Date
 
@@ -35,4 +35,10 @@ export class CreateMatchDto {
   @ApiProperty({ nullable: true })
   @IsDate()
   refereeGradeDate: Date;
+
+  @ApiProperty({ nullable: true })
+  refereeSmsId: uuid;
+
+  @ApiProperty({ nullable: true })
+  observerSmsId: uuid;
 }

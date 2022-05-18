@@ -14,7 +14,7 @@ import { MockLeague } from '../shared/mockLeague';
 
 describe('e2e users', () => {
   const mockUser: User = MockUser({ role: Role.Owner, email: 'mock@mail.com' });
-  const mockLeague: League = MockLeague({ admins: [mockUser], referees: [], observers: [] });
+  const mockLeague: League = MockLeague({});
 
   let app: INestApplication;
   let admin: User;
@@ -32,8 +32,8 @@ describe('e2e users', () => {
     app = moduleFixture.createNestApplication();
     await app.init();
 
-    await getRepository(User).insert(mockUser);
-    await getRepository(League).insert(mockLeague);
+    await getRepository(User).save(mockUser);
+    await getRepository(League).save(mockLeague);
     const payload = { email: mockUser.email, sub: mockUser.id };
     ownerAccessToken = jwt.sign(payload, process.env.JWT_SECRET);
   });

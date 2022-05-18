@@ -5,12 +5,14 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Match } from '../entities/match.entity';
 import { UsersModule } from '../users/users.module';
 import { LeaguesModule } from '../leagues/leagues.module';
+import { TeamsModule } from '../teams/teams.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Match]),
-    UsersModule,
     LeaguesModule,
+    UsersModule,
+    TeamsModule,
   ],
   controllers: [MatchesController],
   providers: [MatchesService],
