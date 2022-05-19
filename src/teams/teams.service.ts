@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreateTeamDto } from './dto/create-team.dto';
 import { UpdateTeamDto } from './dto/update-team.dto';
 import { Team } from '../entities/team.entity';
@@ -12,6 +12,7 @@ export class TeamsService {
   constructor(@InjectRepository(Team) private teamRepository: Repository<Team>) {}
 
   async create(leagueId: uuid, dto: CreateTeamDto) {
+    await this.validateUnique(dto);
     const team: Team = this.teamRepository.create({
       name: dto.name,
       leagueId: leagueId
@@ -32,6 +33,7 @@ export class TeamsService {
   }
 
   async update(params: LeagueTeamParams, dto: UpdateTeamDto) {
+    await this.validateUnique(dto, params.teamId);
     await this.teamRepository.update(params.teamId, {
       name: dto.name
     });
@@ -42,5 +44,19 @@ export class TeamsService {
     const team: Team = await this.getById(params.teamId);
     await this.teamRepository.delete(params.teamId);
     return team;
+  }
+
+  async validateUnique(dto: CreateTeamDto | UpdateTeamDto, id?: uuid): Promise<void> {
+    const existingTeam: Team | undefined = await this.teamRepository.findOne({
+      where: { name: dto.name }
+    });
+
+    if (!existingTeam) {
+      return;
+    }
+
+    if (!id || id !== existingTeam.id) {
+      throw new BadRequestException('Team name not unique');
+    }
   }
 }

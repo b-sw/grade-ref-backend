@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreateLeagueDto } from './dto/create-league.dto';
 import { UpdateLeagueDto } from './dto/update-league.dto';
 import { LeagueParams } from './params/LeagueParams';
@@ -14,6 +14,7 @@ export class LeaguesService {
   constructor(@InjectRepository(League) private leagueRepository: Repository<League>) {}
 
   async createLeague(initialLeagueAdmin: User, dto: CreateLeagueDto): Promise<League> {
+    await this.validateUnique(dto);
     const league: League = this.leagueRepository.create({
       name: dto.name,
       shortName: dto.shortName,
@@ -51,6 +52,7 @@ export class LeaguesService {
   }
 
   async updateLeague(params: LeagueParams, dto: UpdateLeagueDto): Promise<League> {
+    await this.validateUnique(dto, params.leagueId);
     await this.leagueRepository.update(params.leagueId, {
       name: dto.name,
       shortName: dto.shortName,
@@ -120,5 +122,19 @@ export class LeaguesService {
     league.admins = league.admins.filter((admin) => admin.id !== user.id);
     await this.leagueRepository.save(league);
     return league.admins;
+  }
+
+  async validateUnique(dto: CreateLeagueDto | UpdateLeagueDto, id?: uuid): Promise<void> {
+    const existingLeague: League | undefined = await this.leagueRepository.findOne({
+      where: [ { name: dto.name }, { shortName: dto.shortName }]
+    });
+
+    if (!existingLeague) {
+      return;
+    }
+
+    if (!id || id !== existingLeague.id) {
+      throw new BadRequestException('League name or short name not unique.');
+    }
   }
 }

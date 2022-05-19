@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { User } from '../entities/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -29,6 +29,7 @@ export class UsersService {
   }
 
   async create(dto: CreateUserDto): Promise<User> {
+    await this.validateUnique(dto);
     const newUser = this.usersRepository.create({
       email: dto.email,
       role: dto.role,
@@ -40,6 +41,7 @@ export class UsersService {
   }
 
   async update(params: UserParams, dto: UpdateUserDto): Promise<User> {
+    await this.validateUnique(dto, params.userId);
     await this.usersRepository.update(params.userId, {
       email: dto.email,
       phoneNumber: dto.phoneNumber,
@@ -53,5 +55,19 @@ export class UsersService {
     const user: User = await this.getById(params.userId);
     await this.usersRepository.delete(params.userId);
     return user;
+  }
+
+  async validateUnique(dto: CreateUserDto | UpdateUserDto, id?: uuid): Promise<void> {
+    const existingLeague: User | undefined = await this.usersRepository.findOne({
+      where: { email: dto.email }
+    });
+
+    if (!existingLeague) {
+      return;
+    }
+
+    if (!id || id !== existingLeague.id) {
+      throw new BadRequestException('Email not unique');
+    }
   }
 }
