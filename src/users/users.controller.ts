@@ -28,6 +28,13 @@ export class UsersController {
     return this.usersService.getAll();
   }
 
+  @Get('users/admins')
+  @UseGuards(JwtAuthGuard, OwnerGuard)
+  @ApiOperation({ summary: 'Get all admins' })
+  async getAllAdmins(): Promise<User[]> {
+    return this.usersService.getAllByRole(Role.Admin);
+  }
+
   @Get('users/referees')
   @UseGuards(JwtAuthGuard, AdminGuard)
   @ApiOperation({ summary: 'Get all referees' })
