@@ -89,14 +89,14 @@ export class MatchesController {
   async getUserReadableKeyParams(homeTeamId: uuid): Promise<{ leagueIdx: number, homeTeamIdx: number }> {
     const homeTeam: Team = await this.teamsService.getById(homeTeamId);
     const leagues: League[] = await this.leaguesService.getLeagues();
-    const league: League = await this.leaguesService.getLeagueById(homeTeam.leagueId);
-    const teams: Team[] = await this.teamsService.getAllByLeagueId(league.id);
+    const teamLeague: League = await this.leaguesService.getLeagueById(homeTeam.leagueId);
+    const teams: Team[] = await this.teamsService.getAllByLeagueId(teamLeague.id);
 
     leagues.sort((a, b) => a.name.localeCompare(b.name));
     teams.sort((a, b) => a.name.localeCompare(b.name));
 
-    const leagueIdx: number = leagues.indexOf(league)
-    const homeTeamIdx: number = teams.indexOf(homeTeam);
+    const leagueIdx: number = leagues.findIndex((league) => league.id === league.id);
+    const homeTeamIdx: number = teams.findIndex((team) => team.id === homeTeam.id);
 
     return { leagueIdx, homeTeamIdx }
   }

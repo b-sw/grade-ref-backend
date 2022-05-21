@@ -29,15 +29,18 @@ export class MatchesService {
 
   getUserReadableKey(dtoDate: Date, leagueIdx: number, homeTeamIdx: number) {
     dtoDate = new Date(dtoDate);
-    const day: String = String(dtoDate.getDay()).slice(-2);
-    const month: String = String(dtoDate.getMonth()).slice(-2);
+    /*
+     *  + 1 because JavaScript's Date is a copy of Java's java.util.Date
+     */
+    const day: String = String(dtoDate.getDay() + 1).slice(-2);
+    const month: String = String(dtoDate.getMonth() + 1).slice(-2);
     const year: String = String(dtoDate.getFullYear()).slice(-2);
 
     return day.padStart(2, '0') +
       month.padStart(2, '0') +
       year.padStart(2, '0') +
-      String(leagueIdx).padStart(2, '0') +
-      String(homeTeamIdx).padStart(2, '0');
+      String(leagueIdx + 1).padStart(2, '0') +
+      String(homeTeamIdx + 1).padStart(2, '0');
   }
 
   async getAllMatches(): Promise<Match[]> {

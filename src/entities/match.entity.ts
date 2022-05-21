@@ -35,7 +35,7 @@ export class Match {
   @Column()
   leagueId: uuid;
 
-  @Column({ nullable: true })
+  @Column({ type: 'float', nullable: true })
   refereeGrade: number;
 
   @Column({ type: 'datetime', nullable: true })
