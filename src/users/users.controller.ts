@@ -94,7 +94,7 @@ export class UsersController {
   @Post('leagues/:leagueId/referees/:userId')
   @UseGuards(JwtAuthGuard, LeagueAdminGuard)
   @ApiOperation({ summary: 'Assign referee to a league' })
-  async assignReferee(@Param() params: LeagueUserParams): Promise<User[]> {
+  async assignReferee(@Param() params: LeagueUserParams): Promise<User> {
     const user: User = await this.usersService.getById(params.userId);
     return this.leaguesService.assignRefereeToLeague(params, user);
   }
@@ -102,7 +102,7 @@ export class UsersController {
   @Post('leagues/:leagueId/observers/:userId')
   @UseGuards(JwtAuthGuard, LeagueAdminGuard)
   @ApiOperation({ summary: 'Assign observer to a league' })
-  async assignObserver(@Param() params: LeagueUserParams): Promise<User[]> {
+  async assignObserver(@Param() params: LeagueUserParams): Promise<User> {
     const user: User = await this.usersService.getById(params.userId);
     return this.leaguesService.assignObserverToLeague(params, user);
   }
@@ -110,7 +110,7 @@ export class UsersController {
   @Post('leagues/:leagueId/admins/:userId')
   @UseGuards(JwtAuthGuard, OwnerGuard)
   @ApiOperation({ summary: 'Add user as league admin' })
-  async assignAdmin(@Param() params: LeagueUserParams): Promise<User[]> {
+  async assignAdmin(@Param() params: LeagueUserParams): Promise<User> {
     const user: User = await this.usersService.getById(params.userId);
     return this.leaguesService.assignAdminToLeague(params, user);
   }
@@ -118,7 +118,7 @@ export class UsersController {
   @Delete('leagues/:leagueId/referees/:userId')
   @UseGuards(JwtAuthGuard, LeagueAdminGuard)
   @ApiOperation({ summary: 'Unassign referee from a league' })
-  async unassignReferee(@Param() params: LeagueUserParams): Promise<User[]> {
+  async unassignReferee(@Param() params: LeagueUserParams): Promise<User> {
     const user: User = await this.usersService.getById(params.userId);
     return this.leaguesService.removeRefereeFromLeague(params, user);
   }
@@ -126,7 +126,7 @@ export class UsersController {
   @Delete('leagues/:leagueId/observers/:userId')
   @UseGuards(JwtAuthGuard, LeagueAdminGuard)
   @ApiOperation({ summary: 'Unassign observer from a league' })
-  async unassignObserver(@Param() params: LeagueUserParams): Promise<User[]> {
+  async unassignObserver(@Param() params: LeagueUserParams): Promise<User> {
     const user: User = await this.usersService.getById(params.userId);
     return this.leaguesService.removeObserverFromLeague(params, user);
   }
@@ -134,7 +134,7 @@ export class UsersController {
   @Delete('leagues/:leagueId/admins/:userId')
   @UseGuards(JwtAuthGuard, LeagueAdminGuard)
   @ApiOperation({ summary: 'Unassign league admin' })
-  async unassignAdmin(@Param() params: LeagueUserParams): Promise<User[]> {
+  async unassignAdmin(@Param() params: LeagueUserParams): Promise<User> {
     const user: User = await this.usersService.getById(params.userId);
     return this.leaguesService.removeAdminFromLeague(params, user);
   }

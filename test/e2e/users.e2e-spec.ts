@@ -234,10 +234,7 @@ describe('e2e users', () => {
       .auth(ownerAccessToken, { type: 'bearer' });
 
     expect(response.status).toBe(HttpStatus.CREATED);
-    expect(response.body).toHaveLength(1);
-
-    const responseLeagueAdmins: User[] = response.body;
-    expect(responseLeagueAdmins[0]).toMatchObject(admin);
+    expect(response.body).toMatchObject(admin);
 
     const dbLeagueAdmins: User[] = (await getRepository(League).findOne({
       where: { id: mockLeague.id },
@@ -260,10 +257,7 @@ describe('e2e users', () => {
       .auth(adminAccessToken, { type: 'bearer' });
 
     expect(response.status).toBe(HttpStatus.CREATED);
-    expect(response.body).toHaveLength(1);
-
-    const responseLeagueObservers: User[] = response.body;
-    expect(responseLeagueObservers[0]).toMatchObject(observer);
+    expect(response.body).toMatchObject(observer);
 
     const dbLeagueObservers: User[] = (await getRepository(League).findOne({
       where: { id: mockLeague.id },
@@ -286,10 +280,7 @@ describe('e2e users', () => {
       .auth(adminAccessToken, { type: 'bearer' });
 
     expect(response.status).toBe(HttpStatus.CREATED);
-    expect(response.body).toHaveLength(1);
-
-    const responseLeagueReferees: User[] = response.body;
-    expect(responseLeagueReferees[0]).toMatchObject(referee);
+    expect(response.body).toMatchObject(referee);
 
     const dbLeagueReferees: User[] = (await getRepository(League).findOne({
       where: { id: mockLeague.id },
@@ -312,7 +303,7 @@ describe('e2e users', () => {
       .auth(adminAccessToken, { type: 'bearer' });
 
     expect(response.status).toBe(HttpStatus.OK);
-    expect(response.body).toHaveLength(0);
+    expect(response.body).toMatchObject(observer);
 
     const dbLeagueObservers: User[] = (await getRepository(League).findOne({
       where: { id: mockLeague.id },
@@ -334,7 +325,7 @@ describe('e2e users', () => {
       .auth(adminAccessToken, { type: 'bearer' });
 
     expect(response.status).toBe(HttpStatus.OK);
-    expect(response.body).toHaveLength(0);
+    expect(response.body).toMatchObject(referee);
 
     const dbLeagueReferees: User[] = (await getRepository(League).findOne({
       where: { id: mockLeague.id },
@@ -356,7 +347,7 @@ describe('e2e users', () => {
       .auth(ownerAccessToken, { type: 'bearer' });
 
     expect(response.status).toBe(HttpStatus.OK);
-    expect(response.body).toHaveLength(0);
+    expect(response.body).toMatchObject(admin);
 
     const dbLeagueAdmins: User[] = (await getRepository(League).findOne({
       where: { id: mockLeague.id },

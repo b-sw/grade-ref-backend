@@ -82,46 +82,46 @@ export class LeaguesService {
     return league.admins;
   }
 
-  async assignRefereeToLeague(params: LeagueUserParams, user: User): Promise<User[]> {
+  async assignRefereeToLeague(params: LeagueUserParams, user: User): Promise<User> {
     const league: League = await this.getLeagueById(params.leagueId);
     league.referees.push(user);
     await this.leagueRepository.save(league);
-    return league.referees;
+    return user;
   }
 
-  async assignObserverToLeague(params: LeagueUserParams, user: User): Promise<User[]> {
+  async assignObserverToLeague(params: LeagueUserParams, user: User): Promise<User> {
     const league: League = await this.getLeagueById(params.leagueId);
     league.observers.push(user);
     await this.leagueRepository.save(league);
-    return league.observers
+    return user;
   }
 
-  async assignAdminToLeague(params: LeagueUserParams, user: User): Promise<User[]> {
+  async assignAdminToLeague(params: LeagueUserParams, user: User): Promise<User> {
     const league: League = await this.getLeagueById(params.leagueId);
     league.admins.push(user);
     await this.leagueRepository.save(league);
-    return league.admins
+    return user;
   }
 
-  async removeRefereeFromLeague(params: LeagueUserParams, user: User): Promise<User[]> {
+  async removeRefereeFromLeague(params: LeagueUserParams, user: User): Promise<User> {
     const league: League = await this.getLeagueById(params.leagueId);
     league.referees = league.referees.filter((referee) => referee.id !== user.id);
     await this.leagueRepository.save(league);
-    return league.referees;
+    return user;
   }
 
-  async removeObserverFromLeague(params: LeagueUserParams, user: User): Promise<User[]> {
+  async removeObserverFromLeague(params: LeagueUserParams, user: User): Promise<User> {
     const league: League = await this.getLeagueById(params.leagueId);
     league.observers = league.observers.filter((observer) => observer.id !== user.id);
     await this.leagueRepository.save(league);
-    return league.observers;
+    return user;
   }
 
-  async removeAdminFromLeague(params: LeagueUserParams, user: User): Promise<User[]> {
+  async removeAdminFromLeague(params: LeagueUserParams, user: User): Promise<User> {
     const league: League = await this.getLeagueById(params.leagueId);
     league.admins = league.admins.filter((admin) => admin.id !== user.id);
     await this.leagueRepository.save(league);
-    return league.admins;
+    return user;
   }
 
   async validateUnique(dto: CreateLeagueDto | UpdateLeagueDto, id?: uuid): Promise<void> {
