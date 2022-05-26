@@ -80,7 +80,7 @@ export class MatchesController {
   }
 
   @Get('users/:userId/leagues/:leagueId/matches')
-  @UseGuards(JwtAuthGuard, LeagueAdminGuard)
+  @UseGuards(JwtAuthGuard) // todo: add guard
   @ApiOperation({ summary: 'Get user league matches' })
   async getUserLeagueMatches(@Param() params: LeagueUserParams): Promise<Match[]> {
     return this.matchesService.getUserLeagueMatches(params);
