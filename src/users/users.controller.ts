@@ -13,6 +13,7 @@ import { LeaguesService } from '../leagues/leagues.service';
 import { OwnerGuard } from '../shared/guards/owner.guard';
 import { LeagueAdminGuard } from '../shared/guards/league-admin.guard';
 import { AdminGuard } from '../shared/guards/admin.guard';
+import { LeagueUserGuard } from '../shared/guards/league-user.guard';
 
 @ApiTags('users')
 @Controller('')
@@ -71,14 +72,14 @@ export class UsersController {
   }
 
   @Get('leagues/:leagueId/referees')
-  @UseGuards(JwtAuthGuard, LeagueAdminGuard)
+  @UseGuards(JwtAuthGuard, LeagueUserGuard)
   @ApiOperation({ summary: 'Get referees assigned to a league' })
   async getReferees(@Param() params: LeagueParams): Promise<User[]> {
     return this.leaguesService.getLeagueReferees(params.leagueId);
   }
 
   @Get('leagues/:leagueId/observers')
-  @UseGuards(JwtAuthGuard, LeagueAdminGuard)
+  @UseGuards(JwtAuthGuard, LeagueUserGuard)
   @ApiOperation({ summary: 'Get observers assigned to a league' })
   async getObservers(@Param() params: LeagueParams): Promise<User[]> {
     return this.leaguesService.getLeagueObservers(params.leagueId);

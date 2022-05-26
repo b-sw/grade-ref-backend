@@ -10,7 +10,7 @@ import { OwnerGuard } from './owner.guard';
 @Injectable()
 export class LeagueAdminGuard extends OwnerGuard implements CanActivate {
   constructor(protected usersService: UsersService,
-              private leaguesService: LeaguesService) {
+              protected leaguesService: LeaguesService) {
     super(usersService);
   }
 
