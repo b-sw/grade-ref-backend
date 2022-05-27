@@ -32,10 +32,9 @@ export class MatchesService {
     /*
      *  + 1 because JavaScript's Date is a copy of Java's java.util.Date
      */
-    const day: String = String(dtoDate.getDay() + 1).slice(-2);
-    const month: String = String(dtoDate.getMonth() + 1).slice(-2);
-    const year: String = String(dtoDate.getFullYear()).slice(-2);
-
+    const day: String = String(dtoDate.getUTCDate()).slice(-2);
+    const month: String = String(dtoDate.getUTCMonth() + 1).slice(-2);
+    const year: String = String(dtoDate.getUTCFullYear()).slice(-2);
     return day.padStart(2, '0') +
       month.padStart(2, '0') +
       year.padStart(2, '0') +
