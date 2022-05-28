@@ -47,7 +47,7 @@ export class MatchesService {
   }
 
   async getByLeague(leagueId: uuid): Promise<Match[]> {
-    return this.matchRepository.find({ where: { leagueId: leagueId } });
+    return this.matchRepository.find({ where: { leagueId: leagueId }, order: { matchDate: 'DESC' } });
   }
 
   async getById(matchId: uuid): Promise<Match> {
@@ -78,7 +78,8 @@ export class MatchesService {
       where: [
         { refereeId: params.userId },
         { observerId: params.userId }
-      ]
+      ],
+      order: { matchDate: 'DESC' }
     });
   }
 
@@ -87,7 +88,8 @@ export class MatchesService {
       where: [
         { refereeId: params.userId, leagueId: params.leagueId },
         { observerId: params.userId, leagueId: params.leagueId }
-      ]
+      ],
+      order: { matchDate: 'DESC' }
     });
   }
 
