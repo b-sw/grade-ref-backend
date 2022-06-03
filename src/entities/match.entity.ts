@@ -43,10 +43,10 @@ export class Match {
   refereeGradeDate: Date;
 
   @Column({ nullable: true })
-  refereeSmsId: String;
+  refereeSmsId: string;
 
   @Column({ nullable: true })
-  observerSmsId: String;
+  observerSmsId: string;
 
   @ManyToOne(() => Team, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'homeTeamId' })
