@@ -120,7 +120,7 @@ export class MatchesService {
 
       return response.data.messageId.toSting();
     }
-    
+
     catch (error) {
       if (axios.isAxiosError(error)) {
         console.log(error.response.status)
@@ -131,7 +131,7 @@ export class MatchesService {
   }
 
   async cancelSMS(smsId : string){
-    var smsIdInt: number = +smsId;
+    let smsIdInt: number = +smsId;
     try {
       axios.post("https://api2.smsplanet.pl/cancelMessage", {
       key : process.env.SMS_API_KEY,
