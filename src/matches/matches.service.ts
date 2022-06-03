@@ -36,10 +36,9 @@ export class MatchesService {
     /*
      *  + 1 because JavaScript's Date is a copy of Java's java.util.Date
      */
-    const day: String = String(dtoDate.getDay() + 1).slice(-2);
-    const month: String = String(dtoDate.getMonth() + 1).slice(-2);
-    const year: String = String(dtoDate.getFullYear()).slice(-2);
-
+    const day: String = String(dtoDate.getUTCDate()).slice(-2);
+    const month: String = String(dtoDate.getUTCMonth() + 1).slice(-2);
+    const year: String = String(dtoDate.getUTCFullYear()).slice(-2);
     return day.padStart(2, '0') +
       month.padStart(2, '0') +
       year.padStart(2, '0') +
@@ -52,7 +51,7 @@ export class MatchesService {
   }
 
   async getByLeague(leagueId: uuid): Promise<Match[]> {
-    return this.matchRepository.find({ where: { leagueId: leagueId } });
+    return this.matchRepository.find({ where: { leagueId: leagueId }, order: { matchDate: 'DESC' } });
   }
 
   async getById(matchId: uuid): Promise<Match> {
@@ -86,7 +85,8 @@ export class MatchesService {
       where: [
         { refereeId: params.userId },
         { observerId: params.userId }
-      ]
+      ],
+      order: { matchDate: 'DESC' }
     });
   }
 
@@ -95,7 +95,8 @@ export class MatchesService {
       where: [
         { refereeId: params.userId, leagueId: params.leagueId },
         { observerId: params.userId, leagueId: params.leagueId }
-      ]
+      ],
+      order: { matchDate: 'DESC' }
     });
   }
 

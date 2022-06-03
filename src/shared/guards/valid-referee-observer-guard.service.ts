@@ -9,7 +9,7 @@ import { UpdateMatchDto } from '../../matches/dto/update-match.dto';
 import { League } from '../../entities/league.entity';
 
 @Injectable()
-export class RefereeObserverGuard implements CanActivate {
+export class ValidRefereeObserverGuard implements CanActivate {
   constructor(private usersService: UsersService,
               private leaguesService: LeaguesService) {}
 

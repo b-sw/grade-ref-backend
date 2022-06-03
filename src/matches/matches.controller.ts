@@ -16,7 +16,7 @@ import { TeamsService } from '../teams/teams.service';
 import { League } from '../entities/league.entity';
 import { Team } from '../entities/team.entity';
 import { uuid } from '../shared/types/uuid';
-import { RefereeObserverGuard } from '../shared/guards/referee-observer-guard.service';
+import { ValidRefereeObserverGuard } from '../shared/guards/valid-referee-observer-guard.service';
 import { ObserverGuard } from '../shared/guards/observer.guard';
 import { LeagueUserParams } from '../leagues/params/LeagueUserParams';
 import { UsersService } from '../users/users.service';
@@ -44,7 +44,7 @@ export class MatchesController {
   }
 
   @Post('leagues/:leagueId/matches')
-  @UseGuards(JwtAuthGuard, LeagueAdminGuard, RefereeObserverGuard)
+  @UseGuards(JwtAuthGuard, LeagueAdminGuard, ValidRefereeObserverGuard)
   @ApiOperation({ summary: 'Create match' })
   async createMatch(@Param() params: LeagueParams, @Body() dto: CreateMatchDto): Promise<Match> {
     const { leagueIdx, homeTeamIdx } = await this.getUserReadableKeyParams(dto.homeTeamId);
@@ -53,7 +53,7 @@ export class MatchesController {
   }
 
   @Put('leagues/:leagueId/matches/:matchId')
-  @UseGuards(JwtAuthGuard, LeagueAdminGuard, RefereeObserverGuard)
+  @UseGuards(JwtAuthGuard, LeagueAdminGuard, ValidRefereeObserverGuard)
   @ApiOperation({ summary: 'Update match' })
   async updateMatch(@Param() params: LeagueMatchParams, @Body() dto: UpdateMatchDto): Promise<Match> {
     const { leagueIdx, homeTeamIdx } = await this.getUserReadableKeyParams(dto.homeTeamId);
@@ -83,7 +83,7 @@ export class MatchesController {
   }
 
   @Get('users/:userId/leagues/:leagueId/matches')
-  @UseGuards(JwtAuthGuard, LeagueAdminGuard)
+  @UseGuards(JwtAuthGuard) // todo: add guard
   @ApiOperation({ summary: 'Get user league matches' })
   async getUserLeagueMatches(@Param() params: LeagueUserParams): Promise<Match[]> {
     return this.matchesService.getUserLeagueMatches(params);
