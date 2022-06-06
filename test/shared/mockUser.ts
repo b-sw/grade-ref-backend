@@ -6,7 +6,7 @@ import { CreateUserDto } from '../../src/users/dto/create-user.dto';
 const BaseCreateUserDto: CreateUserDto = {
   email: 'jdoe@mail.com',
   role: Role.Referee,
-  phoneNumber: randomUuid(), // for tests, we just need this to be unique
+  phoneNumber: '669797907', // for tests, we just need this to be unique
   firstName: 'John',
   lastName: 'Doe',
 }

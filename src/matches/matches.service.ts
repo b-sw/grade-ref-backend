@@ -1,6 +1,6 @@
 import { Injectable} from '@nestjs/common';
 import axios from "axios";
-import dayjs from "dayjs";
+import * as dayjs from 'dayjs'
 import { CreateMatchDto } from './dto/create-match.dto';
 import { UpdateMatchDto } from './dto/update-match.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -12,7 +12,8 @@ import { LeagueMatchParams } from './params/LeagueMatchParams';
 import { LeagueUserParams } from '../leagues/params/LeagueUserParams';
 
 const SMS_API: string = 'https://api2.smsplanet.pl';
-const SMS_API_DATETIME_FORMAT: string = 'YYYY-MM-DD HH:mm:ss';
+export const DTO_DATETIME_FORMAT: string = 'YYYY-MM-DDThh:mm';
+const SMS_API_DATETIME_FORMAT: string = 'DD-MM-YYYY HH:mm:ss';
 
 @Injectable()
 export class MatchesService {
@@ -65,7 +66,8 @@ export class MatchesService {
 
   async updateMatch(params: LeagueMatchParams, dto: UpdateMatchDto, leagueIdx: number, homeTeamIdx: number, observerPhoneNumber: string): Promise<Match> {
     await this.cancelSMS(dto.observerSmsId)
-    const observerSmsId:string = await this.planSms(dto.matchDate, this.getUserReadableKey(dto.matchDate, leagueIdx, homeTeamIdx), observerPhoneNumber)
+    const matchKey: string = this.getUserReadableKey(dto.matchDate, leagueIdx, homeTeamIdx);
+    const observerSmsId: string = await this.planSms(dto.matchDate, matchKey, observerPhoneNumber)
 
     await this.matchRepository.update(params.matchId, {
       matchDate: dto.matchDate,
@@ -116,29 +118,35 @@ export class MatchesService {
   }
 
   async planSms(dtoDate: Date, messageKey: string, phoneNumber: string): Promise<string> {
-    const matchDate: string = dayjs(dtoDate).format(SMS_API_DATETIME_FORMAT);
-    const sendDate: string = dayjs(dtoDate).subtract(1, 'day').format(SMS_API_DATETIME_FORMAT);
+    const matchDate: string = dayjs(dtoDate, DTO_DATETIME_FORMAT).format(SMS_API_DATETIME_FORMAT);
+    const sendDate: string = dayjs(dtoDate, DTO_DATETIME_FORMAT).subtract(1, 'day').format(SMS_API_DATETIME_FORMAT);
 
-    const response = await axios.post(`${SMS_API}/sms`, {
-      key : process.env.SMS_API_KEY,
-      password : process.env.SMS_PASSWORD,
-      from : process.env.SMS_NUMBER,
-      to : phoneNumber,
-      msg : `Nowa obsada, mecz ${messageKey}, ${matchDate}. Po zakończeniu spotkania wyślij sms o treści: ID_meczu#ocena/ocena`,
-      date : sendDate
+    const response = await axios.post(`${SMS_API}/sms`, {}, {
+      params: {
+        key: process.env.SMS_API_KEY,
+        password: process.env.SMS_PASSWORD,
+        from: process.env.SMS_NUMBER,
+        to: phoneNumber,
+        msg: `Nowa obsada, mecz ${messageKey}, ${matchDate}. Po zakończeniu spotkania wyślij sms o treści: ID_meczu#ocena/ocena`,
+        date: sendDate
+      }
     });
 
-    return response.data.messageId.toSting();
+    console.log('response is', response);
+
+    return response.data.messageId.toString();
   }
 
   // todo: check return type in external api
   async cancelSMS(smsId : string): Promise<void> {
     let smsIdInt: number = +smsId;
 
-    await axios.post(`${SMS_API}/cancelMessage`, {
-      key : process.env.SMS_API_KEY,
-      password : process.env.SMS_PASSWORD,
-      messageId : smsIdInt,
+    await axios.post(`${SMS_API}/cancelMessage`, {}, {
+      params: {
+        key: process.env.SMS_API_KEY,
+        password: process.env.SMS_PASSWORD,
+        messageId: smsIdInt,
+      }
     });
   }
 }
