@@ -1,4 +1,4 @@
-import { Injectable} from '@nestjs/common';
+import { HttpStatus, Injectable, ServiceUnavailableException } from '@nestjs/common';
 import axios from "axios";
 import * as dayjs from 'dayjs'
 import { CreateMatchDto } from './dto/create-match.dto';
@@ -132,7 +132,9 @@ export class MatchesService {
       }
     });
 
-    console.log('response is', response);
+    if (response.status != HttpStatus.OK) {
+      throw new ServiceUnavailableException('SMS API error');
+    }
 
     return response.data.messageId.toString();
   }
