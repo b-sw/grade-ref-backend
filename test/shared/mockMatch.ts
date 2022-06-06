@@ -1,6 +1,7 @@
 import { CreateMatchDto } from '../../src/matches/dto/create-match.dto';
 import { Team } from '../../src/entities/team.entity';
 import { User } from '../../src/entities/user.entity';
+import * as dayjs from 'dayjs';
 
 export const MockCreateMatchDto = (teamA: Team,
                                    teamB: Team,
@@ -8,7 +9,7 @@ export const MockCreateMatchDto = (teamA: Team,
                                    observer: User,
                                    stadium?: string): CreateMatchDto => {
   return {
-    matchDate: new Date(),
+    matchDate: new Date(dayjs().add(2, 'day').toDate()),
     stadium: stadium ?? 'Mock stadium',
     homeTeamId: teamA.id,
     awayTeamId: teamB.id,
