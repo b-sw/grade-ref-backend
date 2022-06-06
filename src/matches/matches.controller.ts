@@ -19,6 +19,8 @@ import { uuid } from '../shared/types/uuid';
 import { ValidRefereeObserverGuard } from '../shared/guards/valid-referee-observer-guard.service';
 import { ObserverGuard } from '../shared/guards/observer.guard';
 import { LeagueUserParams } from '../leagues/params/LeagueUserParams';
+import { UsersService } from '../users/users.service';
+import { User } from '../entities/user.entity';
 
 @ApiTags('matches')
 @Controller('')
@@ -26,7 +28,8 @@ import { LeagueUserParams } from '../leagues/params/LeagueUserParams';
 export class MatchesController {
   constructor(private readonly matchesService: MatchesService,
               private readonly leaguesService: LeaguesService,
-              private readonly teamsService: TeamsService) {}
+              private readonly teamsService: TeamsService,
+              private readonly usersService: UsersService) {}
 
   @Get('matches')
   @UseGuards(JwtAuthGuard, OwnerGuard)
@@ -47,7 +50,8 @@ export class MatchesController {
   @ApiOperation({ summary: 'Create match' })
   async createMatch(@Param() params: LeagueParams, @Body() dto: CreateMatchDto): Promise<Match> {
     const { leagueIdx, homeTeamIdx } = await this.getUserReadableKeyParams(dto.homeTeamId);
-    return this.matchesService.createMatch(params.leagueId, dto, leagueIdx, homeTeamIdx);
+    const observer: User = await this.usersService.getById(dto.observerId);
+    return this.matchesService.createMatch(params.leagueId, dto, leagueIdx, homeTeamIdx, observer.phoneNumber);
   }
 
   @Put('leagues/:leagueId/matches/:matchId')
@@ -55,7 +59,8 @@ export class MatchesController {
   @ApiOperation({ summary: 'Update match' })
   async updateMatch(@Param() params: LeagueMatchParams, @Body() dto: UpdateMatchDto): Promise<Match> {
     const { leagueIdx, homeTeamIdx } = await this.getUserReadableKeyParams(dto.homeTeamId);
-    return this.matchesService.updateMatch(params, dto, leagueIdx, homeTeamIdx);
+    const observer: User = await this.usersService.getById(dto.observerId);
+    return this.matchesService.updateMatch(params, dto, leagueIdx, homeTeamIdx, observer.phoneNumber);
   }
 
   @Put('leagues/:leagueId/matches/:matchId/grade')

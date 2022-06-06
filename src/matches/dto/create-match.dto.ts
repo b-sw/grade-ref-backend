@@ -37,8 +37,8 @@ export class CreateMatchDto {
   refereeGradeDate: Date;
 
   @ApiProperty({ nullable: true })
-  refereeSmsId: uuid;
+  refereeSmsId: string;
 
   @ApiProperty({ nullable: true })
-  observerSmsId: uuid;
+  observerSmsId: string;
 }

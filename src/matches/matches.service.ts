@@ -1,4 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { HttpStatus, Injectable, ServiceUnavailableException } from '@nestjs/common';
+import axios from "axios";
+import * as dayjs from 'dayjs'
 import { CreateMatchDto } from './dto/create-match.dto';
 import { UpdateMatchDto } from './dto/update-match.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -9,11 +11,18 @@ import { uuid } from '../shared/types/uuid';
 import { LeagueMatchParams } from './params/LeagueMatchParams';
 import { LeagueUserParams } from '../leagues/params/LeagueUserParams';
 
+const SMS_API: string = 'https://api2.smsplanet.pl';
+export const DTO_DATETIME_FORMAT: string = 'YYYY-MM-DDThh:mm';
+const SMS_API_DATETIME_FORMAT: string = 'DD-MM-YYYY HH:mm:ss';
+
 @Injectable()
 export class MatchesService {
   constructor(@InjectRepository(Match) private matchRepository: Repository<Match>) {}
 
-  async createMatch(leagueId: uuid, dto: CreateMatchDto, leagueIdx: number, homeTeamIdx: number): Promise<Match> {
+  async createMatch(leagueId: uuid, dto: CreateMatchDto, leagueIdx: number, homeTeamIdx: number, observerPhoneNumber: string): Promise<Match> {
+    const matchKey: string = this.getUserReadableKey(dto.matchDate, leagueIdx, homeTeamIdx);
+    const observerSmsId: string = await this.planSms(dto.matchDate, matchKey, observerPhoneNumber)
+
     const match: Match = this.matchRepository.create({
       matchDate: dto.matchDate,
       userReadableKey: this.getUserReadableKey(dto.matchDate, leagueIdx, homeTeamIdx),
@@ -23,6 +32,7 @@ export class MatchesService {
       refereeId: dto.refereeId,
       observerId: dto.observerId,
       leagueId: leagueId,
+      observerSmsId: observerSmsId,
     });
     return this.matchRepository.save(match);
   }
@@ -54,7 +64,11 @@ export class MatchesService {
     return this.matchRepository.findOne({ where: { id: matchId } });
   }
 
-  async updateMatch(params: LeagueMatchParams, dto: UpdateMatchDto, leagueIdx: number, homeTeamIdx: number): Promise<Match> {
+  async updateMatch(params: LeagueMatchParams, dto: UpdateMatchDto, leagueIdx: number, homeTeamIdx: number, observerPhoneNumber: string): Promise<Match> {
+    await this.cancelSMS(dto.observerSmsId)
+    const matchKey: string = this.getUserReadableKey(dto.matchDate, leagueIdx, homeTeamIdx);
+    const observerSmsId: string = await this.planSms(dto.matchDate, matchKey, observerPhoneNumber)
+
     await this.matchRepository.update(params.matchId, {
       matchDate: dto.matchDate,
       userReadableKey: this.getUserReadableKey(dto.matchDate, leagueIdx, homeTeamIdx),
@@ -62,13 +76,15 @@ export class MatchesService {
       homeTeamId: dto.homeTeamId,
       awayTeamId: dto.awayTeamId,
       refereeId: dto.refereeId,
-      observerId: dto.observerId
+      observerId: dto.observerId,
+      observerSmsId: observerSmsId
     });
     return this.getById(params.matchId);
   }
 
   async removeMatch(params: LeagueMatchParams): Promise<Match> {
     const match: Match = await this.getById(params.matchId);
+    await this.cancelSMS(match.observerSmsId);
     await this.matchRepository.delete(params.matchId);
     return match;
   }
@@ -99,5 +115,40 @@ export class MatchesService {
     match.refereeGradeDate = new Date();
     await this.matchRepository.save(match);
     return match;
+  }
+
+  async planSms(dtoDate: Date, messageKey: string, phoneNumber: string): Promise<string> {
+    const matchDate: string = dayjs(dtoDate, DTO_DATETIME_FORMAT).format(SMS_API_DATETIME_FORMAT);
+    const sendDate: string = dayjs(dtoDate, DTO_DATETIME_FORMAT).subtract(1, 'day').format(SMS_API_DATETIME_FORMAT);
+
+    const response = await axios.post(`${SMS_API}/sms`, {}, {
+      params: {
+        key: process.env.SMS_API_KEY,
+        password: process.env.SMS_PASSWORD,
+        from: process.env.SMS_NUMBER,
+        to: phoneNumber,
+        msg: `Nowa obsada, mecz ${messageKey}, ${matchDate}. Po zakończeniu spotkania wyślij sms o treści: ID_meczu#ocena/ocena`,
+        date: sendDate
+      }
+    });
+
+    if (response.status != HttpStatus.OK) {
+      throw new ServiceUnavailableException('SMS API error');
+    }
+
+    return response.data.messageId.toString();
+  }
+
+  // todo: check return type in external api
+  async cancelSMS(smsId : string): Promise<void> {
+    let smsIdInt: number = +smsId;
+
+    await axios.post(`${SMS_API}/cancelMessage`, {}, {
+      params: {
+        key: process.env.SMS_API_KEY,
+        password: process.env.SMS_PASSWORD,
+        messageId: smsIdInt,
+      }
+    });
   }
 }

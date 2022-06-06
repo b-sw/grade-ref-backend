@@ -86,7 +86,12 @@ describe('e2e matches', () => {
       .auth(adminAccessToken, { type: 'bearer' })
       .send(dto);
 
-    mockMatch = { ...dto, id: expect.any(String), userReadableKey: expect.any(String), leagueId: mockLeague.id };
+    mockMatch = { ...dto,
+      id: expect.any(String),
+      userReadableKey: expect.any(String),
+      leagueId: mockLeague.id,
+      observerSmsId: expect.any(String)
+    };
     response.body.matchDate = new Date(response.body.matchDate)
 
     expect(response.status).toBe(HttpStatus.CREATED);
