@@ -20,6 +20,8 @@ import { ValidRefereeObserverGuard } from '../shared/guards/valid-referee-observ
 import { ObserverGuard } from '../shared/guards/observer.guard';
 import { LeagueUserParams } from '../leagues/params/LeagueUserParams';
 import { UsersService } from '../users/users.service';
+import { User } from '../entities/user.entity';
+
 @ApiTags('matches')
 @Controller('')
 @ApiBearerAuth()
@@ -48,9 +50,8 @@ export class MatchesController {
   @ApiOperation({ summary: 'Create match' })
   async createMatch(@Param() params: LeagueParams, @Body() dto: CreateMatchDto): Promise<Match> {
     const { leagueIdx, homeTeamIdx } = await this.getUserReadableKeyParams(dto.homeTeamId);
-    let { phoneNumber } = await this.usersService.getById(dto.observerId);
-    const observerPhoneNumber = phoneNumber;
-    return this.matchesService.createMatch(params.leagueId, dto, leagueIdx, homeTeamIdx, observerPhoneNumber);
+    const observer: User = await this.usersService.getById(dto.observerId);
+    return this.matchesService.createMatch(params.leagueId, dto, leagueIdx, homeTeamIdx, observer.phoneNumber);
   }
 
   @Put('leagues/:leagueId/matches/:matchId')
@@ -58,9 +59,8 @@ export class MatchesController {
   @ApiOperation({ summary: 'Update match' })
   async updateMatch(@Param() params: LeagueMatchParams, @Body() dto: UpdateMatchDto): Promise<Match> {
     const { leagueIdx, homeTeamIdx } = await this.getUserReadableKeyParams(dto.homeTeamId);
-    let { phoneNumber } = await this.usersService.getById(dto.observerId);
-    const observerPhoneNumber = phoneNumber;
-    return this.matchesService.updateMatch(params, dto, leagueIdx, homeTeamIdx, observerPhoneNumber );
+    const observer: User = await this.usersService.getById(dto.observerId);
+    return this.matchesService.updateMatch(params, dto, leagueIdx, homeTeamIdx, observer.phoneNumber);
   }
 
   @Put('leagues/:leagueId/matches/:matchId/grade')
@@ -74,8 +74,7 @@ export class MatchesController {
   @UseGuards(JwtAuthGuard, LeagueAdminGuard)
   @ApiOperation({ summary: 'Delete match' })
   async removeMatch(@Param() params: LeagueMatchParams): Promise<Match> {
-    const { observerSmsId } = await this.matchesService.getById(params.matchId)
-    return this.matchesService.removeMatch(params, observerSmsId);
+    return this.matchesService.removeMatch(params);
   }
 
   @Get('users/:userId/matches')

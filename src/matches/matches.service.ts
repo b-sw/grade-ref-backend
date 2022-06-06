@@ -1,5 +1,5 @@
 import { Injectable} from '@nestjs/common';
-import axios, { AxiosError } from "axios";
+import axios from "axios";
 import dayjs from "dayjs";
 import { CreateMatchDto } from './dto/create-match.dto';
 import { UpdateMatchDto } from './dto/update-match.dto';
@@ -11,12 +11,17 @@ import { uuid } from '../shared/types/uuid';
 import { LeagueMatchParams } from './params/LeagueMatchParams';
 import { LeagueUserParams } from '../leagues/params/LeagueUserParams';
 
+const SMS_API: string = 'https://api2.smsplanet.pl';
+const SMS_API_DATETIME_FORMAT: string = 'YYYY-MM-DD HH:mm:ss';
+
 @Injectable()
 export class MatchesService {
   constructor(@InjectRepository(Match) private matchRepository: Repository<Match>) {}
 
   async createMatch(leagueId: uuid, dto: CreateMatchDto, leagueIdx: number, homeTeamIdx: number, observerPhoneNumber: string): Promise<Match> {
-    const observerSmsId:string = await this.sendSMS(dto.matchDate, this.getUserReadableKey(dto.matchDate, leagueIdx, homeTeamIdx), observerPhoneNumber)
+    const matchKey: string = this.getUserReadableKey(dto.matchDate, leagueIdx, homeTeamIdx);
+    const observerSmsId: string = await this.planSms(dto.matchDate, matchKey, observerPhoneNumber)
+
     const match: Match = this.matchRepository.create({
       matchDate: dto.matchDate,
       userReadableKey: this.getUserReadableKey(dto.matchDate, leagueIdx, homeTeamIdx),
@@ -28,7 +33,6 @@ export class MatchesService {
       leagueId: leagueId,
       observerSmsId: observerSmsId,
     });
-
     return this.matchRepository.save(match);
   }
 
@@ -61,7 +65,7 @@ export class MatchesService {
 
   async updateMatch(params: LeagueMatchParams, dto: UpdateMatchDto, leagueIdx: number, homeTeamIdx: number, observerPhoneNumber: string): Promise<Match> {
     await this.cancelSMS(dto.observerSmsId)
-    const observerSmsId:string = await this.sendSMS(dto.matchDate, this.getUserReadableKey(dto.matchDate, leagueIdx, homeTeamIdx), observerPhoneNumber)
+    const observerSmsId:string = await this.planSms(dto.matchDate, this.getUserReadableKey(dto.matchDate, leagueIdx, homeTeamIdx), observerPhoneNumber)
 
     await this.matchRepository.update(params.matchId, {
       matchDate: dto.matchDate,
@@ -76,9 +80,9 @@ export class MatchesService {
     return this.getById(params.matchId);
   }
 
-  async removeMatch(params: LeagueMatchParams, observerSmsId: string): Promise<Match> {
-    await this.cancelSMS(observerSmsId)
+  async removeMatch(params: LeagueMatchParams): Promise<Match> {
     const match: Match = await this.getById(params.matchId);
+    await this.cancelSMS(match.observerSmsId);
     await this.matchRepository.delete(params.matchId);
     return match;
   }
@@ -111,27 +115,30 @@ export class MatchesService {
     return match;
   }
 
-  async sendSMS(dtoDate: Date, messageKey: string, phoneNumber: string): Promise<string>{
+  async planSms(dtoDate: Date, messageKey: string, phoneNumber: string): Promise<string> {
+    const matchDate: string = dayjs(dtoDate).format(SMS_API_DATETIME_FORMAT);
+    const sendDate: string = dayjs(dtoDate).subtract(1, 'day').format(SMS_API_DATETIME_FORMAT);
 
-    const response = await axios.post("https://api2.smsplanet.pl/sms", {
+    const response = await axios.post(`${SMS_API}/sms`, {
       key : process.env.SMS_API_KEY,
       password : process.env.SMS_PASSWORD,
       from : process.env.SMS_NUMBER,
       to : phoneNumber,
-      msg : `Nowa obsada, mecz ${messageKey}, ${dayjs(dtoDate).format('DD-MM-YYYY HH:mm:ss')}. Po zakończeniu spotkania wyślij sms o treści: ID_meczu#ocena/ocena`,
-      date : dayjs(dtoDate).subtract(1, 'day').format('DD-MM-YYYY HH:mm:ss')
+      msg : `Nowa obsada, mecz ${messageKey}, ${matchDate}. Po zakończeniu spotkania wyślij sms o treści: ID_meczu#ocena/ocena`,
+      date : sendDate
     });
 
     return response.data.messageId.toSting();
   }
 
-  async cancelSMS(smsId : string){
+  // todo: check return type in external api
+  async cancelSMS(smsId : string): Promise<void> {
     let smsIdInt: number = +smsId;
 
-    axios.post("https://api2.smsplanet.pl/cancelMessage", {
+    await axios.post(`${SMS_API}/cancelMessage`, {
       key : process.env.SMS_API_KEY,
       password : process.env.SMS_PASSWORD,
       messageId : smsIdInt,
-      });
+    });
   }
 }
