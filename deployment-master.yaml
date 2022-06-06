@@ -27,4 +27,4 @@ spec:
     spec:
       containers:
         - name: backend-container
-          image: bswitals/graderef
+          image: bswitals/graderef:awssecretmanager0.1
