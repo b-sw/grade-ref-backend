@@ -5,7 +5,7 @@ module.exports = () => {
     const region = "eu-central-1";
     const client = new AWS.SecretsManager({ region });
 
-    const SecretId = "ersms-secrets-nobase64";
+    const SecretId = "ersms-secret";
     return new Promise((resolve, reject) => {
         //retrieving secrets from secrets manager
         client.getSecretValue({ SecretId }, (err, data) => {
