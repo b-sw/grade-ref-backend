@@ -15,7 +15,8 @@ import { LeagueUserParams } from '../leagues/params/LeagueUserParams';
 export class MatchesService {
   constructor(@InjectRepository(Match) private matchRepository: Repository<Match>) {}
 
-  async createMatch(leagueId: uuid, dto: CreateMatchDto, leagueIdx: number, homeTeamIdx: number, phoneNumber: string): Promise<Match> {
+  async createMatch(leagueId: uuid, dto: CreateMatchDto, leagueIdx: number, homeTeamIdx: number, observerPhoneNumber: string): Promise<Match> {
+    const observerSmsId:string = await this.sendSMS(dto.matchDate, this.getUserReadableKey(dto.matchDate, leagueIdx, homeTeamIdx), observerPhoneNumber)
     const match: Match = this.matchRepository.create({
       matchDate: dto.matchDate,
       userReadableKey: this.getUserReadableKey(dto.matchDate, leagueIdx, homeTeamIdx),
@@ -25,7 +26,7 @@ export class MatchesService {
       refereeId: dto.refereeId,
       observerId: dto.observerId,
       leagueId: leagueId,
-      observerSmsId: await this.sendSMS(dto.matchDate, this.getUserReadableKey(dto.matchDate, leagueIdx, homeTeamIdx), phoneNumber),
+      observerSmsId: observerSmsId,
     });
 
     return this.matchRepository.save(match);
@@ -58,8 +59,9 @@ export class MatchesService {
     return this.matchRepository.findOne({ where: { id: matchId } });
   }
 
-  async updateMatch(params: LeagueMatchParams, dto: UpdateMatchDto, leagueIdx: number, homeTeamIdx: number, phoneNumber: string): Promise<Match> {
+  async updateMatch(params: LeagueMatchParams, dto: UpdateMatchDto, leagueIdx: number, homeTeamIdx: number, observerPhoneNumber: string): Promise<Match> {
     await this.cancelSMS(dto.observerSmsId)
+    const observerSmsId:string = await this.sendSMS(dto.matchDate, this.getUserReadableKey(dto.matchDate, leagueIdx, homeTeamIdx), observerPhoneNumber)
 
     await this.matchRepository.update(params.matchId, {
       matchDate: dto.matchDate,
@@ -69,12 +71,13 @@ export class MatchesService {
       awayTeamId: dto.awayTeamId,
       refereeId: dto.refereeId,
       observerId: dto.observerId,
-      observerSmsId: await this.sendSMS(dto.matchDate, this.getUserReadableKey(dto.matchDate, leagueIdx, homeTeamIdx), phoneNumber)
+      observerSmsId: observerSmsId
     });
     return this.getById(params.matchId);
   }
 
-  async removeMatch(params: LeagueMatchParams): Promise<Match> {
+  async removeMatch(params: LeagueMatchParams, observerSmsId: string): Promise<Match> {
+    await this.cancelSMS(observerSmsId)
     const match: Match = await this.getById(params.matchId);
     await this.matchRepository.delete(params.matchId);
     return match;
@@ -109,43 +112,26 @@ export class MatchesService {
   }
 
   async sendSMS(dtoDate: Date, messageKey: string, phoneNumber: string): Promise<string>{
-    try{
-      const response = await axios.post("https://api2.smsplanet.pl/sms", {
-        key : process.env.SMS_API_KEY,
-        password : process.env.SMS_PASSWORD,
-        from : process.env.SMS_NUMBER,
-        to : phoneNumber,
-        msg : `Nowa obsada, mecz ${messageKey}, ${dayjs(dtoDate).format('DD-MM-YYYY HH:mm:ss')}. Po zakończeniu spotkania wyślij sms o treści: ID_meczu#ocena/ocena`,
-        date : dayjs(dtoDate).subtract(1, 'day').format('DD-MM-YYYY HH:mm:ss')
-      });
 
-      return response.data.messageId.toSting();
-    }
+    const response = await axios.post("https://api2.smsplanet.pl/sms", {
+      key : process.env.SMS_API_KEY,
+      password : process.env.SMS_PASSWORD,
+      from : process.env.SMS_NUMBER,
+      to : phoneNumber,
+      msg : `Nowa obsada, mecz ${messageKey}, ${dayjs(dtoDate).format('DD-MM-YYYY HH:mm:ss')}. Po zakończeniu spotkania wyślij sms o treści: ID_meczu#ocena/ocena`,
+      date : dayjs(dtoDate).subtract(1, 'day').format('DD-MM-YYYY HH:mm:ss')
+    });
 
-    catch (error) {
-      if (axios.isAxiosError(error)) {
-        console.log(error.response.status)
-        console.log(error.response.data)
-      }
-      console.log("Cancel message error.")
-    }
+    return response.data.messageId.toSting();
   }
 
   async cancelSMS(smsId : string){
     let smsIdInt: number = +smsId;
-    try {
-      axios.post("https://api2.smsplanet.pl/cancelMessage", {
+
+    axios.post("https://api2.smsplanet.pl/cancelMessage", {
       key : process.env.SMS_API_KEY,
       password : process.env.SMS_PASSWORD,
       messageId : smsIdInt,
       });
-    }
-    catch (error) {
-      if (axios.isAxiosError(error)) {
-        console.log(error.response.status)
-        console.log(error.response.data)
-      }
-      console.log("Cancel message error.")
-    }
   }
 }

@@ -14,7 +14,7 @@ import { LeaguesModule } from './leagues/leagues.module';
     AuthModule,
     TeamsModule,
     MatchesModule,
-    LeaguesModule
+    LeaguesModule,
   ],
   controllers: [],
   providers: [],

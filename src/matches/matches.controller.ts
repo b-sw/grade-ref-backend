@@ -48,8 +48,9 @@ export class MatchesController {
   @ApiOperation({ summary: 'Create match' })
   async createMatch(@Param() params: LeagueParams, @Body() dto: CreateMatchDto): Promise<Match> {
     const { leagueIdx, homeTeamIdx } = await this.getUserReadableKeyParams(dto.homeTeamId);
-    const { phoneNumber } = await this.usersService.getById(dto.observerId)
-    return this.matchesService.createMatch(params.leagueId, dto, leagueIdx, homeTeamIdx, phoneNumber);
+    let { phoneNumber } = await this.usersService.getById(dto.observerId);
+    const observerPhoneNumber = phoneNumber;
+    return this.matchesService.createMatch(params.leagueId, dto, leagueIdx, homeTeamIdx, observerPhoneNumber);
   }
 
   @Put('leagues/:leagueId/matches/:matchId')
@@ -57,8 +58,9 @@ export class MatchesController {
   @ApiOperation({ summary: 'Update match' })
   async updateMatch(@Param() params: LeagueMatchParams, @Body() dto: UpdateMatchDto): Promise<Match> {
     const { leagueIdx, homeTeamIdx } = await this.getUserReadableKeyParams(dto.homeTeamId);
-    const { phoneNumber } = await this.usersService.getById(dto.observerId)
-    return this.matchesService.updateMatch(params, dto, leagueIdx, homeTeamIdx, phoneNumber);
+    let { phoneNumber } = await this.usersService.getById(dto.observerId);
+    const observerPhoneNumber = phoneNumber;
+    return this.matchesService.updateMatch(params, dto, leagueIdx, homeTeamIdx, observerPhoneNumber );
   }
 
   @Put('leagues/:leagueId/matches/:matchId/grade')
@@ -72,7 +74,8 @@ export class MatchesController {
   @UseGuards(JwtAuthGuard, LeagueAdminGuard)
   @ApiOperation({ summary: 'Delete match' })
   async removeMatch(@Param() params: LeagueMatchParams): Promise<Match> {
-    return this.matchesService.removeMatch(params);
+    const { observerSmsId } = await this.matchesService.getById(params.matchId)
+    return this.matchesService.removeMatch(params, observerSmsId);
   }
 
   @Get('users/:userId/matches')
