@@ -98,6 +98,8 @@ describe('e2e matches', () => {
     expect(response.body).toMatchObject(mockMatch);
 
     mockMatch.id = response.body.id;
+    mockMatch.userReadableKey = response.body.userReadableKey;
+    mockMatch.observerSmsId = response.body.observerSmsId;
 
     const match: Match = await getRepository(Match).findOne({ where: { id: mockMatch.id } });
     expect(match).toMatchObject(mockMatch);
@@ -142,6 +144,9 @@ describe('e2e matches', () => {
 
     response.body.matchDate = new Date(response.body.matchDate);
     mockMatch = { ...mockMatch, homeTeamId: teamB.id, awayTeamId: teamA.id, matchDate: expect.any(Date) }
+    mockMatch.userReadableKey = response.body.userReadableKey;
+    mockMatch.observerSmsId = response.body.observerSmsId;
+
     expect(response.status).toBe(HttpStatus.OK);
     expect(response.body).toMatchObject(mockMatch);
 

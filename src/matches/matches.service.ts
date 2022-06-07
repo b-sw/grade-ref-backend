@@ -65,7 +65,8 @@ export class MatchesService {
   }
 
   async updateMatch(params: LeagueMatchParams, dto: UpdateMatchDto, leagueIdx: number, homeTeamIdx: number, observerPhoneNumber: string): Promise<Match> {
-    await this.cancelSMS(dto.observerSmsId)
+    const match: Match = await this.getById(params.matchId);
+    await this.cancelSMS(match.observerSmsId);
     const matchKey: string = this.getUserReadableKey(dto.matchDate, leagueIdx, homeTeamIdx);
     const observerSmsId: string = await this.planSms(dto.matchDate, matchKey, observerPhoneNumber)
 
@@ -133,22 +134,24 @@ export class MatchesService {
     });
 
     if (response.status != HttpStatus.OK) {
-      throw new ServiceUnavailableException('SMS API error');
+      throw new ServiceUnavailableException('SMS API error: ', response.data);
     }
 
     return response.data.messageId.toString();
   }
 
-  // todo: check return type in external api
   async cancelSMS(smsId : string): Promise<void> {
     let smsIdInt: number = +smsId;
 
-    await axios.post(`${SMS_API}/cancelMessage`, {}, {
+    const response = await axios.post(`${SMS_API}/cancelMessage`, {}, {
       params: {
         key: process.env.SMS_API_KEY,
         password: process.env.SMS_PASSWORD,
         messageId: smsIdInt,
       }
     });
+    if (response.status != HttpStatus.OK) {
+      throw new ServiceUnavailableException('SMS API error: ', response.data);
+    }
   }
 }
