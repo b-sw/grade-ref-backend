@@ -22,7 +22,7 @@ describe('e2e matches', () => {
   const mockAdmin: User = MockUser( { id: randomUuid(), role: Role.Admin, email: 'admin@mail.com' });
   const mockReferee: User = MockUser( { id: randomUuid(), role: Role.Referee, email: 'ref@mail.com' });
   const mockRefereeB: User = MockUser( { id: randomUuid(), role: Role.Referee, email: 'ref2@mail.com' });
-  const mockObserver: User = MockUser( { id: randomUuid(), role: Role.Observer, email: 'obs@mail.com' });
+  const mockObserver: User = MockUser( { id: randomUuid(), role: Role.Observer, email: 'obs@mail.com', phoneNumber: '669797907' });
   const mockLeague: League = MockLeague({ admins: [mockAdmin], referees: [mockReferee], observers: [mockObserver] });
   const users: User[] = [mockOwner, mockAdmin, mockReferee, mockRefereeB, mockObserver];
 

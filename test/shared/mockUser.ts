@@ -3,20 +3,20 @@ import { Role } from '../../src/shared/types/role';
 import { v4 as randomUuid } from 'uuid';
 import { CreateUserDto } from '../../src/users/dto/create-user.dto';
 
-const BaseCreateUserDto: CreateUserDto = {
-  email: 'jdoe@mail.com',
-  role: Role.Referee,
-  phoneNumber: '669797907', // for tests, we just need this to be unique
-  firstName: 'John',
-  lastName: 'Doe',
+export const BaseCreateUserDto = (): CreateUserDto => {
+  return {
+    email: 'jdoe@mail.com',
+    role: Role.Referee,
+    phoneNumber: randomUuid().substring(0, 9), // for tests, we just need this to be unique
+    firstName: 'John',
+    lastName: 'Doe',
+  }
 }
 
-const BaseUser: User = { ...BaseCreateUserDto, id: randomUuid() }
-
 export const MockCreateUserDto = (overwrite: Partial<CreateUserDto>): CreateUserDto => {
-  return { ...BaseCreateUserDto, ...overwrite };
+  return { ...BaseCreateUserDto(), ...overwrite };
 }
 
 export const MockUser = (overwrite: Partial<User>): User => {
-  return { ...BaseUser, ...overwrite };
+  return { ...BaseCreateUserDto(), id: randomUuid(), ...overwrite };
 }
