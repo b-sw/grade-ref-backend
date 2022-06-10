@@ -21,6 +21,8 @@ import { ObserverGuard } from '../shared/guards/observer.guard';
 import { LeagueUserParams } from '../leagues/params/LeagueUserParams';
 import { UsersService } from '../users/users.service';
 import { User } from '../entities/user.entity';
+import { UpdateGradeSmsDto } from './dto/update-grade-sms.dto';
+import { MatchGradeGuard } from '../shared/guards/match-grade.guard';
 
 @ApiTags('matches')
 @Controller('')
@@ -68,6 +70,14 @@ export class MatchesController {
   @ApiOperation({ summary: 'Update referee match grade' })
   async updateMatchGrade(@Param() params: LeagueMatchParams, @Body() dto: UpdateMatchDto): Promise<Match> {
     return this.matchesService.updateGrade(params, dto);
+  }
+
+  @Post('matches/grades')
+  @UseGuards(MatchGradeGuard)
+  @ApiOperation({ summary: 'Update referee match grade by sms' })
+  async updateMatchGradeSms(@Body() dto: UpdateGradeSmsDto): Promise<void> {
+    const observer: User = await this.usersService.getByPhoneNumber(dto.msisdn);
+    return this.matchesService.updateGradeSms(dto, observer);
   }
 
   @Delete('leagues/:leagueId/matches/:matchId')

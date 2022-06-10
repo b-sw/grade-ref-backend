@@ -14,7 +14,7 @@ export class OwnerGuard implements CanActivate {
     if (owners.some((owner) => owner.id === request.user.id)) {
       return true;
     } else {
-      throw new HttpException('Forbidden', HttpStatus.FORBIDDEN);
+      throw new HttpException('Forbidden.', HttpStatus.FORBIDDEN);
     }
   }
 }

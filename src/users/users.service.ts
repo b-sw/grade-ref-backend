@@ -24,6 +24,10 @@ export class UsersService {
     return this.usersRepository.findOne({ where: { email: email } });
   }
 
+  async getByPhoneNumber(phoneNumber: string): Promise<User | undefined> {
+    return this.usersRepository.findOne({ where: { phoneNumber: phoneNumber } });
+  }
+
   async getById(id: uuid): Promise<User | undefined> {
     return this.usersRepository.findOne({ where: { id: id } });
   }

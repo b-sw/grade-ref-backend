@@ -14,4 +14,4 @@ jobs:
       - name: Install modules
         run: npm install
       - name: Run tests
-        run: JWT_SECRET=test OAUTH_CLIENT_ID=${{secrets.OAUTH_CLIENT_ID}} OAUTH_KEY=${{secrets.OAUTH_KEY}} DOMAIN=${{secrets.DOMAIN}} SMS_API_KEY=${{secrets.SMS_API_KEY}} SMS_PASSWORD=${{secrets.SMS_PASSWORD}} SMS_NUMBER=${{secrets.SMS_NUMBER}} npm run test:e2e
+        run: JWT_SECRET=test OAUTH_CLIENT_ID=${{secrets.OAUTH_CLIENT_ID}} OAUTH_KEY=${{secrets.OAUTH_KEY}} DOMAIN=${{secrets.DOMAIN}} SMS_API_KEY=${{secrets.SMS_API_KEY}} SMS_PASSWORD=${{secrets.SMS_PASSWORD}} SMS_NUMBER=${{secrets.SMS_NUMBER}} SMS_SENDER=${{secrets.SMS_SENDER}} npm run test:e2e

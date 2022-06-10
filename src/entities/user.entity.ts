@@ -13,7 +13,7 @@ export class User {
   @Column()
   role: Role;
 
-  @Column()
+  @Column({ unique: true })
   phoneNumber: string;
 
   @Column()

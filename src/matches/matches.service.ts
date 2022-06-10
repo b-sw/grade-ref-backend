@@ -10,6 +10,9 @@ import { UserParams } from '../users/params/UserParams';
 import { uuid } from '../shared/types/uuid';
 import { LeagueMatchParams } from './params/LeagueMatchParams';
 import { LeagueUserParams } from '../leagues/params/LeagueUserParams';
+import { UpdateGradeSmsDto } from './dto/update-grade-sms.dto';
+import { AxiosResponse } from '@nestjs/terminus/dist/health-indicator/http/axios.interfaces';
+import { User } from '../entities/user.entity';
 
 const SMS_API: string = 'https://api2.smsplanet.pl';
 export const DTO_DATETIME_FORMAT: string = 'YYYY-MM-DDThh:mm';
@@ -60,8 +63,12 @@ export class MatchesService {
     return this.matchRepository.find({ where: { leagueId: leagueId }, order: { matchDate: 'DESC' } });
   }
 
-  async getById(matchId: uuid): Promise<Match> {
+  async getById(matchId: uuid): Promise<Match | undefined> {
     return this.matchRepository.findOne({ where: { id: matchId } });
+  }
+
+  async getByObserverSmsId(id: string): Promise<Match | undefined> {
+    return this.matchRepository.findOne({ where: { observerSmsId: id } });
   }
 
   async updateMatch(params: LeagueMatchParams, dto: UpdateMatchDto, leagueIdx: number, homeTeamIdx: number, observerPhoneNumber: string): Promise<Match> {
@@ -118,11 +125,48 @@ export class MatchesService {
     return match;
   }
 
+  async updateGradeSms(dto: UpdateGradeSmsDto, observer: User): Promise<void> {
+    console.log('dto', dto);
+    const match: Match = await this.getByObserverSmsId(dto.id);
+
+    if (match.refereeGrade) {
+      await this.sendOneWaySms(observer.phoneNumber, `Grade has already been entered.`);
+      return;
+    }
+
+    if(dayjs().isBefore(dayjs(match.matchDate).add(2, 'hour'))) {
+      await this.sendOneWaySms(observer.phoneNumber, `Cannot enter a grade before match end.`);
+      return;
+    }
+
+    const grade: number = +dto.msg.split('#')[1].split('/')[0];
+    console.log('grade is', grade);
+    match.refereeGrade = grade;
+    match.refereeGradeDate = new Date();
+    await this.matchRepository.save(match);
+    await this.sendOneWaySms(observer.phoneNumber, `Grade for match ${match.userReadableKey} has been entered.`);
+  }
+
+  async sendOneWaySms(recipient: string, message: string): Promise<void> {
+    const response: AxiosResponse = await axios.post(`${SMS_API}/sms`, {}, {
+      params: {
+        key: process.env.SMS_API_KEY,
+        password: process.env.SMS_PASSWORD,
+        from: process.env.SMS_SENDER,
+        to: recipient,
+        msg: message,
+      }
+    });
+    if (response.status != HttpStatus.OK) {
+      throw new ServiceUnavailableException('SMS API error: ', response.data);
+    }
+  }
+
   async planSms(dtoDate: Date, messageKey: string, phoneNumber: string): Promise<string> {
     const matchDate: string = dayjs(dtoDate, DTO_DATETIME_FORMAT).format(SMS_API_DATETIME_FORMAT);
     const sendDate: string = dayjs(dtoDate, DTO_DATETIME_FORMAT).subtract(1, 'day').format(SMS_API_DATETIME_FORMAT);
 
-    const response = await axios.post(`${SMS_API}/sms`, {}, {
+    const response: AxiosResponse = await axios.post(`${SMS_API}/sms`, {}, {
       params: {
         key: process.env.SMS_API_KEY,
         password: process.env.SMS_PASSWORD,
