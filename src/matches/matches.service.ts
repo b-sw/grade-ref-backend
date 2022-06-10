@@ -12,7 +12,7 @@ import { LeagueMatchParams } from './params/LeagueMatchParams';
 import { LeagueUserParams } from '../leagues/params/LeagueUserParams';
 import { AxiosResponse } from '@nestjs/terminus/dist/health-indicator/http/axios.interfaces';
 import { User } from '../entities/user.entity';
-import { GradeMessage } from './params/SmsGradeParams';
+import { GradeMessage } from './dto/update-grade-sms.dto';
 
 const SMS_API: string = 'https://api2.smsplanet.pl';
 export const DTO_DATETIME_FORMAT: string = 'YYYY-MM-DDThh:mm';
@@ -125,9 +125,9 @@ export class MatchesService {
     return match;
   }
 
-  async updateGradeSms(message: GradeMessage, observer: User): Promise<void> {
-    console.log('dto', message);
-    const match: Match = await this.getByObserverSmsId(message.id);
+  async updateGradeSms(dto: GradeMessage, observer: User): Promise<void> {
+    console.log('dto', dto);
+    const match: Match = await this.getByObserverSmsId(dto.id);
 
     if (match.refereeGrade) {
       await this.sendOneWaySms(observer.phoneNumber, `Grade has already been entered.`);
@@ -139,7 +139,7 @@ export class MatchesService {
       return;
     }
 
-    const grade: number = +message.msg.split('#')[1].split('/')[0];
+    const grade: number = +dto.msg.split('#')[1].split('/')[0];
     console.log('grade is', grade);
     match.refereeGrade = grade;
     match.refereeGradeDate = new Date();
