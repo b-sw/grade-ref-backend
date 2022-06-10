@@ -1,9 +1,9 @@
 import { CanActivate, ExecutionContext, HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { MatchesService } from '../../matches/matches.service';
 import { UsersService } from '../../users/users.service';
-import { UpdateGradeSmsDto } from '../../matches/dto/update-grade-sms.dto';
 import { User } from '../../entities/user.entity';
 import { Match } from '../../entities/match.entity';
+import { SmsGradeParams } from '../../matches/params/SmsGradeParams';
 
 @Injectable()
 export class MatchGradeGuard implements CanActivate {
@@ -12,9 +12,9 @@ export class MatchGradeGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
-    const dto: UpdateGradeSmsDto = request.body;
-    const observer: User | undefined = await this.usersService.getByPhoneNumber(dto.msisdn);
-    const match: Match | undefined = await this.matchesService.getByObserverSmsId(dto.id);
+    const params: SmsGradeParams = request.params;
+    const observer: User | undefined = await this.usersService.getByPhoneNumber(params.message.msisdn);
+    const match: Match | undefined = await this.matchesService.getByObserverSmsId(params.message.id);
 
     console.log('request in guard is', request.body);
 
