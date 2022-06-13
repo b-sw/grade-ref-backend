@@ -11,19 +11,19 @@ provider:
   region: eu-west-1
   deploymentMethod: direct
   environment:
-    OAUTH_CLIENT_ID: ${env:OAUTH_CLIENT_ID}
-    OAUTH_KEY: ${env:OAUTH_KEY}
-    JWT_SECRET: ${env:JWT_SECRET}
-    DB_HOST: ${env:DB_HOST}
-    DB_PORT: ${env:DB_PORT}
-    DB_USERNAME: ${env:DB_USERNAME}
-    DB_PASSWORD: ${env:DB_PASSWORD}
-    DB_DATABASE: ${env:DB_DATABASE}
-    DOMAIN: ${env:DOMAIN}
-    SMS_API_KEY: ${env:SMS_API_KEY}
-    SMS_PASSWORD: ${env:SMS_PASSWORD}
-    SMS_NUMBER: ${env:SMS_NUMBER}
-    SMS_SENDER: ${env:SMS_SENDER}
+    OAUTH_CLIENT_ID: ${ssm:/graderef/prod/OAUTH_CLIENT_ID}
+    OAUTH_KEY: ${ssm:/graderef/prod/OAUTH_KEY}
+    JWT_SECRET: ${ssm:/graderef/prod/JWT_SECRET}
+    DB_HOST: ${ssm:/graderef/prod/DB_HOST}
+    DB_PORT: ${ssm:/graderef/prod/DB_PORT}
+    DB_USERNAME: ${ssm:/graderef/prod/DB_USERNAME}
+    DB_PASSWORD: ${ssm:/graderef/prod/DB_PASSWORD}
+    DB_DATABASE: ${ssm:/graderef/prod/DB_DATABASE}
+    DOMAIN: ${ssm:/graderef/prod/DOMAIN}
+    SMS_API_KEY: ${ssm:/graderef/prod/SMS_API_KEY}
+    SMS_PASSWORD: ${ssm:/graderef/prod/SMS_PASSWORD}
+    SMS_NUMBER: ${ssm:/graderef/prod/SMS_NUMBER}
+    SMS_SENDER: ${ssm:/graderef/prod/SMS_SENDER}
 
 functions:
   main:
