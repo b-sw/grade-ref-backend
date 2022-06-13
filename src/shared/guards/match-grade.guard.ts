@@ -1,5 +1,4 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
-import { UpdateGradeSmsDto } from '../../matches/dto/update-grade-sms.dto';
 
 @Injectable()
 export class MatchGradeGuard implements CanActivate {
@@ -7,7 +6,7 @@ export class MatchGradeGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
-    const dto: UpdateGradeSmsDto = request.body;
+    const dto = request.body;
     console.log('request body in guard is', dto);
 
     // if (!dto.message || !dto.message.msisdn || !dto.message.id) {
