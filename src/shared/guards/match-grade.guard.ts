@@ -8,7 +8,6 @@ export class MatchGradeGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
     const dto: UpdateGradeSmsDto = request.body;
-    console.log('request in guard is', request);
     console.log('request body in guard is', dto);
 
     // if (!dto.message || !dto.message.msisdn || !dto.message.id) {

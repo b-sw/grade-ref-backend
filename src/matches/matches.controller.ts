@@ -76,7 +76,7 @@ export class MatchesController {
   @UseGuards(MatchGradeGuard)
   @ApiOperation({ summary: 'Update referee match grade by sms' })
   async updateMatchGradeSms(@Req() req): Promise<void> {
-    console.log('request has passed guard', req);
+    console.log('request has passed guard');
     // const observer: User = await this.usersService.getByPhoneNumber(dto.message.msisdn);
     // return this.matchesService.updateGradeSms(dto.message, observer);
   }
