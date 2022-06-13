@@ -9,7 +9,7 @@ export const MockCreateMatchDto = (teamA: Team,
                                    observer: User,
                                    stadium?: string): CreateMatchDto => {
   return {
-    matchDate: new Date(dayjs().add(1, 'day').add(5, 'minute').toDate()),
+    matchDate: new Date(dayjs().add(2, 'day').toDate()),
     stadium: stadium ?? 'Mock stadium',
     homeTeamId: teamA.id,
     awayTeamId: teamB.id,
