@@ -12,7 +12,7 @@ import { Team } from '../../src/entities/team.entity';
 import { MockLeague } from '../shared/mockLeague';
 import { CreateTeamDto } from '../../src/teams/dto/create-team.dto';
 import { MockCreateTeamDto } from '../shared/mockTeam';
-import * as request from 'supertest';
+import request from 'supertest';
 import { UpdateTeamDto } from '../../src/teams/dto/update-team.dto';
 
 describe('e2e teams', () => {

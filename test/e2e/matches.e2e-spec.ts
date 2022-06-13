@@ -12,7 +12,7 @@ import { Test } from '@nestjs/testing';
 import { AppModule } from '../../src/app.module';
 import * as jwt from 'jsonwebtoken';
 import { CreateMatchDto } from '../../src/matches/dto/create-match.dto';
-import * as request from 'supertest';
+import request from 'supertest';
 import { MockCreateMatchDto } from '../shared/mockMatch';
 import { MockTeam } from '../shared/mockTeam';
 import { UpdateMatchDto } from 'src/matches/dto/update-match.dto';

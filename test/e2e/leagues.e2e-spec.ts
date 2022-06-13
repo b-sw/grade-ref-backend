@@ -7,7 +7,7 @@ import { User } from '../../src/entities/user.entity';
 import * as jwt from 'jsonwebtoken';
 import { MockUser } from '../shared/mockUser';
 import { v4 as randomUuid } from 'uuid';
-import * as request from 'supertest';
+import request from 'supertest';
 import { CreateLeagueDto } from '../../src/leagues/dto/create-league.dto';
 import { MockCreateLeagueDto } from '../shared/mockLeague';
 import { League } from '../../src/entities/league.entity';
