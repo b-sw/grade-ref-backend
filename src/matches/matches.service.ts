@@ -1,6 +1,6 @@
 import { HttpStatus, Injectable, ServiceUnavailableException } from '@nestjs/common';
 import axios from "axios";
-import * as dayjs from 'dayjs'
+import dayjs from 'dayjs';
 import { CreateMatchDto } from './dto/create-match.dto';
 import { UpdateMatchDto } from './dto/update-match.dto';
 import { InjectRepository } from '@nestjs/typeorm';

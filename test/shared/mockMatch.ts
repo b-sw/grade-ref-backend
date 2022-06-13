@@ -1,7 +1,7 @@
 import { CreateMatchDto } from '../../src/matches/dto/create-match.dto';
 import { Team } from '../../src/entities/team.entity';
 import { User } from '../../src/entities/user.entity';
-import * as dayjs from 'dayjs';
+import dayjs from 'dayjs';
 
 export const MockCreateMatchDto = (teamA: Team,
                                    teamB: Team,
