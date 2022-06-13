@@ -1,0 +1,37 @@
+service: graderef-backend
+
+useDotenv: true
+
+plugins:
+  - serverless-offline
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  region: eu-west-1
+  deploymentMethod: direct
+  environment:
+    OAUTH_CLIENT_ID: ${env:OAUTH_CLIENT_ID}
+    OAUTH_KEY: ${env:OAUTH_KEY}
+    JWT_SECRET: ${env:JWT_SECRET}
+    DB_HOST: ${env:DB_HOST}
+    DB_PORT: ${env:DB_PORT}
+    DB_USERNAME: ${env:DB_USERNAME}
+    DB_PASSWORD: ${env:DB_PASSWORD}
+    DB_DATABASE: ${env:DB_DATABASE}
+    DOMAIN: ${env:DOMAIN}
+    SMS_API_KEY: ${env:SMS_API_KEY}
+    SMS_PASSWORD: ${env:SMS_PASSWORD}
+    SMS_NUMBER: ${env:SMS_NUMBER}
+    SMS_SENDER: ${env:SMS_SENDER}
+
+functions:
+  main:
+    handler: dist/src/serverless.handler
+    events:
+      - http:
+          method: ANY
+          path: /
+      - http:
+          method: ANY
+          path: '{proxy+}'
