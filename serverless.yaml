@@ -2,14 +2,10 @@ service: graderef-backend
 
 useDotenv: true
 
-plugins:
-  - serverless-offline
-
 provider:
   name: aws
-  runtime: nodejs12.x
+  runtime: nodejs16.x
   region: eu-west-1
-  deploymentMethod: direct
   environment:
     OAUTH_CLIENT_ID: ${env:OAUTH_CLIENT_ID}
     OAUTH_KEY: ${env:OAUTH_KEY}

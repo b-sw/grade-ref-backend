@@ -67,8 +67,8 @@ export class MatchesService {
     return this.matchRepository.findOne({ where: { id: matchId } });
   }
 
-  async getByObserverSmsId(id: string): Promise<Match | undefined> {
-    return this.matchRepository.findOne({ where: { observerSmsId: id } });
+  async getByUserReadableKey(key: string): Promise<Match | undefined> {
+    return this.matchRepository.findOne({ where: { userReadableKey: key } });
   }
 
   async updateMatch(params: LeagueMatchParams, dto: UpdateMatchDto, leagueIdx: number, homeTeamIdx: number, observerPhoneNumber: string): Promise<Match> {
@@ -126,8 +126,17 @@ export class MatchesService {
   }
 
   async updateGradeSms(dto: GradeMessage, observer: User): Promise<void> {
-    console.log('dto', dto);
-    const match: Match = await this.getByObserverSmsId(dto.id);
+    const matchKey: string = dto.msg.split('#')[0];
+    if (!matchKey) {
+      await this.sendOneWaySms(observer.phoneNumber, `Invalid match key.`);
+      return;
+    }
+
+    const match: Match = await this.getByUserReadableKey(matchKey);
+    if (!match) {
+      await this.sendOneWaySms(observer.phoneNumber, `Invalid match key.`);
+      return;
+    }
 
     if (match.refereeGrade) {
       await this.sendOneWaySms(observer.phoneNumber, `Grade has already been entered.`);
@@ -140,7 +149,11 @@ export class MatchesService {
     }
 
     const grade: number = +dto.msg.split('#')[1].split('/')[0];
-    console.log('grade is', grade);
+    if (isNaN(grade)) {
+      await this.sendOneWaySms(observer.phoneNumber, `Invalid grade.`);
+      return;
+    }
+
     match.refereeGrade = grade;
     match.refereeGradeDate = new Date();
     await this.matchRepository.save(match);
