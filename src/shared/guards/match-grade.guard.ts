@@ -11,7 +11,7 @@ export class MatchGradeGuard implements CanActivate {
     const dto = request.body;
 
     console.log('inside guard dto is', dto);
-    if (!dto.message || !dto.message.msisdn || !dto.message.msg || !dto.id) {
+    if (!dto.message || !dto.message.msisdn || !dto.message.msg || !dto.message.id) {
       console.log('invalid body');
       throw new HttpException('Invalid body.', HttpStatus.BAD_REQUEST);
     }
