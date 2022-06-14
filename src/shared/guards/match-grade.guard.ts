@@ -10,13 +10,16 @@ export class MatchGradeGuard implements CanActivate {
     const request = context.switchToHttp().getRequest();
     const dto = request.body;
 
+    console.log('inside guard dto is', dto);
     if (!dto.message || !dto.message.msisdn || !dto.message.msg || !dto.id) {
+      console.log('invalid body');
       throw new HttpException('Invalid body.', HttpStatus.BAD_REQUEST);
     }
 
     const observer: User | undefined = await this.usersService.getByPhoneNumber(dto.message.msisdn);
 
     if (!observer) {
+      console.log('forbidden');
       throw new HttpException('Forbidden.', HttpStatus.FORBIDDEN);
     }
     return true;

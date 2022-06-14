@@ -126,6 +126,7 @@ export class MatchesService {
   }
 
   async updateGradeSms(dto: GradeMessage, observer: User): Promise<void> {
+    console.log('updating grade sms', dto, observer);
     const matchKey: string = dto.msg.split('#')[0];
     if (!matchKey) {
       await this.sendOneWaySms(observer.phoneNumber, `Invalid match key.`);
