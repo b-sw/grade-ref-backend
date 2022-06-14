@@ -2,7 +2,7 @@ name: Deploy-serverless
 
 on:
   push:
-    branches: ['feature-serverless']
+    branches: ['master']
 
 jobs:
   test:
