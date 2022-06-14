@@ -22,19 +22,20 @@ jobs:
         node-version: [ 16.x ]
     steps:
       - uses: actions/checkout@v3
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v3
-        with:
-          node-version: ${{ matrix.node-version }}
-      - run: npm ci
+      - uses: actions/setup-node@v3
 
-      - name: serverless deploy
-        uses: serverless/github-action@v3.1
-        with:
-          args: deploy
+      - name: Install Serverless Framework
+        run: npm install -g serverless
+
+      - name: Serverless AWS authentication
+        run: serverless config credentials --provider aws --key ${{ secrets.AWS_ACCESS_KEY_ID }} --secret ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+      - name: Install NPM dependencies
+        run: npm install
+
+      - name: Deploy Lambda functions
+        run: serverless deploy -s dev
         env:
-         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
          OAUTH_CLIENT_ID: ${{ secrets.OAUTH_CLIENT_ID }}
          OAUTH_KEY: ${{ secrets.OAUTH_KEY }}
          JWT_SECRET: ${{ secrets.JWT_SECRET }}
