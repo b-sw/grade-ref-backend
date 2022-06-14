@@ -31,8 +31,7 @@ jobs:
       - name: serverless deploy
         uses: serverless/github-action@v3.1
         with:
-          args: -c "serverless plugin install ... && serverless deploy"
-          entrypoint: /bin/sh
+          args: -c "npm install -g serverless && serverless deploy"
         env:
          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
