@@ -16,21 +16,16 @@ export class MatchGradeGuard implements CanActivate {
     try {
       message = JSON.parse(body.message);
     } catch (_e) {
-      console.log('invalid body');
       throw new HttpException('Invalid body.', HttpStatus.BAD_REQUEST);
     }
 
-    console.log('message', message);
-
     if (!message || !message.msisdn || !message.id || !message.msg) {
-      console.log('invalid body 2');
       throw new HttpException('Invalid body.', HttpStatus.BAD_REQUEST);
     }
 
     const observer: User | undefined = await this.usersService.getByPhoneNumber(message.msisdn);
 
     if (!observer) {
-      console.log('invalid observer');
       throw new HttpException('Forbidden.', HttpStatus.FORBIDDEN);
     }
 

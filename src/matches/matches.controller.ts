@@ -79,7 +79,6 @@ export class MatchesController {
   async updateMatchGradeSms(@Request() req): Promise<void> {
     const message: GradeMessage = JSON.parse(req.body.message);
     const observer: User = await this.usersService.getByPhoneNumber(message.msisdn);
-    console.log('in controller', message, observer);
     return this.matchesService.updateGradeSms(message, observer);
   }
 

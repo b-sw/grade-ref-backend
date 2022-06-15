@@ -127,7 +127,6 @@ export class MatchesService {
 
   async updateGradeSms(gradeMessage: GradeMessage, observer: User): Promise<void> {
     if (!(await this.requireSmsValid(gradeMessage.msg, observer.phoneNumber))) {
-      console.log('invalid sms');
       return;
     }
 
@@ -135,12 +134,10 @@ export class MatchesService {
     const match: Match | undefined = await this.getByUserReadableKey(matchKey);
 
     if (!(await this.requireMatchValid(match, observer.phoneNumber))) {
-      console.log('invalid match');
       return;
     }
 
     if (!(await this.requireGradeValid(gradeMessage.msg, observer.phoneNumber))) {
-      console.log('invalid grade');
       return;
     }
 
@@ -148,7 +145,6 @@ export class MatchesService {
     match.refereeGradeDate = new Date();
     await this.matchRepository.save(match);
     await this.sendOneWaySms(observer.phoneNumber, `Grade for match ${match.userReadableKey} has been entered.`);
-    console.log('sent sms');
   }
 
   async requireSmsValid(smsText: string, phoneNumber: string): Promise<boolean> {
@@ -191,6 +187,7 @@ export class MatchesService {
       await this.sendOneWaySms(phoneNumber, `Invalid grade.`);
       return false;
     }
+    return true;
   }
 
   async requireMatchValid(match: Match | undefined, phoneNumber: string): Promise<boolean> {
@@ -208,7 +205,6 @@ export class MatchesService {
       await this.sendOneWaySms(phoneNumber, `Cannot enter a grade before match end.`);
       return false;
     }
-
     return true;
   }
 
