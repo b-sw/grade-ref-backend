@@ -158,19 +158,19 @@ export class MatchesService {
       smsElems = smsText.split('#');
     } catch (_e) {
       await this.sendOneWaySms(phoneNumber, 'Invalid sms format.');
-      return;
+      return false;
     }
 
     if (smsElems.length !== 2) {
       await this.sendOneWaySms(phoneNumber, 'Invalid sms format.');
-      return;
+      return false;
     }
 
     const matchKey: string = smsElems[0];
 
     if (!matchKey) {
       await this.sendOneWaySms(phoneNumber, `Invalid match key.`);
-      return;
+      return false;
     }
 
     let gradeElems: string[];
@@ -178,36 +178,38 @@ export class MatchesService {
       gradeElems = smsElems[1].split('/');
     } catch (_e) {
       await this.sendOneWaySms(phoneNumber, 'Invalid sms grade format.');
-      return;
+      return false;
     }
 
     if (gradeElems.length !== 2) {
       await this.sendOneWaySms(phoneNumber, 'Invalid sms grade format.');
-      return;
+      return false;
     }
 
     const grade: number = +gradeElems[0];
     if (isNaN(grade)) {
       await this.sendOneWaySms(phoneNumber, `Invalid grade.`);
-      return;
+      return false;
     }
   }
 
   async requireMatchValid(match: Match | undefined, phoneNumber: string): Promise<boolean> {
     if (!match) {
       await this.sendOneWaySms(phoneNumber, `Invalid match key.`);
-      return;
+      return false;
     }
 
     if (match.refereeGrade) {
       await this.sendOneWaySms(phoneNumber, `Grade has already been entered.`);
-      return;
+      return false;
     }
 
     if(dayjs().isBefore(dayjs(match.matchDate).add(2, 'hour'))) {
       await this.sendOneWaySms(phoneNumber, `Cannot enter a grade before match end.`);
-      return;
+      return false;
     }
+
+    return true;
   }
 
   async requireGradeValid(smsText: string, phoneNumber: string): Promise<boolean> {
@@ -216,13 +218,14 @@ export class MatchesService {
       grade = +smsText.split('#')[1].split('/')[0];
     } catch (_e) {
       await this.sendOneWaySms(phoneNumber, `Invalid sms grade format.`);
-      return;
+      return false;
     }
 
     if (isNaN(grade)) {
       await this.sendOneWaySms(phoneNumber, `Invalid grade.`);
-      return;
+      return false;
     }
+    return true;
   }
 
   async planSms(dtoDate: Date, messageKey: string, phoneNumber: string): Promise<string> {
