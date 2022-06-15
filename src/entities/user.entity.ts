@@ -13,7 +13,8 @@ export class User {
   @Column()
   role: Role;
 
-  @Column({ unique: true })
+  // todo: restore '{ unique: true }' for beta version
+  @Column()
   phoneNumber: string;
 
   @Column()

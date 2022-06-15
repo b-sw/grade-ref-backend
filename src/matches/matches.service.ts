@@ -1,5 +1,5 @@
 import { HttpStatus, Injectable, ServiceUnavailableException } from '@nestjs/common';
-import axios from "axios";
+import axios from 'axios';
 import dayjs from 'dayjs';
 import { CreateMatchDto } from './dto/create-match.dto';
 import { UpdateMatchDto } from './dto/update-match.dto';
@@ -125,54 +125,99 @@ export class MatchesService {
     return match;
   }
 
-  async updateGradeSms(dto: GradeMessage, observer: User): Promise<void> {
-    console.log('updating grade sms', dto, observer);
-    const matchKey: string = dto.msg.split('#')[0];
-    if (!matchKey) {
-      await this.sendOneWaySms(observer.phoneNumber, `Invalid match key.`);
+  async updateGradeSms(gradeMessage: GradeMessage, observer: User): Promise<void> {
+    if (!(await this.requireSmsValid(gradeMessage.msg, observer.phoneNumber))) {
       return;
     }
 
-    const match: Match = await this.getByUserReadableKey(matchKey);
-    if (!match) {
-      await this.sendOneWaySms(observer.phoneNumber, `Invalid match key.`);
+    const matchKey: string = gradeMessage.msg.split('#')[0];
+    const match: Match | undefined = await this.getByUserReadableKey(matchKey);
+
+    if (!(await this.requireMatchValid(match, observer.phoneNumber))) {
       return;
     }
 
-    if (match.refereeGrade) {
-      await this.sendOneWaySms(observer.phoneNumber, `Grade has already been entered.`);
+    if (!(await this.requireGradeValid(gradeMessage.msg, observer.phoneNumber))) {
       return;
     }
 
-    if(dayjs().isBefore(dayjs(match.matchDate).add(2, 'hour'))) {
-      await this.sendOneWaySms(observer.phoneNumber, `Cannot enter a grade before match end.`);
-      return;
-    }
-
-    const grade: number = +dto.msg.split('#')[1].split('/')[0];
-    if (isNaN(grade)) {
-      await this.sendOneWaySms(observer.phoneNumber, `Invalid grade.`);
-      return;
-    }
-
-    match.refereeGrade = grade;
+    match.refereeGrade = +gradeMessage.msg.split('#')[1].split('/')[0];
     match.refereeGradeDate = new Date();
     await this.matchRepository.save(match);
     await this.sendOneWaySms(observer.phoneNumber, `Grade for match ${match.userReadableKey} has been entered.`);
   }
 
-  async sendOneWaySms(recipient: string, message: string): Promise<void> {
-    const response: AxiosResponse = await axios.post(`${SMS_API}/sms`, {}, {
-      params: {
-        key: process.env.SMS_API_KEY,
-        password: process.env.SMS_PASSWORD,
-        from: process.env.SMS_SENDER,
-        to: recipient,
-        msg: message,
-      }
-    });
-    if (response.status != HttpStatus.OK) {
-      throw new ServiceUnavailableException('SMS API error: ', response.data);
+  async requireSmsValid(smsText: string, phoneNumber: string): Promise<boolean> {
+    let smsElems: string[];
+
+    try {
+      smsElems = smsText.split('#');
+    } catch (_e) {
+      await this.sendOneWaySms(phoneNumber, 'Invalid sms format.');
+      return;
+    }
+
+    if (smsElems.length !== 2) {
+      await this.sendOneWaySms(phoneNumber, 'Invalid sms format.');
+      return;
+    }
+
+    const matchKey: string = smsElems[0];
+
+    if (!matchKey) {
+      await this.sendOneWaySms(phoneNumber, `Invalid match key.`);
+      return;
+    }
+
+    let gradeElems: string[];
+    try {
+      gradeElems = smsElems[1].split('/');
+    } catch (_e) {
+      await this.sendOneWaySms(phoneNumber, 'Invalid sms grade format.');
+      return;
+    }
+
+    if (gradeElems.length !== 2) {
+      await this.sendOneWaySms(phoneNumber, 'Invalid sms grade format.');
+      return;
+    }
+
+    const grade: number = +gradeElems[0];
+    if (isNaN(grade)) {
+      await this.sendOneWaySms(phoneNumber, `Invalid grade.`);
+      return;
+    }
+  }
+
+  async requireMatchValid(match: Match | undefined, phoneNumber: string): Promise<boolean> {
+    if (!match) {
+      await this.sendOneWaySms(phoneNumber, `Invalid match key.`);
+      return;
+    }
+
+    if (match.refereeGrade) {
+      await this.sendOneWaySms(phoneNumber, `Grade has already been entered.`);
+      return;
+    }
+
+    if(dayjs().isBefore(dayjs(match.matchDate).add(2, 'hour'))) {
+      await this.sendOneWaySms(phoneNumber, `Cannot enter a grade before match end.`);
+      return;
+    }
+  }
+
+  async requireGradeValid(smsText: string, phoneNumber: string): Promise<boolean> {
+    let grade: number;
+    try {
+      grade = +smsText.split('#')[1].split('/')[0];
+    } catch (_e) {
+      await this.sendOneWaySms(phoneNumber, `Invalid sms grade format.`);
+      return;
+    }
+
+    if (isNaN(grade)) {
+      await this.sendOneWaySms(phoneNumber, `Invalid grade.`);
+      return;
     }
   }
 
@@ -206,6 +251,21 @@ export class MatchesService {
         key: process.env.SMS_API_KEY,
         password: process.env.SMS_PASSWORD,
         messageId: smsIdInt,
+      }
+    });
+    if (response.status != HttpStatus.OK) {
+      throw new ServiceUnavailableException('SMS API error: ', response.data);
+    }
+  }
+
+  async sendOneWaySms(recipient: string, message: string): Promise<void> {
+    const response: AxiosResponse = await axios.post(`${SMS_API}/sms`, {}, {
+      params: {
+        key: process.env.SMS_API_KEY,
+        password: process.env.SMS_PASSWORD,
+        from: process.env.SMS_SENDER,
+        to: recipient,
+        msg: message,
       }
     });
     if (response.status != HttpStatus.OK) {

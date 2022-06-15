@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Post, Put, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Post, Put, UseGuards, Request } from '@nestjs/common';
 import { MatchesService } from './matches.service';
 import { CreateMatchDto } from './dto/create-match.dto';
 import { UpdateMatchDto } from './dto/update-match.dto';
@@ -22,7 +22,7 @@ import { LeagueUserParams } from '../leagues/params/LeagueUserParams';
 import { UsersService } from '../users/users.service';
 import { User } from '../entities/user.entity';
 import { MatchGradeGuard } from '../shared/guards/match-grade.guard';
-import { UpdateGradeSmsDto } from './dto/update-grade-sms.dto';
+import { GradeMessage } from './dto/update-grade-sms.dto';
 
 @ApiTags('matches')
 @Controller('')
@@ -76,10 +76,10 @@ export class MatchesController {
   @HttpCode(HttpStatus.OK)
   @UseGuards(MatchGradeGuard)
   @ApiOperation({ summary: 'Update referee match grade by sms' })
-  async updateMatchGradeSms(@Body() dto: UpdateGradeSmsDto): Promise<void> {
-    console.log('passed guard');
-    const observer: User = await this.usersService.getByPhoneNumber(dto.message.msisdn);
-    return this.matchesService.updateGradeSms(dto.message, observer);
+  async updateMatchGradeSms(@Request() req): Promise<void> {
+    const message: GradeMessage = JSON.parse(req.body.message);
+    const observer: User = await this.usersService.getByPhoneNumber(message.msisdn);
+    return this.matchesService.updateGradeSms(message, observer);
   }
 
   @Delete('leagues/:leagueId/matches/:matchId')
