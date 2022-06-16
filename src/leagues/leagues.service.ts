@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { CreateLeagueDto } from './dto/create-league.dto';
 import { UpdateLeagueDto } from './dto/update-league.dto';
 import { LeagueParams } from './params/LeagueParams';
@@ -134,7 +134,7 @@ export class LeaguesService {
     }
 
     if (!id || id !== existingLeague.id) {
-      throw new BadRequestException('League name or short name not unique.');
+      throw new HttpException('League name or short name not unique', HttpStatus.BAD_REQUEST);
     }
   }
 }

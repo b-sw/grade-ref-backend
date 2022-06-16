@@ -1,10 +1,15 @@
-import { HttpStatus, Injectable, ServiceUnavailableException } from '@nestjs/common';
+import {
+  HttpException,
+  HttpStatus,
+  Injectable,
+  ServiceUnavailableException
+} from '@nestjs/common';
 import axios from 'axios';
-import dayjs from 'dayjs';
+import dayjs, { Dayjs } from 'dayjs';
 import { CreateMatchDto } from './dto/create-match.dto';
 import { UpdateMatchDto } from './dto/update-match.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Between, In, Repository } from 'typeorm';
 import { Match } from '../entities/match.entity';
 import { UserParams } from '../users/params/UserParams';
 import { uuid } from '../shared/types/uuid';
@@ -13,6 +18,7 @@ import { LeagueUserParams } from '../leagues/params/LeagueUserParams';
 import { AxiosResponse } from '@nestjs/terminus/dist/health-indicator/http/axios.interfaces';
 import { User } from '../entities/user.entity';
 import { GradeMessage } from './dto/update-grade-sms.dto';
+import { getNotNull } from '../shared/getters';
 
 const SMS_API: string = 'https://api2.smsplanet.pl';
 export const DTO_DATETIME_FORMAT: string = 'YYYY-MM-DDThh:mm';
@@ -23,8 +29,9 @@ export class MatchesService {
   constructor(@InjectRepository(Match) private matchRepository: Repository<Match>) {}
 
   async createMatch(leagueId: uuid, dto: CreateMatchDto, leagueIdx: number, homeTeamIdx: number, observerPhoneNumber: string): Promise<Match> {
+    await this.validateMatch(dto);
     const matchKey: string = this.getUserReadableKey(dto.matchDate, leagueIdx, homeTeamIdx);
-    const observerSmsId: string = await this.planSms(dto.matchDate, matchKey, observerPhoneNumber)
+    const observerSmsId: string = await this.scheduleSms(dto.matchDate, matchKey, observerPhoneNumber)
 
     const match: Match = this.matchRepository.create({
       matchDate: dto.matchDate,
@@ -72,10 +79,11 @@ export class MatchesService {
   }
 
   async updateMatch(params: LeagueMatchParams, dto: UpdateMatchDto, leagueIdx: number, homeTeamIdx: number, observerPhoneNumber: string): Promise<Match> {
-    const match: Match = await this.getById(params.matchId);
+    await this.validateMatch(dto, params.matchId);
+    const match: Match = getNotNull(await this.getById(params.matchId));
     await this.cancelSMS(match.observerSmsId);
     const matchKey: string = this.getUserReadableKey(dto.matchDate, leagueIdx, homeTeamIdx);
-    const observerSmsId: string = await this.planSms(dto.matchDate, matchKey, observerPhoneNumber)
+    const observerSmsId: string = await this.scheduleSms(dto.matchDate, matchKey, observerPhoneNumber)
 
     await this.matchRepository.update(params.matchId, {
       matchDate: dto.matchDate,
@@ -90,10 +98,11 @@ export class MatchesService {
     return this.getById(params.matchId);
   }
 
-  async removeMatch(params: LeagueMatchParams): Promise<Match> {
-    const match: Match = await this.getById(params.matchId);
+  async removeMatch(params: LeagueMatchParams, phoneNumber: string): Promise<Match> {
+    const match: Match = getNotNull(await this.getById(params.matchId));
     await this.cancelSMS(match.observerSmsId);
     await this.matchRepository.delete(params.matchId);
+    await this.sendOneWaySms(phoneNumber, `Cannot enter a grade before match end.`);
     return match;
   }
 
@@ -118,7 +127,7 @@ export class MatchesService {
   }
 
   async updateGrade(params: LeagueMatchParams, dto: UpdateMatchDto): Promise<Match> {
-    const match: Match = await this.getById(params.matchId);
+    const match: Match = getNotNull(await this.getById(params.matchId));
     match.refereeGrade = dto.refereeGrade;
     match.refereeGradeDate = new Date();
     await this.matchRepository.save(match);
@@ -133,11 +142,11 @@ export class MatchesService {
     const matchKey: string = gradeMessage.msg.split('#')[0];
     const match: Match | undefined = await this.getByUserReadableKey(matchKey);
 
-    if (!(await this.requireMatchValid(match, observer.phoneNumber))) {
+    if (!(await this.requireSmsMatchKeyValid(match, observer.phoneNumber))) {
       return;
     }
 
-    if (!(await this.requireGradeValid(gradeMessage.msg, observer.phoneNumber))) {
+    if (!(await this.requireSmsGradeValid(gradeMessage.msg, observer.phoneNumber))) {
       return;
     }
 
@@ -190,7 +199,7 @@ export class MatchesService {
     return true;
   }
 
-  async requireMatchValid(match: Match | undefined, phoneNumber: string): Promise<boolean> {
+  async requireSmsMatchKeyValid(match: Match | undefined, phoneNumber: string): Promise<boolean> {
     if (!match) {
       await this.sendOneWaySms(phoneNumber, `Invalid match key.`);
       return false;
@@ -208,7 +217,7 @@ export class MatchesService {
     return true;
   }
 
-  async requireGradeValid(smsText: string, phoneNumber: string): Promise<boolean> {
+  async requireSmsGradeValid(smsText: string, phoneNumber: string): Promise<boolean> {
     let grade: number;
     try {
       grade = +smsText.split('#')[1].split('/')[0];
@@ -224,7 +233,32 @@ export class MatchesService {
     return true;
   }
 
-  async planSms(dtoDate: Date, messageKey: string, phoneNumber: string): Promise<string> {
+  async validateMatch(dto: CreateMatchDto, existingId?: uuid) {
+    const matchDate: Dayjs = dayjs(dto.matchDate);
+
+    const existingMatch: Match | undefined = await this.matchRepository.findOne({
+      where: [
+        {
+          matchDate: Between(matchDate.startOf('day').toDate(), matchDate.endOf('day').toDate()),
+          homeTeamId: In([dto.homeTeamId, dto.awayTeamId]),
+        },
+        {
+          matchDate: Between(matchDate.startOf('day').toDate(), matchDate.endOf('day').toDate()),
+          awayTeamId: In([dto.homeTeamId, dto.awayTeamId]),
+        }
+      ]
+    });
+
+    if (dto.homeTeamId === dto.awayTeamId) {
+      throw new HttpException(`Home team same as away team`, HttpStatus.BAD_REQUEST);
+    }
+
+    if (existingMatch && existingMatch.id !== existingId) {
+      throw new HttpException(`One of the teams already has a match at that day`, HttpStatus.BAD_REQUEST);
+    }
+  }
+
+  async scheduleSms(dtoDate: Date, messageKey: string, phoneNumber: string): Promise<string> {
     const matchDate: string = dayjs(dtoDate, DTO_DATETIME_FORMAT).format(SMS_API_DATETIME_FORMAT);
     const sendDate: string = dayjs(dtoDate, DTO_DATETIME_FORMAT).subtract(1, 'day').format(SMS_API_DATETIME_FORMAT);
 

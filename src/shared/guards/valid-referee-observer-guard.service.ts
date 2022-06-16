@@ -19,9 +19,21 @@ export class ValidRefereeObserverGuard implements CanActivate {
     const dto: CreateMatchDto | UpdateMatchDto = request.body;
     const leagueReferees: User[] = await this.leaguesService.getLeagueReferees(params.leagueId);
     const leagueObservers: User[] = await this.leaguesService.getLeagueObservers(params.leagueId);
-    const referee: User = await this.usersService.getById(dto.refereeId);
-    const observer: User = await this.usersService.getById(dto.observerId);
-    const league: League = await this.leaguesService.getLeagueById(params.leagueId);
+    const referee: User | undefined = await this.usersService.getById(dto.refereeId);
+    const observer: User | undefined = await this.usersService.getById(dto.observerId);
+    const league: League | undefined = await this.leaguesService.getLeagueById(params.leagueId);
+
+    if (!referee) {
+      throw new HttpException('Invalid referee id ' + dto.refereeId, HttpStatus.BAD_REQUEST);
+    }
+
+    if (!observer) {
+      throw new HttpException('Invalid observer id ' + dto.observerId, HttpStatus.BAD_REQUEST);
+    }
+
+    if (!league) {
+      throw new HttpException('Invalid league id ' + params.leagueId, HttpStatus.BAD_REQUEST);
+    }
 
     if (!leagueReferees.some((ref) => ref.id === referee.id)) {
       throw new HttpException('Referee ' + referee.firstName + ' ' + referee.lastName +

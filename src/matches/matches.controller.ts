@@ -1,4 +1,16 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Post, Put, UseGuards, Request } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Post,
+  Put,
+  UseGuards,
+  Request,
+} from '@nestjs/common';
 import { MatchesService } from './matches.service';
 import { CreateMatchDto } from './dto/create-match.dto';
 import { UpdateMatchDto } from './dto/update-match.dto';
@@ -23,6 +35,7 @@ import { UsersService } from '../users/users.service';
 import { User } from '../entities/user.entity';
 import { MatchGradeGuard } from '../shared/guards/match-grade.guard';
 import { GradeMessage } from './dto/update-grade-sms.dto';
+import { getNotNull } from '../shared/getters';
 
 @ApiTags('matches')
 @Controller('')
@@ -52,7 +65,7 @@ export class MatchesController {
   @ApiOperation({ summary: 'Create match' })
   async createMatch(@Param() params: LeagueParams, @Body() dto: CreateMatchDto): Promise<Match> {
     const { leagueIdx, homeTeamIdx } = await this.getUserReadableKeyParams(dto.homeTeamId);
-    const observer: User = await this.usersService.getById(dto.observerId);
+    const observer: User = getNotNull(await this.usersService.getById(dto.observerId));
     return this.matchesService.createMatch(params.leagueId, dto, leagueIdx, homeTeamIdx, observer.phoneNumber);
   }
 
@@ -61,7 +74,7 @@ export class MatchesController {
   @ApiOperation({ summary: 'Update match' })
   async updateMatch(@Param() params: LeagueMatchParams, @Body() dto: UpdateMatchDto): Promise<Match> {
     const { leagueIdx, homeTeamIdx } = await this.getUserReadableKeyParams(dto.homeTeamId);
-    const observer: User = await this.usersService.getById(dto.observerId);
+    const observer: User = getNotNull(await this.usersService.getById(dto.observerId));
     return this.matchesService.updateMatch(params, dto, leagueIdx, homeTeamIdx, observer.phoneNumber);
   }
 
@@ -78,7 +91,7 @@ export class MatchesController {
   @ApiOperation({ summary: 'Update referee match grade by sms' })
   async updateMatchGradeSms(@Request() req): Promise<void> {
     const message: GradeMessage = JSON.parse(req.body.message);
-    const observer: User = await this.usersService.getByPhoneNumber(message.msisdn);
+    const observer: User = getNotNull(await this.usersService.getByPhoneNumber(message.msisdn));
     return this.matchesService.updateGradeSms(message, observer);
   }
 
@@ -86,7 +99,9 @@ export class MatchesController {
   @UseGuards(JwtAuthGuard, LeagueAdminGuard)
   @ApiOperation({ summary: 'Delete match' })
   async removeMatch(@Param() params: LeagueMatchParams): Promise<Match> {
-    return this.matchesService.removeMatch(params);
+    const match: Match = getNotNull(await this.matchesService.getById(params.matchId));
+    const observer: User = getNotNull(await this.usersService.getById(match.observerId));
+    return this.matchesService.removeMatch(params, observer.phoneNumber);
   }
 
   @Get('users/:userId/matches')

@@ -1,8 +1,16 @@
-import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
+import {
+  CanActivate,
+  ExecutionContext,
+  HttpException,
+  HttpStatus,
+  Injectable
+} from '@nestjs/common';
 import { LeagueAdminGuard } from './league-admin.guard';
 import { UsersService } from '../../users/users.service';
 import { LeaguesService } from '../../leagues/leagues.service';
 import { LeagueParams } from '../../leagues/params/LeagueParams';
+import { User } from '../../entities/user.entity';
+import { League } from '../../entities/league.entity';
 
 @Injectable()
 export class LeagueUserGuard extends LeagueAdminGuard implements CanActivate {
@@ -14,8 +22,12 @@ export class LeagueUserGuard extends LeagueAdminGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
     const params: LeagueParams = request.params;
-    const user = await this.usersService.getById(request.user.id);
-    const league = await this.leaguesService.getLeagueById(params.leagueId);
+    const user: User | undefined = await this.usersService.getById(request.user.id);
+    const league: League | undefined = await this.leaguesService.getLeagueById(params.leagueId);
+
+    if (!league) {
+      throw new HttpException('Invalid league id ' + params.leagueId, HttpStatus.BAD_REQUEST);
+    }
 
     if (league.observers.some((observer) => observer.id === user.id)) {
       return true;

@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { User } from '../entities/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -71,7 +71,7 @@ export class UsersService {
     }
 
     if (!id || id !== existingLeague.id) {
-      throw new BadRequestException('Email not unique');
+      throw new HttpException(`Email '` + dto.email + `' is not unique`, HttpStatus.BAD_REQUEST);
     }
   }
 }

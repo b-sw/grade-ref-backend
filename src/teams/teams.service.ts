@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { CreateTeamDto } from './dto/create-team.dto';
 import { UpdateTeamDto } from './dto/update-team.dto';
 import { Team } from '../entities/team.entity';
@@ -56,7 +56,7 @@ export class TeamsService {
     }
 
     if (!id || id !== existingTeam.id) {
-      throw new BadRequestException('Team name not unique');
+      throw new HttpException(`Team name '` + dto.name + `' is not unique.`, HttpStatus.BAD_REQUEST);
     }
   }
 }
