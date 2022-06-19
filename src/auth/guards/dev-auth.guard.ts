@@ -13,6 +13,8 @@ export class DevAuthGuard implements CanActivate {
     const request = context.switchToHttp().getRequest();
     const body: AuthBodyDev = request.body;
 
+    console.log('Node env', process.env.NODE_ENV);
+
     if (process.env.NODE_ENV && process.env.NODE_ENV !== 'development') {
       throw new HttpException('Not dev env.', HttpStatus.BAD_REQUEST);
     }
