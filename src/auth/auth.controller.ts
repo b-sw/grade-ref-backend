@@ -1,32 +1,23 @@
-import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Post, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { ApiProperty, ApiTags } from '@nestjs/swagger';
-import { GoogleAuthGuard } from './guards/google-auth.guard';
-
-export class AuthBody {
-  @ApiProperty({ type: String })
-  googleToken: string;
-}
+import { ApiTags } from '@nestjs/swagger';
+import { AuthBody, AuthBodyDev } from './dto/auth-body.dto';
+import { User } from '../entities/user.entity';
+import { DevAuthGuard } from './guards/dev-auth.guard';
 
 @ApiTags('auth')
-@Controller('google')
+@Controller('')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  @Get()
-  @UseGuards(GoogleAuthGuard)
-  async googleAuth(@Req() req) {
-    // Guard redirects
-  }
-
-  @Get('redirect')
-  @UseGuards(GoogleAuthGuard)
-  async googleAuthRedirect(@Req() req) {
-    return this.authService.login(req.user);
-  }
-
-  @Post('auth')
-  async authenticateUser(@Body() authBody: AuthBody) {
+  @Post('google/auth')
+  async authenticateUser(@Body() authBody: AuthBody): Promise<Partial<User> & { accessToken: string }> {
     return this.authService.googleLogin(authBody.googleToken);
+  }
+
+  @Post('dev/auth')
+  @UseGuards(DevAuthGuard)
+  async authenticateUserDev(@Body() authBody: AuthBodyDev): Promise<{ accessToken: string }> {
+    return this.authService.devLogin(authBody.email);
   }
 }
