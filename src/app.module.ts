@@ -16,7 +16,7 @@ import { HealthModule } from './health/health.module';
     TeamsModule,
     MatchesModule,
     LeaguesModule,
-    HealthModule
+    HealthModule,
   ],
   controllers: [],
   providers: [],

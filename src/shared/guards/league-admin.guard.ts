@@ -16,6 +16,9 @@ export class LeagueAdminGuard extends OwnerGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
+    if (request.body !== {}) {
+      console.log('request is', request.body);
+    }
     const params: LeagueParams | LeagueUserParams | LeagueTeamParams = request.params;
     const leagueAdmins: User[] = await this.leaguesService.getLeagueAdmins(params.leagueId);
 

@@ -13,13 +13,12 @@ export class User {
   @Column()
   role: Role;
 
-  // todo: restore '{ unique: true }' for beta version
-  @Column()
+  @Column({ unique: true })
   phoneNumber: string;
 
   @Column()
   firstName: string;
 
-  @Column()
+  @Column({ unique: true })
   lastName: string;
 }
