@@ -9,7 +9,7 @@ import {
   Post,
   Put,
   UseGuards,
-  Request,
+  Request, UseInterceptors, UploadedFile
 } from '@nestjs/common';
 import { MatchesService } from './matches.service';
 import { CreateMatchDto } from './dto/create-match.dto';
@@ -36,6 +36,7 @@ import { User } from '../entities/user.entity';
 import { MatchGradeGuard } from '../shared/guards/match-grade.guard';
 import { GradeMessage } from './dto/update-grade-sms.dto';
 import { getNotNull } from '../shared/getters';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @ApiTags('matches')
 @Controller('')
@@ -131,5 +132,28 @@ export class MatchesController {
     const homeTeamIdx: number = teams.findIndex((team) => team.id === homeTeam.id);
 
     return { leagueIdx, homeTeamIdx }
+  }
+
+  @Post('leagues/:leagueId/matches/upload')
+  @UseGuards(JwtAuthGuard, LeagueAdminGuard)
+  @UseInterceptors(FileInterceptor('matches'))
+  @ApiOperation({ summary: 'Upload file' })
+  async upload(@Param() params: LeagueParams, @UploadedFile() file) {
+    const teams: Team[] = await this.teamsService.getAllByLeagueId(params.leagueId);
+    const referees: User[] = await this.leaguesService.getLeagueReferees(params.leagueId);
+    const observers: User[] = await this.leaguesService.getLeagueObservers(params.leagueId);
+
+    const { buffer } = file;
+    await this.matchesService.validateMatches(buffer.toString(), params.leagueId, teams, referees, observers);
+    await this.matchesService.uploadToS3(file);
+    const dtos: CreateMatchDto[] = await this.matchesService.getFileMatchesDtos(buffer.toString(), params.leagueId, teams, referees, observers);
+
+    let matches: Match[] = [];
+    await Promise.all(dtos.map(async (dto: CreateMatchDto) => {
+      const match: Match = await this.createMatch(params, dto);
+      matches.push(match);
+    }));
+
+    return matches;
   }
 }

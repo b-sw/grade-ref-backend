@@ -1,7 +1,7 @@
 import {
   HttpException,
   HttpStatus,
-  Injectable,
+  Injectable, Logger,
   ServiceUnavailableException
 } from '@nestjs/common';
 import axios from 'axios';
@@ -19,10 +19,15 @@ import { AxiosResponse } from '@nestjs/terminus/dist/health-indicator/http/axios
 import { User } from '../entities/user.entity';
 import { GradeMessage } from './dto/update-grade-sms.dto';
 import { getNotNull } from '../shared/getters';
+import { Team } from '../entities/team.entity';
+import { S3 } from 'aws-sdk';
 
 const SMS_API: string = 'https://api2.smsplanet.pl';
 export const DTO_DATETIME_FORMAT: string = 'YYYY-MM-DDThh:mm';
 const SMS_API_DATETIME_FORMAT: string = 'DD-MM-YYYY HH:mm:ss';
+
+const MATCH_PROPS_COUNT = 7;
+const DELIMETER = ';';
 
 @Injectable()
 export class MatchesService {
@@ -308,5 +313,108 @@ export class MatchesService {
     if (response.status != HttpStatus.OK) {
       throw new ServiceUnavailableException('SMS API error: ', response.data);
     }
+  }
+
+  async uploadToS3(file) {
+    const { originalname, buffer } = file;
+    Logger.log(buffer.toString(), 'S3 Uploaded file buffer');
+    const bucketS3: string = 'graderef-matches';
+
+    const s3: S3 = this.getS3();
+    const params = {
+      Bucket: bucketS3,
+      Key: String(originalname + ' ' + dayjs().toString()),
+      Body: buffer,
+    };
+    return new Promise((resolve, reject) => {
+      s3.upload(params, (err, data) => {
+        if (err) {
+          Logger.error(err, 'S3 Upload error');
+          reject(err.message);
+        }
+        resolve(data);
+      });
+    });
+  }
+
+  getS3() {
+    return new S3({
+      accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+    });
+  }
+
+  async validateMatches(csv: string, leagueId: uuid, teams: Team[], referees: User[], observers: User[]): Promise<void> {
+    const { teamsDict, refereesDict, observersDict } = this.getMaps(teams, referees, observers);
+
+    const matchesEntries: string[] = csv.split(/\r?\n|\r/);
+    matchesEntries.forEach((matchEntry, lineIndex) => {
+      const matchProps: string[] = matchEntry.split(DELIMETER);
+      if (matchProps.length != MATCH_PROPS_COUNT) {
+        throw new HttpException(`Invalid number of match props in line ${lineIndex}.`, HttpStatus.BAD_REQUEST);
+      }
+
+      const [homeTeamName, awayTeamName, date, time, stadium, refereeName, observerName] = matchProps;
+
+      if (!teamsDict[homeTeamName]) {
+        throw new HttpException(`Home team not found in line ${lineIndex}.`, HttpStatus.BAD_REQUEST);
+      }
+
+      if (!teamsDict[awayTeamName]) {
+        throw new HttpException(`Away team not found in line ${lineIndex}.`, HttpStatus.BAD_REQUEST);
+      }
+
+      if (!refereesDict[refereeName]) {
+        throw new HttpException(`Referee not found in line ${lineIndex}.`, HttpStatus.BAD_REQUEST);
+      }
+
+      if (!observersDict[observerName]) {
+        throw new HttpException(`Observer not found in line ${lineIndex}.`, HttpStatus.BAD_REQUEST);
+      }
+
+      let dateTime: Dayjs
+      try {
+        dateTime = dayjs(`${date}T${time}`, DTO_DATETIME_FORMAT);
+      } catch (_e) {
+        throw new HttpException(`Invalid date/time in line ${lineIndex}.`, HttpStatus.BAD_REQUEST);
+      }
+
+      if (dateTime.isBefore(dayjs())) {
+        throw new HttpException(`Match date/time is from the past in line ${lineIndex}.`, HttpStatus.BAD_REQUEST);
+      }
+    });
+  }
+
+  async getFileMatchesDtos(csv: string, leagueId: uuid, teams: Team[], referees: User[], observers: User[]): Promise<CreateMatchDto[]> {
+    const { teamsDict, refereesDict, observersDict } = this.getMaps(teams, referees, observers);
+
+    const matchesEntries: string[] = csv.split(/\r?\n|\r/);
+    let dtos: CreateMatchDto[] = [];
+
+    matchesEntries.forEach((matchEntry: string) => {
+      const matchProps: string[] = matchEntry.split(DELIMETER);
+      const [homeTeamName, awayTeamName, date, time, matchStadium, refereeName, observerName] = matchProps;
+      dtos.push({
+        matchDate: dayjs(`${date}T${time}`, DTO_DATETIME_FORMAT).toDate(),
+        stadium: matchStadium,
+        homeTeamId: teamsDict[homeTeamName].id,
+        awayTeamId: teamsDict[awayTeamName].id,
+        refereeId: refereesDict[refereeName].id,
+        observerId: observersDict[observerName].id,
+      } as CreateMatchDto);
+    });
+    return dtos;
+  }
+
+  getMaps(teams: Team[], referees: User[], observers: User[]) {
+    let teamsDict: { [key: string]: Team } = {};
+    let refereesDict: { [key: string]: User } = {};
+    let observersDict: { [key: string]: User } = {};
+
+    teams.forEach((team: Team) => teamsDict[team.name] = team);
+    referees.forEach((referee: User) => refereesDict[referee.lastName] = referee);
+    observers.forEach((observer: User) => observersDict[observer.lastName] = observer);
+
+    return { teamsDict, refereesDict, observersDict };
   }
 }
