@@ -139,9 +139,21 @@ export class MatchesController {
   @UseInterceptors(FileInterceptor('matches'))
   @ApiOperation({ summary: 'Upload file' })
   async upload(@Param() params: LeagueParams, @UploadedFile() file) {
-    const leagueTeams: Team[] = await this.teamsService.getAllByLeagueId(params.leagueId);
-    const leagueReferees: User[] = await this.leaguesService.getLeagueReferees(params.leagueId);
-    const leagueObservers: User[] = await this.leaguesService.getLeagueObservers(params.leagueId);
-    return await this.matchesService.uploadMatchesFile(params.leagueId, file, leagueTeams, leagueReferees, leagueObservers);
+    const teams: Team[] = await this.teamsService.getAllByLeagueId(params.leagueId);
+    const referees: User[] = await this.leaguesService.getLeagueReferees(params.leagueId);
+    const observers: User[] = await this.leaguesService.getLeagueObservers(params.leagueId);
+
+    const { buffer } = file;
+    await this.matchesService.validateMatches(buffer.toString(), params.leagueId, teams, referees, observers);
+    await this.matchesService.uploadToS3(file);
+    const dtos: CreateMatchDto[] = await this.matchesService.getFileMatchesDtos(buffer.toString(), params.leagueId, teams, referees, observers);
+
+    let matches: Match[] = [];
+    await Promise.all(dtos.map(async (dto: CreateMatchDto) => {
+      const match: Match = await this.createMatch(params, dto);
+      matches.push(match);
+    }));
+
+    return matches;
   }
 }
