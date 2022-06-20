@@ -47,6 +47,7 @@ describe('e2e users', () => {
     const dto: CreateUserDto = MockCreateUserDto({
       role: Role.Admin,
       firstName: 'Jane',
+      lastName: 'Doe1',
       email: 'jane@mail.com',
     });
 
@@ -63,6 +64,7 @@ describe('e2e users', () => {
     const dto: CreateUserDto = MockCreateUserDto({
       role: Role.Admin,
       firstName: 'Jackson',
+      lastName: 'Doe2',
       email: 'jackson@mail.com',
     });
 
@@ -78,6 +80,7 @@ describe('e2e users', () => {
     const dto: CreateUserDto = MockCreateUserDto({
       role: Role.Referee,
       firstName: 'Jackson',
+      lastName: 'Doe2',
       email: 'jackson@mail.com',
     });
 
@@ -94,6 +97,7 @@ describe('e2e users', () => {
     const dto: CreateUserDto = MockCreateUserDto({
       role: Role.Referee,
       firstName: 'James',
+      lastName: 'Doe3',
       email: 'james@mail.com',
     });
 
@@ -109,6 +113,7 @@ describe('e2e users', () => {
     const dto: CreateUserDto = MockCreateUserDto({
       role: Role.Observer,
       firstName: 'Jake',
+      lastName: 'Doe4',
       email: 'jake@mail.com',
     });
     const response = await createUser(dto, ownerAccessToken);
@@ -122,6 +127,7 @@ describe('e2e users', () => {
     const dto: CreateUserDto = MockCreateUserDto({
       role: Role.Observer,
       firstName: 'Jake',
+      lastName: 'Doe4',
       email: 'jake@mail.com',
     });
 
@@ -150,6 +156,7 @@ describe('e2e users', () => {
   it('should update user', async () => {
     const dto: UpdateUserDto = MockCreateUserDto({
       firstName: 'Jaime',
+      lastName: 'Doe5',
       email: 'jaime@mail.com',
     });
 
@@ -171,6 +178,7 @@ describe('e2e users', () => {
   it('should not update user', async () => {
     const dto: UpdateUserDto = MockCreateUserDto({
       firstName: 'Jaime',
+      lastName: 'Doe5',
       email: 'jaime@mail.com',
     });
 

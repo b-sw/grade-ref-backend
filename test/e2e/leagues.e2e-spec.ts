@@ -15,10 +15,10 @@ import { uuid } from '../../src/shared/types/uuid';
 import { UpdateLeagueDto } from '../../src/leagues/dto/update-league.dto';
 
 describe('e2e leagues', () => {
-  const mockOwner: User = MockUser({ id: randomUuid(), role: Role.Owner, email: 'mock@mail.com' });
-  const mockAdmin: User = MockUser( { id: randomUuid(), role: Role.Admin, email: 'admin@mail.com' });
-  const mockReferee: User = MockUser( { id: randomUuid(), role: Role.Referee, email: 'ref@mail.com' });
-  const mockObserver: User = MockUser( { id: randomUuid(), role: Role.Observer, email: 'obs@mail.com' });
+  const mockOwner: User = MockUser({ id: randomUuid(), role: Role.Owner, email: 'mock@mail.com', lastName: 'Doe' });
+  const mockAdmin: User = MockUser( { id: randomUuid(), role: Role.Admin, email: 'admin@mail.com', lastName: 'Doe1' });
+  const mockReferee: User = MockUser( { id: randomUuid(), role: Role.Referee, email: 'ref@mail.com', lastName: 'Doe2' });
+  const mockObserver: User = MockUser( { id: randomUuid(), role: Role.Observer, email: 'obs@mail.com', lastName: 'Doe3' });
   const users: User[] = [mockOwner, mockAdmin, mockReferee, mockObserver];
 
   let app: INestApplication;

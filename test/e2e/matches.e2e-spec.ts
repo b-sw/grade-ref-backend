@@ -18,11 +18,11 @@ import { MockTeam } from '../shared/mockTeam';
 import { UpdateMatchDto } from 'src/matches/dto/update-match.dto';
 
 describe('e2e matches', () => {
-  const mockOwner: User = MockUser({ id: randomUuid(), role: Role.Owner, email: 'mock@mail.com' });
-  const mockAdmin: User = MockUser( { id: randomUuid(), role: Role.Admin, email: 'admin@mail.com' });
-  const mockReferee: User = MockUser( { id: randomUuid(), role: Role.Referee, email: 'ref@mail.com' });
-  const mockRefereeB: User = MockUser( { id: randomUuid(), role: Role.Referee, email: 'ref2@mail.com' });
-  const mockObserver: User = MockUser( { id: randomUuid(), role: Role.Observer, email: 'obs@mail.com', phoneNumber: '669797907' });
+  const mockOwner: User = MockUser({ id: randomUuid(), role: Role.Owner, email: 'mock@mail.com', lastName: 'Doe' });
+  const mockAdmin: User = MockUser( { id: randomUuid(), role: Role.Admin, email: 'admin@mail.com', lastName: 'Doe1' });
+  const mockReferee: User = MockUser( { id: randomUuid(), role: Role.Referee, email: 'ref@mail.com', lastName: 'Doe2' });
+  const mockRefereeB: User = MockUser( { id: randomUuid(), role: Role.Referee, email: 'ref2@mail.com', lastName: 'Doe3' });
+  const mockObserver: User = MockUser( { id: randomUuid(), role: Role.Observer, email: 'obs@mail.com', phoneNumber: '669797907', lastName: 'Doe4' });
   const mockLeague: League = MockLeague({ admins: [mockAdmin], referees: [mockReferee], observers: [mockObserver] });
   const users: User[] = [mockOwner, mockAdmin, mockReferee, mockRefereeB, mockObserver];
 
