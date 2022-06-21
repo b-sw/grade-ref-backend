@@ -106,8 +106,8 @@ export class MatchesService {
   async removeMatch(params: LeagueMatchParams, phoneNumber: string): Promise<Match> {
     const match: Match = getNotNull(await this.getById(params.matchId));
     await this.cancelSMS(match.observerSmsId);
+    await this.sendOneWaySms(phoneNumber, `Match #${match.userReadableKey} has been canceled.`);
     await this.matchRepository.delete(params.matchId);
-    await this.sendOneWaySms(phoneNumber, `Cannot enter a grade before match end.`);
     return match;
   }
 
@@ -277,7 +277,7 @@ export class MatchesService {
         date: sendDate
       }
     });
-
+    Logger.log('Response: ' + response.status, 'Schedule SMS');
     if (response.status != HttpStatus.OK) {
       throw new ServiceUnavailableException('SMS API error: ', response.data);
     }
@@ -295,6 +295,7 @@ export class MatchesService {
         messageId: smsIdInt,
       }
     });
+    Logger.log('Response: ' + response.status, 'Cancel SMS');
     if (response.status != HttpStatus.OK) {
       throw new ServiceUnavailableException('SMS API error: ', response.data);
     }
@@ -310,6 +311,7 @@ export class MatchesService {
         msg: message,
       }
     });
+    Logger.log('Send to: ' + recipient + ' Msg: ' + message + ' Response: ' + response.status, 'Send one-way SMS');
     if (response.status != HttpStatus.OK) {
       throw new ServiceUnavailableException('SMS API error: ', response.data);
     }
@@ -381,6 +383,10 @@ export class MatchesService {
 
       if (dateTime.isBefore(dayjs())) {
         throw new HttpException(`Match date/time is from the past in line ${lineIndex}.`, HttpStatus.BAD_REQUEST);
+      }
+
+      if(!stadium) {
+        throw new HttpException(`Stadium not found in line ${lineIndex}.`, HttpStatus.BAD_REQUEST);
       }
     });
   }

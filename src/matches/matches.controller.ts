@@ -9,7 +9,7 @@ import {
   Post,
   Put,
   UseGuards,
-  Request, UseInterceptors, UploadedFile
+  Request, UseInterceptors, UploadedFile, Logger
 } from '@nestjs/common';
 import { MatchesService } from './matches.service';
 import { CreateMatchDto } from './dto/create-match.dto';
@@ -91,6 +91,7 @@ export class MatchesController {
   @UseGuards(MatchGradeGuard)
   @ApiOperation({ summary: 'Update referee match grade by sms' })
   async updateMatchGradeSms(@Request() req): Promise<void> {
+    Logger.log(req.body, 'Update match grade sms');
     const message: GradeMessage = JSON.parse(req.body.message);
     const observer: User = getNotNull(await this.usersService.getByPhoneNumber(message.msisdn));
     return this.matchesService.updateGradeSms(message, observer);
