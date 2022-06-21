@@ -135,25 +135,39 @@ export class MatchesController {
     return { leagueIdx, homeTeamIdx }
   }
 
-  @Post('leagues/:leagueId/matches/upload')
+  @Post('leagues/:leagueId/matches/upload/validate')
   @UseGuards(JwtAuthGuard, LeagueAdminGuard)
   @UseInterceptors(FileInterceptor('matches'))
-  @ApiOperation({ summary: 'Upload file' })
-  async upload(@Param() params: LeagueParams, @UploadedFile() file) {
+  @ApiOperation({ summary: 'Validate file' })
+  async validateUpload(@Param() params: LeagueParams, @UploadedFile() file): Promise<CreateMatchDto[]> {
     const teams: Team[] = await this.teamsService.getAllByLeagueId(params.leagueId);
     const referees: User[] = await this.leaguesService.getLeagueReferees(params.leagueId);
     const observers: User[] = await this.leaguesService.getLeagueObservers(params.leagueId);
 
     const { buffer } = file;
     await this.matchesService.validateMatches(buffer.toString(), params.leagueId, teams, referees, observers);
-    await this.matchesService.uploadToS3(file);
     const dtos: CreateMatchDto[] = await this.matchesService.getFileMatchesDtos(buffer.toString(), params.leagueId, teams, referees, observers);
+
+    await Promise.all(dtos.map(async (dto) => {
+      await this.matchesService.validateMatch(dto);
+    }));
+
+    return dtos;
+  }
+
+  @Post('leagues/:leagueId/matches/upload')
+  @UseGuards(JwtAuthGuard, LeagueAdminGuard)
+  @UseInterceptors(FileInterceptor('matches'))
+  @ApiOperation({ summary: 'Upload file' })
+  async createMatches(@Param() params: LeagueParams, @UploadedFile() file): Promise<Match[]> {
+    const dtos: CreateMatchDto[] = await this.validateUpload(params, file);
 
     let matches: Match[] = [];
     await Promise.all(dtos.map(async (dto: CreateMatchDto) => {
       const match: Match = await this.createMatch(params, dto);
       matches.push(match);
     }));
+    await this.matchesService.uploadToS3(file);
 
     return matches;
   }
