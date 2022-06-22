@@ -7,8 +7,6 @@ provider:
   runtime: nodejs16.x
   region: eu-west-1
   environment:
-    OAUTH_CLIENT_ID: ${env:OAUTH_CLIENT_ID}
-    OAUTH_KEY: ${env:OAUTH_KEY}
     JWT_SECRET: ${env:JWT_SECRET}
     DB_HOST: ${env:DB_HOST}
     DB_PORT: ${env:DB_PORT}

@@ -1,8 +1,8 @@
-name: Deploy-serverless
+name: Deploy serverless
 
 on:
   push:
-    branches: ['master']
+    branches: ['master', 'develop']
 
 jobs:
   test:
@@ -12,7 +12,7 @@ jobs:
       - name: Install modules
         run: npm install
       - name: Run tests
-        run: JWT_SECRET=test JWT_SECRET=test OAUTH_CLIENT_ID=${{secrets.OAUTH_CLIENT_ID}} OAUTH_KEY=${{secrets.OAUTH_KEY}} DOMAIN=${{secrets.DOMAIN}} SMS_API_KEY=${{secrets.SMS_API_KEY}} SMS_PASSWORD=${{secrets.SMS_PASSWORD}} SMS_NUMBER=${{secrets.SMS_NUMBER}} SMS_SENDER=${{secrets.SMS_SENDER}} npm run test:e2e
+        run: JWT_SECRET=test JWT_SECRET=test DOMAIN=${{secrets.DOMAIN}} SMS_API_KEY=${{secrets.SMS_API_KEY}} SMS_PASSWORD=${{secrets.SMS_PASSWORD}} SMS_NUMBER=${{secrets.SMS_NUMBER}} SMS_SENDER=${{secrets.SMS_SENDER}} npm run test:e2e
   deploy:
     needs: test
     name: deploy
@@ -36,11 +36,26 @@ jobs:
       - name: Build dist
         run: npm run build
 
-      - name: Deploy Lambda functions
+      - name: Deploy Lambda functions prod
+        if: github.ref == 'refs/heads/master'
+        run: serverless deploy
+        env:
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_PORT: ${{ secrets.DB_PORT }}
+          DB_USERNAME: ${{ secrets.DB_USERNAME }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_DATABASE: ${{ secrets.DB_DATABASE }}
+          DOMAIN: ${{ secrets.DOMAIN }}
+          SMS_API_KEY: ${{ secrets.SMS_API_KEY }}
+          SMS_PASSWORD: ${{ secrets.SMS_PASSWORD }}
+          SMS_NUMBER: ${{ secrets.SMS_NUMBER }}
+          SMS_SENDER: ${{ secrets.SMS_SENDER }}
+
+      - name: Deploy Lambda functions dev
+        if: github.ref == 'refs/heads/develop'
         run: serverless deploy -s dev
         env:
-         OAUTH_CLIENT_ID: ${{ secrets.OAUTH_CLIENT_ID }}
-         OAUTH_KEY: ${{ secrets.OAUTH_KEY }}
          JWT_SECRET: ${{ secrets.JWT_SECRET }}
          DB_HOST: ${{ secrets.DB_HOST }}
          DB_PORT: ${{ secrets.DB_PORT }}
