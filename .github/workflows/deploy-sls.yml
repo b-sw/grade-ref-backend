@@ -51,6 +51,8 @@ jobs:
           SMS_PASSWORD: ${{ secrets.SMS_PASSWORD }}
           SMS_NUMBER: ${{ secrets.SMS_NUMBER }}
           SMS_SENDER: ${{ secrets.SMS_SENDER }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
       - name: Deploy Lambda functions dev
         if: github.ref == 'refs/heads/develop'
@@ -67,3 +69,5 @@ jobs:
          SMS_PASSWORD: ${{ secrets.SMS_PASSWORD }}
          SMS_NUMBER: ${{ secrets.SMS_NUMBER }}
          SMS_SENDER: ${{ secrets.SMS_SENDER }}
+         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
