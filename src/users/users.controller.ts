@@ -123,6 +123,7 @@ export class UsersController {
   @ApiOperation({ summary: 'Unassign referee from a league' })
   async unassignReferee(@Param() params: LeagueUserParams): Promise<User> {
     const user: User = await this.usersService.getById(params.userId);
+    await this.matchesService.validateUserLeagueRemoval(params);
     return this.leaguesService.removeRefereeFromLeague(params, user);
   }
 
@@ -140,7 +141,6 @@ export class UsersController {
   @ApiOperation({ summary: 'Unassign league admin' })
   async unassignAdmin(@Param() params: LeagueUserParams): Promise<User> {
     const user: User = await this.usersService.getById(params.userId);
-    await this.matchesService.validateUserLeagueRemoval(params);
     return this.leaguesService.removeAdminFromLeague(params, user);
   }
 }

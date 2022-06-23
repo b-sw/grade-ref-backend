@@ -425,7 +425,7 @@ export class MatchesService {
   }
 
   async validateUserLeagueRemoval(params: LeagueUserParams) {
-    if (await this.matchRepository.find({ where: [
+    const foundMatches: Match[] = await this.matchRepository.find({ where: [
         {
           leagueId: params.leagueId,
           refereeId: params.userId
@@ -435,7 +435,9 @@ export class MatchesService {
           observerId: params.userId
         }
       ]
-    })) {
+    });
+
+    if (foundMatches.length) {
       throw new HttpException(`This user is assigned to some matches from this league.`, HttpStatus.BAD_REQUEST);
     }
   }
