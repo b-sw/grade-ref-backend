@@ -1,11 +1,38 @@
 service: graderef-backend
 
+configValidationMode: error
+
 useDotenv: true
+
+plugins:
+  - serverless-plugin-warmup
+
+custom:
+  warmup:
+    officeHoursWarmer:
+      enabled: true
+      events:
+        - schedule: cron(0/5 8-17 ? * MON-FRI *)
+      concurrency: 10
+      verbose: true
+      logRetentionInDays: 14
+    outOfOfficeHoursWarmer:
+      enabled: true
+      events:
+        - schedule: cron(0/5 0-7 ? * MON-FRI *)
+        - schedule: cron(0/5 18-23 ? * MON-FRI *)
+        - schedule: cron(0/5 * ? * SAT-SUN *)
+      concurrency: 1
+      verbose: false
+    testWarmer:
+      enabled: false
 
 provider:
   name: aws
   runtime: nodejs16.x
+  timeout: 900
   region: eu-west-1
+  memorySize: 2048
   environment:
     JWT_SECRET: ${env:JWT_SECRET}
     DB_HOST: ${env:DB_HOST}

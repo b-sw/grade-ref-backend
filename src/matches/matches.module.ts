@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { MatchesService } from './matches.service';
 import { MatchesController } from './matches.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -11,7 +11,7 @@ import { TeamsModule } from '../teams/teams.module';
   imports: [
     TypeOrmModule.forFeature([Match]),
     LeaguesModule,
-    UsersModule,
+    forwardRef(() => UsersModule),
     TeamsModule,
   ],
   controllers: [MatchesController],

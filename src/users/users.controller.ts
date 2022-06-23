@@ -14,13 +14,15 @@ import { OwnerGuard } from '../shared/guards/owner.guard';
 import { LeagueAdminGuard } from '../shared/guards/league-admin.guard';
 import { AdminGuard } from '../shared/guards/admin.guard';
 import { LeagueUserGuard } from '../shared/guards/league-user.guard';
+import { MatchesService } from '../matches/matches.service';
 
 @ApiTags('users')
 @Controller('')
 @ApiBearerAuth()
 export class UsersController {
   constructor(private readonly usersService: UsersService,
-              private readonly leaguesService: LeaguesService) {}
+              private readonly leaguesService: LeaguesService,
+              private readonly matchesService: MatchesService) {}
 
   @Get('users')
   @UseGuards(JwtAuthGuard, OwnerGuard)
@@ -129,6 +131,7 @@ export class UsersController {
   @ApiOperation({ summary: 'Unassign observer from a league' })
   async unassignObserver(@Param() params: LeagueUserParams): Promise<User> {
     const user: User = await this.usersService.getById(params.userId);
+    await this.matchesService.validateUserLeagueRemoval(params);
     return this.leaguesService.removeObserverFromLeague(params, user);
   }
 
@@ -137,6 +140,7 @@ export class UsersController {
   @ApiOperation({ summary: 'Unassign league admin' })
   async unassignAdmin(@Param() params: LeagueUserParams): Promise<User> {
     const user: User = await this.usersService.getById(params.userId);
+    await this.matchesService.validateUserLeagueRemoval(params);
     return this.leaguesService.removeAdminFromLeague(params, user);
   }
 }
