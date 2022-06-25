@@ -28,7 +28,7 @@ export class FoulsService {
     return getNotNull(await this.foulRepository.findOne({ where: { id: foulId } }));
   }
 
-  async getByMatchId(matchId: uuid): Promise<Foul[]> {
+  async getByMatch(matchId: uuid): Promise<Foul[]> {
     return getNotNull(await this.foulRepository.find({
       where: { matchId: matchId },
       order: { minute: 'ASC' }

@@ -26,9 +26,10 @@ describe('e2e fouls', () => {
   const mockOwner: User = MockUser({ id: randomUuid(), role: Role.Owner, email: 'mock@mail.com', lastName: 'Doe' });
   const mockAdmin: User = MockUser( { id: randomUuid(), role: Role.Admin, email: 'admin@mail.com', lastName: 'Doe1' });
   const mockReferee: User = MockUser( { id: randomUuid(), role: Role.Referee, email: 'ref@mail.com', lastName: 'Doe2' });
+  const mockReferee2: User = MockUser( { id: randomUuid(), role: Role.Referee, email: 'ref2@mail.com', lastName: 'Doe3' });
   const mockObserver: User = MockUser( { id: randomUuid(), role: Role.Observer, email: 'obs@mail.com', phoneNumber: '669797907', lastName: 'Doe4' });
   const mockLeague: League = MockLeague({ admins: [mockAdmin], referees: [mockReferee], observers: [mockObserver] });
-  const users: User[] = [mockOwner, mockAdmin, mockReferee, mockObserver];
+  const users: User[] = [mockOwner, mockAdmin, mockReferee, mockReferee2, mockObserver];
 
   const teamA: Team = MockTeam(mockLeague.id, mockLeague, 'FC Team A');
   const teamB: Team = MockTeam(mockLeague.id, mockLeague, 'FC Team B');
@@ -38,6 +39,7 @@ describe('e2e fouls', () => {
   let ownerAccessToken: string;
   let adminAccessToken: string;
   let refereeAccessToken: string;
+  let referee2AccessToken: string;
   let observerAccessToken: string;
   let app: INestApplication;
 
@@ -64,6 +66,7 @@ describe('e2e fouls', () => {
     ownerAccessToken = jwt.sign({ email: mockOwner.email, sub: mockOwner.id }, process.env.JWT_SECRET);
     adminAccessToken = jwt.sign({ email: mockAdmin.email, sub: mockAdmin.id }, process.env.JWT_SECRET);
     refereeAccessToken = jwt.sign({ email: mockReferee.email, sub: mockReferee.id }, process.env.JWT_SECRET);
+    referee2AccessToken = jwt.sign({ email: mockReferee2.email, sub: mockReferee2.id }, process.env.JWT_SECRET);
     observerAccessToken = jwt.sign({ email: mockObserver.email, sub: mockObserver.id }, process.env.JWT_SECRET);
   });
 
@@ -107,6 +110,47 @@ describe('e2e fouls', () => {
 
     const foul: Foul | undefined = await getRepository(Foul).findOne({ where: { id: mockFoul.id } });
     expect(foul).toMatchObject(mockFoul);
+  });
+
+  it('should not get foul for invalid user', async () => {
+    const response = await request(app.getHttpServer())
+      .get(`/leagues/${mockLeague.id}/matches/${mockMatch.id}/fouls/${mockFoul.id}`)
+      .auth(referee2AccessToken, { type: 'bearer' });
+
+    expect(response.status).toBe(HttpStatus.FORBIDDEN);
+  });
+
+  it('should get foul', async () => {
+    const response = await request(app.getHttpServer())
+      .get(`/leagues/${mockLeague.id}/matches/${mockMatch.id}/fouls/${mockFoul.id}`)
+      .auth(refereeAccessToken, { type: 'bearer' });
+
+    expect(response.status).toBe(HttpStatus.OK);
+    expect(response.body).toMatchObject(mockFoul);
+
+    const foul: Foul | undefined = await getRepository(Foul).findOne({ where: { id: mockFoul.id } });
+    expect(foul).toMatchObject(mockFoul);
+  });
+
+  it('should not get match fouls for invalid user', async () => {
+    const response = await request(app.getHttpServer())
+      .get(`/leagues/${mockLeague.id}/matches/${mockMatch.id}/fouls`)
+      .auth(referee2AccessToken, { type: 'bearer' });
+
+    expect(response.status).toBe(HttpStatus.FORBIDDEN);
+  });
+
+  it('should get match fouls', async () => {
+    const response = await request(app.getHttpServer())
+      .get(`/leagues/${mockLeague.id}/matches/${mockMatch.id}/fouls`)
+      .auth(refereeAccessToken, { type: 'bearer' });
+
+    expect(response.status).toBe(HttpStatus.OK);
+    expect(response.body).toMatchObject([mockFoul]);
+
+    const fouls: Foul[] = await getRepository(Foul).find({ where: { matchId: mockMatch.id } });
+    expect(fouls.length).toBe(1);
+    expect(fouls[0]).toMatchObject(mockFoul);
   });
 
   it('should not update foul for not observer', async () => {

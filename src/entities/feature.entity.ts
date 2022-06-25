@@ -1,38 +1,29 @@
 import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { uuid } from '../shared/types/uuid';
-import { Card } from '../shared/types/card';
-import { Team } from './team.entity';
 import { Match } from './match.entity';
+import { User } from './user.entity';
+import { FeatureType } from '../shared/types/featureType';
 
 @Entity()
-export class Foul {
+export class Feature {
   @PrimaryGeneratedColumn('uuid')
   id: uuid;
 
   @Column()
-  minute: number;
-
-  @Column()
-  card: Card;
-
-  @Column()
-  playerNumber: number;
+  type: FeatureType;
 
   @Column()
   description: string;
 
   @Column()
-  valid: boolean;
-
-  @Column()
-  teamId: uuid;
+  refereeId: uuid;
 
   @Column()
   matchId: uuid;
 
-  @ManyToOne(() => Team, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'teamId' })
-  team: Team;
+  @ManyToOne(() => User, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'refereeId' })
+  referee: User;
 
   @ManyToOne(() => Match, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'matchId' })

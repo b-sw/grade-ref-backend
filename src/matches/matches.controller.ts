@@ -32,7 +32,6 @@ import { League } from '../entities/league.entity';
 import { Team } from '../entities/team.entity';
 import { uuid } from '../shared/types/uuid';
 import { ValidRefereeObserverGuard } from '../shared/guards/valid-referee-observer-guard.service';
-import { ObserverGuard } from '../shared/guards/observer.guard';
 import { LeagueUserParams } from '../leagues/params/LeagueUserParams';
 import { UsersService } from '../users/users.service';
 import { User } from '../entities/user.entity';
@@ -40,6 +39,8 @@ import { MatchGradeGuard } from '../shared/guards/match-grade.guard';
 import { GradeMessage } from './dto/update-grade-sms.dto';
 import { getNotNull } from '../shared/getters';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { RoleGuard } from '../shared/guards/role.guard';
+import { Role } from '../shared/types/role';
 
 @ApiTags('matches')
 @Controller('')
@@ -83,14 +84,14 @@ export class MatchesController {
   }
 
   @Put('leagues/:leagueId/matches/:matchId/grade')
-  @UseGuards(JwtAuthGuard, ObserverGuard)
+  @UseGuards(JwtAuthGuard, RoleGuard(Role.Observer))
   @ApiOperation({ summary: 'Update referee match grade' })
   async updateMatchGrade(@Param() params: LeagueMatchParams, @Body() dto: Partial<UpdateMatchDto>): Promise<Match> {
     return this.matchesService.updateGrade(params, dto);
   }
 
   @Put('leagues/:leagueId/matches/:matchId/overallGrade')
-  @UseGuards(JwtAuthGuard, ObserverGuard)
+  @UseGuards(JwtAuthGuard, RoleGuard(Role.Observer))
   @ApiOperation({ summary: 'Update referee overall grade' })
   async updateMatchOverallGrade(@Param() params: LeagueMatchParams, @Body() dto: Partial<UpdateMatchDto>): Promise<Match> {
     return this.matchesService.updateOverallGrade(params, dto);
