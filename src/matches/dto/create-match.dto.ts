@@ -49,4 +49,8 @@ export class CreateMatchDto {
   @ApiProperty({ nullable: true })
   @Length(5, 400)
   overallGrade: string;
+
+  @ApiProperty({ nullable: true })
+  @IsDate()
+  overallGradeDate: Date;
 }

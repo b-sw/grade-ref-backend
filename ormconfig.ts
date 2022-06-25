@@ -5,6 +5,7 @@ import { config } from 'dotenv';
 import { Team } from './src/entities/team.entity';
 import { Match } from './src/entities/match.entity';
 import { League } from './src/entities/league.entity';
+import { Foul } from './src/entities/foul.entity';
 
 config();
 /*
@@ -13,7 +14,7 @@ config();
     It causes db schema to sync if it detects there's a mismatch between db schema and entities.
     This behaviour may lead to an automatic table drop.
  */
-const entities = [User, Team, Match, League];
+const entities = [User, Team, Match, League, Foul];
 
 export const dbConfig: MysqlConnectionOptions = {
   type: 'mysql',

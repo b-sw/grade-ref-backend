@@ -30,6 +30,10 @@ const SMS_API_DATETIME_FORMAT: string = 'DD-MM-YYYY HH:mm:ss';
 const MATCH_PROPS_COUNT = 7;
 const DELIMITER = ';';
 
+export const MATCH_DURATION = 2;
+export const GRADE_ENTRY_TIME_WINDOW = 2 + MATCH_DURATION;
+export const OVERALL_GRADE_ENTRY_TIME_WINDOW = 48 + MATCH_DURATION;
+
 @Injectable()
 export class MatchesService {
   constructor(@InjectRepository(Match) private matchRepository: Repository<Match>) {}
@@ -135,7 +139,7 @@ export class MatchesService {
   async updateGrade(params: LeagueMatchParams, dto: Partial<UpdateMatchDto>): Promise<Match> {
     const match: Match = getNotNull(await this.getById(params.matchId));
     if (match.refereeGrade) {
-      validateEntryTime(match.matchDate, 2);
+      validateEntryTime(match.matchDate, GRADE_ENTRY_TIME_WINDOW);
     }
     match.refereeGrade = dto.refereeGrade;
     match.refereeGradeDate = new Date();
@@ -146,7 +150,7 @@ export class MatchesService {
   async updateOverallGrade(params: LeagueMatchParams, dto: Partial<UpdateMatchDto>): Promise<Match> {
     const match: Match = getNotNull(await this.getById(params.matchId));
     if (match.overallGrade) {
-      validateEntryTime(match.matchDate, 48);
+      validateEntryTime(match.matchDate, OVERALL_GRADE_ENTRY_TIME_WINDOW);
     }
     match.overallGrade = dto.overallGrade;
     match.overallGradeDate = new Date();
@@ -230,7 +234,7 @@ export class MatchesService {
       return false;
     }
 
-    if(dayjs().isBefore(dayjs(match.matchDate).add(2, 'hour'))) {
+    if(dayjs().isBefore(dayjs(match.matchDate).add(MATCH_DURATION, 'hour'))) {
       await this.sendOneWaySms(phoneNumber, `Cannot enter a grade before match end.`);
       return false;
     }

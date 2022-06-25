@@ -13,10 +13,15 @@ import { AppModule } from '../../src/app.module';
 import * as jwt from 'jsonwebtoken';
 import { CreateMatchDto } from '../../src/matches/dto/create-match.dto';
 import request from 'supertest';
-import { MockCreateMatchDto } from '../shared/mockMatch';
+import { MockCreateMatchDto, setMockMatchDatetime } from '../shared/mockMatch';
 import { MockTeam } from '../shared/mockTeam';
 import { UpdateMatchDto } from 'src/matches/dto/update-match.dto';
-import dayjs, { Dayjs } from 'dayjs';
+import dayjs from 'dayjs';
+import {
+  GRADE_ENTRY_TIME_WINDOW,
+  MATCH_DURATION,
+  OVERALL_GRADE_ENTRY_TIME_WINDOW
+} from '../../src/matches/matches.service';
 
 describe('e2e matches', () => {
   const mockOwner: User = MockUser({ id: randomUuid(), role: Role.Owner, email: 'mock@mail.com', lastName: 'Doe' });
@@ -46,7 +51,7 @@ describe('e2e matches', () => {
     await app.init();
 
     const usersRepository = await getRepository(User);
-    await Promise.all(users.map(async (user) => await usersRepository.save(user)));
+    await Promise.all(users.map(async (user: User) => await usersRepository.save(user)));
 
     const leagueRepository = await getRepository(League);
     await leagueRepository.save(mockLeague);
@@ -71,12 +76,14 @@ describe('e2e matches', () => {
   it('should not create match', async () => {
     const dto: CreateMatchDto = MockCreateMatchDto(teamA, teamB, mockReferee, mockObserver);
 
-    const response = await request(app.getHttpServer())
-      .post(`/leagues/${mockLeague.id}/matches`)
-      .auth(refereeAccessToken, { type: 'bearer' })
-      .send(dto);
+    await Promise.all([observerAccessToken, refereeAccessToken].map(async (token) => {
+      const response = await request(app.getHttpServer())
+        .post(`/leagues/${mockLeague.id}/matches`)
+        .auth(token, { type: 'bearer' })
+        .send(dto);
 
-    expect(response.status).toBe(HttpStatus.FORBIDDEN);
+      expect(response.status).toBe(HttpStatus.FORBIDDEN);
+    }));
   });
 
   it('should create match', async () => {
@@ -246,7 +253,7 @@ describe('e2e matches', () => {
   });
 
   it('should not update referee match grade if late', async () => {
-    await setMockMatchDatetime(dayjs().subtract(4, 'day'));
+    await setMockMatchDatetime(mockMatch.id, dayjs().subtract(4, 'day'));
     const dto: UpdateMatchDto = { refereeGrade: 5.5 } as UpdateMatchDto;
 
     const response = await request(app.getHttpServer())
@@ -255,8 +262,8 @@ describe('e2e matches', () => {
       .send(dto);
 
     expect(response.status).toBe(HttpStatus.BAD_REQUEST);
-    expect(response.body.message).toBe('Time window of 2 hours for this entry has passed.');
-    await setMockMatchDatetime(dayjs().add(2, 'day'));
+    expect(response.body.message).toBe(`Time window of ${GRADE_ENTRY_TIME_WINDOW - MATCH_DURATION} hours for this entry has passed.`);
+    await setMockMatchDatetime(mockMatch.id, dayjs().add(2, 'day'));
   });
 
   it('should not update referee overall grade if not observer', async () => {
@@ -292,7 +299,7 @@ describe('e2e matches', () => {
   });
 
   it('should not update referee overall grade if late', async () => {
-    await setMockMatchDatetime(dayjs().subtract(8, 'day'));
+    await setMockMatchDatetime(mockMatch.id, dayjs().subtract(8, 'day'));
     const dto: UpdateMatchDto = { overallGrade: 'Mock overall grade.' } as UpdateMatchDto;
 
     const response = await request(app.getHttpServer())
@@ -301,9 +308,9 @@ describe('e2e matches', () => {
       .send(dto);
 
     expect(response.status).toBe(HttpStatus.BAD_REQUEST);
-    expect(response.body.message).toBe('Time window of 48 hours for this entry has passed.');
+    expect(response.body.message).toBe(`Time window of ${OVERALL_GRADE_ENTRY_TIME_WINDOW - MATCH_DURATION} hours for this entry has passed.`);
 
-    await setMockMatchDatetime(dayjs().add(2, 'day'));
+    await setMockMatchDatetime(mockMatch.id, dayjs().add(2, 'day'));
   });
 
   it('should not delete match', async () => {
@@ -328,11 +335,4 @@ describe('e2e matches', () => {
     const match: Match = await getRepository(Match).findOne({ where: { id: mockMatch.id } });
     expect(match).toBeUndefined();
   });
-
-  async function setMockMatchDatetime(newDate: Dayjs) {
-    const matchRepository = await getRepository(Match);
-    const match: Match = await matchRepository.findOne({ where: { id: mockMatch.id } });
-    match.matchDate = new Date(newDate.format('YYYY-MM-DD HH:mm:ss'));
-    await matchRepository.save(match);
-  }
 });
