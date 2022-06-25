@@ -1,10 +1,10 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEnum, MaxLength } from 'class-validator';
+import { IsEnum, Length, MaxLength } from 'class-validator';
 import { Role } from '../../shared/types/role';
 
 export class CreateUserDto {
   @ApiProperty()
-  @MaxLength(100, { message: 'Email too long.'})
+  @Length(5, 50)
   email: string;
 
   @ApiProperty()

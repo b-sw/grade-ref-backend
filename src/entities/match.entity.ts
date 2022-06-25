@@ -48,6 +48,16 @@ export class Match {
   @Column({ nullable: true })
   observerSmsId: string;
 
+  @Column({ nullable: true })
+  refereeNote: string;
+
+  @Column({ nullable: true })
+  overallGrade: string;
+
+  @Column({ type: 'datetime', nullable: true })
+  @Type(() => Date)
+  overallGradeDate: Date;
+
   @ManyToOne(() => Team, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'homeTeamId' })
   homeTeam: Team

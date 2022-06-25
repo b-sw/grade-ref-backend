@@ -8,7 +8,7 @@ export class CreateMatchDto {
   matchDate: Date
 
   @ApiProperty()
-  @Length(5, 50, { message: 'Stadium name too long.'})
+  @Length(5, 50)
   stadium: string;
 
   @ApiProperty({ type: String })
@@ -41,4 +41,12 @@ export class CreateMatchDto {
 
   @ApiProperty({ nullable: true })
   observerSmsId: string;
+
+  @ApiProperty({ nullable: true })
+  @Length(5, 400)
+  refereeNote: string;
+
+  @ApiProperty({ nullable: true })
+  @Length(5, 400)
+  overallGrade: string;
 }

@@ -3,6 +3,6 @@ import { Length } from 'class-validator';
 
 export class CreateTeamDto {
   @ApiProperty()
-  @Length(5, 50, { message: 'Team name must have 5-50 characters.'})
+  @Length(5, 50)
   name: string;
 }

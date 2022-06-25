@@ -16,6 +16,7 @@ import request from 'supertest';
 import { MockCreateMatchDto } from '../shared/mockMatch';
 import { MockTeam } from '../shared/mockTeam';
 import { UpdateMatchDto } from 'src/matches/dto/update-match.dto';
+import dayjs, { Dayjs } from 'dayjs';
 
 describe('e2e matches', () => {
   const mockOwner: User = MockUser({ id: randomUuid(), role: Role.Owner, email: 'mock@mail.com', lastName: 'Doe' });
@@ -175,20 +176,14 @@ describe('e2e matches', () => {
     expect(response.body).toMatchObject(matches);
   });
 
-  it('should not get observer matches for admin', async () => {
-    const response = await request(app.getHttpServer())
-      .get(`/users/${mockObserver.id}/matches`)
-      .auth(adminAccessToken, { type: 'bearer' });
+  it('should not get observer matches if not self', async () => {
+    await Promise.all([adminAccessToken, refereeAccessToken].map(async (token) => {
+      const response = await request(app.getHttpServer())
+        .get(`/users/${mockObserver.id}/matches`)
+        .auth(token, { type: 'bearer' });
 
-    expect(response.status).toBe(HttpStatus.FORBIDDEN);
-  });
-
-  it('should not get observer matches for referee', async () => {
-    const response = await request(app.getHttpServer())
-      .get(`/users/${mockObserver.id}/matches`)
-      .auth(refereeAccessToken, { type: 'bearer' });
-
-    expect(response.status).toBe(HttpStatus.FORBIDDEN);
+      expect(response.status).toBe(HttpStatus.FORBIDDEN);
+    }));
   });
 
   it('should get observer matches for self', async () => {
@@ -237,15 +232,78 @@ describe('e2e matches', () => {
     expect(response.body).toMatchObject(match);
   });
 
-  it('should not update referee match grade', async () => {
+  it('should not update referee match grade if not observer', async () => {
+    await Promise.all([adminAccessToken, refereeAccessToken].map(async (token) => {
+      const dto: UpdateMatchDto = { refereeGrade: 5.5 } as UpdateMatchDto;
+
+      const response = await request(app.getHttpServer())
+        .put(`/leagues/${mockLeague.id}/matches/${mockMatch.id}/grade`)
+        .auth(token, { type: 'bearer' })
+        .send(dto);
+
+      expect(response.status).toBe(HttpStatus.FORBIDDEN);
+    }))
+  });
+
+  it('should not update referee match grade if late', async () => {
+    await setMockMatchDatetime(dayjs().subtract(4, 'day'));
     const dto: UpdateMatchDto = { refereeGrade: 5.5 } as UpdateMatchDto;
 
     const response = await request(app.getHttpServer())
       .put(`/leagues/${mockLeague.id}/matches/${mockMatch.id}/grade`)
-      .auth(adminAccessToken, { type: 'bearer' })
+      .auth(observerAccessToken, { type: 'bearer' })
       .send(dto);
 
-    expect(response.status).toBe(HttpStatus.FORBIDDEN);
+    expect(response.status).toBe(HttpStatus.BAD_REQUEST);
+    expect(response.body.message).toBe('Time window of 2 hours for this entry has passed.');
+    await setMockMatchDatetime(dayjs().add(2, 'day'));
+  });
+
+  it('should not update referee overall grade if not observer', async () => {
+    await Promise.all([adminAccessToken, refereeAccessToken].map(async (token) => {
+      const dto: UpdateMatchDto = { overallGrade: 'Mock overall grade.' } as UpdateMatchDto;
+
+      const response = await request(app.getHttpServer())
+        .put(`/leagues/${mockLeague.id}/matches/${mockMatch.id}/overallGrade`)
+        .auth(token, { type: 'bearer' })
+        .send(dto);
+
+      expect(response.status).toBe(HttpStatus.FORBIDDEN);
+    }))
+  });
+
+  it('should update referee overall grade', async () => {
+    const dto: UpdateMatchDto = { overallGrade: 'Mock overall grade.' } as UpdateMatchDto;
+
+    const response = await request(app.getHttpServer())
+      .put(`/leagues/${mockLeague.id}/matches/${mockMatch.id}/overallGrade`)
+      .auth(observerAccessToken, { type: 'bearer' })
+      .send(dto);
+
+    expect(response.status).toBe(HttpStatus.OK);
+    response.body.matchDate = new Date(response.body.matchDate);
+    response.body.refereeGradeDate = new Date(response.body.refereeGradeDate);
+    response.body.overallGradeDate = new Date(response.body.overallGradeDate);
+    mockMatch = { ...mockMatch, overallGrade: dto.overallGrade, overallGradeDate: expect.any(Date) };
+    expect(response.body).toMatchObject(mockMatch);
+
+    const match: Match = await getRepository(Match).findOne({ where: { id: mockMatch.id } });
+    expect(response.body).toMatchObject(match);
+  });
+
+  it('should not update referee overall grade if late', async () => {
+    await setMockMatchDatetime(dayjs().subtract(8, 'day'));
+    const dto: UpdateMatchDto = { overallGrade: 'Mock overall grade.' } as UpdateMatchDto;
+
+    const response = await request(app.getHttpServer())
+      .put(`/leagues/${mockLeague.id}/matches/${mockMatch.id}/overallGrade`)
+      .auth(observerAccessToken, { type: 'bearer' })
+      .send(dto);
+
+    expect(response.status).toBe(HttpStatus.BAD_REQUEST);
+    expect(response.body.message).toBe('Time window of 48 hours for this entry has passed.');
+
+    await setMockMatchDatetime(dayjs().add(2, 'day'));
   });
 
   it('should not delete match', async () => {
@@ -264,9 +322,17 @@ describe('e2e matches', () => {
     expect(response.status).toBe(HttpStatus.OK);
     response.body.matchDate = new Date(response.body.matchDate);
     response.body.refereeGradeDate = new Date(response.body.refereeGradeDate);
+    response.body.overallGradeDate = new Date(response.body.overallGradeDate);
     expect(response.body).toMatchObject(mockMatch);
 
     const match: Match = await getRepository(Match).findOne({ where: { id: mockMatch.id } });
     expect(match).toBeUndefined();
   });
+
+  async function setMockMatchDatetime(newDate: Dayjs) {
+    const matchRepository = await getRepository(Match);
+    const match: Match = await matchRepository.findOne({ where: { id: mockMatch.id } });
+    match.matchDate = new Date(newDate.format('YYYY-MM-DD HH:mm:ss'));
+    await matchRepository.save(match);
+  }
 });

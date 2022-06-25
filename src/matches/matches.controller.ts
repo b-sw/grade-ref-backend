@@ -5,11 +5,14 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Logger,
   Param,
   Post,
   Put,
+  Request,
+  UploadedFile,
   UseGuards,
-  Request, UseInterceptors, UploadedFile, Logger
+  UseInterceptors
 } from '@nestjs/common';
 import { MatchesService } from './matches.service';
 import { CreateMatchDto } from './dto/create-match.dto';
@@ -82,8 +85,15 @@ export class MatchesController {
   @Put('leagues/:leagueId/matches/:matchId/grade')
   @UseGuards(JwtAuthGuard, ObserverGuard)
   @ApiOperation({ summary: 'Update referee match grade' })
-  async updateMatchGrade(@Param() params: LeagueMatchParams, @Body() dto: UpdateMatchDto): Promise<Match> {
+  async updateMatchGrade(@Param() params: LeagueMatchParams, @Body() dto: Partial<UpdateMatchDto>): Promise<Match> {
     return this.matchesService.updateGrade(params, dto);
+  }
+
+  @Put('leagues/:leagueId/matches/:matchId/overallGrade')
+  @UseGuards(JwtAuthGuard, ObserverGuard)
+  @ApiOperation({ summary: 'Update referee overall grade' })
+  async updateMatchOverallGrade(@Param() params: LeagueMatchParams, @Body() dto: Partial<UpdateMatchDto>): Promise<Match> {
+    return this.matchesService.updateOverallGrade(params, dto);
   }
 
   @Post('matches/grades')

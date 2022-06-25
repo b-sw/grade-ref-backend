@@ -21,13 +21,14 @@ import { GradeMessage } from './dto/update-grade-sms.dto';
 import { getNotNull } from '../shared/getters';
 import { Team } from '../entities/team.entity';
 import { S3 } from 'aws-sdk';
+import { validateEntryTime } from '../shared/validators';
 
 const SMS_API: string = 'https://api2.smsplanet.pl';
 export const DTO_DATETIME_FORMAT: string = 'YYYY-MM-DDThh:mm';
 const SMS_API_DATETIME_FORMAT: string = 'DD-MM-YYYY HH:mm:ss';
 
 const MATCH_PROPS_COUNT = 7;
-const DELIMETER = ';';
+const DELIMITER = ';';
 
 @Injectable()
 export class MatchesService {
@@ -131,10 +132,24 @@ export class MatchesService {
     });
   }
 
-  async updateGrade(params: LeagueMatchParams, dto: UpdateMatchDto): Promise<Match> {
+  async updateGrade(params: LeagueMatchParams, dto: Partial<UpdateMatchDto>): Promise<Match> {
     const match: Match = getNotNull(await this.getById(params.matchId));
+    if (match.refereeGrade) {
+      validateEntryTime(match.matchDate, 2);
+    }
     match.refereeGrade = dto.refereeGrade;
     match.refereeGradeDate = new Date();
+    await this.matchRepository.save(match);
+    return match;
+  }
+
+  async updateOverallGrade(params: LeagueMatchParams, dto: Partial<UpdateMatchDto>): Promise<Match> {
+    const match: Match = getNotNull(await this.getById(params.matchId));
+    if (match.overallGrade) {
+      validateEntryTime(match.matchDate, 48);
+    }
+    match.overallGrade = dto.overallGrade;
+    match.overallGradeDate = new Date();
     await this.matchRepository.save(match);
     return match;
   }
@@ -351,7 +366,7 @@ export class MatchesService {
 
     const matchesEntries: string[] = csv.split(/\r?\n|\r/);
     matchesEntries.forEach((matchEntry, lineIndex) => {
-      const matchProps: string[] = matchEntry.split(DELIMETER);
+      const matchProps: string[] = matchEntry.split(DELIMITER);
       if (matchProps.length != MATCH_PROPS_COUNT) {
         throw new HttpException(`Invalid number of match props in line ${lineIndex}.`, HttpStatus.BAD_REQUEST);
       }
@@ -398,7 +413,7 @@ export class MatchesService {
     let dtos: CreateMatchDto[] = [];
 
     matchesEntries.forEach((matchEntry: string) => {
-      const matchProps: string[] = matchEntry.split(DELIMETER);
+      const matchProps: string[] = matchEntry.split(DELIMITER);
       const [homeTeamName, awayTeamName, date, time, matchStadium, refereeName, observerName] = matchProps;
       dtos.push({
         matchDate: dayjs(`${date}T${time}`, DTO_DATETIME_FORMAT).toDate(),

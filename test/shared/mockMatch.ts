@@ -19,5 +19,7 @@ export const MockCreateMatchDto = (teamA: Team,
     refereeGradeDate: null,
     refereeSmsId: null,
     observerSmsId: null,
+    refereeNote: null,
+    overallGrade: null,
   }
 }
