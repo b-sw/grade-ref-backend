@@ -1,5 +1,5 @@
 import { uuid } from 'aws-sdk/clients/customerprofiles';
-import { Card } from 'src/entities/foul.entity';
+import { Card } from '../../src/entities/foul.entity';
 import { CreateFoulDto } from '../../src/fouls/dto/create-foul.dto';
 
 export const MockCreateFoulDto = (teamId: uuid,
