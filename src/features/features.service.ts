@@ -2,10 +2,9 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { uuid } from 'src/shared/types/uuid';
 import { CreateFeatureDto } from './dto/create-feature.dto';
 import { UpdateFeatureDto } from './dto/update-feature.dto';
-import { Feature } from '../entities/feature.entity';
+import { Feature, FeatureType } from '../entities/feature.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { FeatureType } from '../shared/types/featureType';
 
 const FEATURES_MATCH_LIMIT = 3;
 

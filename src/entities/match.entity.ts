@@ -48,10 +48,10 @@ export class Match {
   @Column({ nullable: true })
   observerSmsId: string;
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, length: 1000 })
   refereeNote: string;
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, length: 3000 })
   overallGrade: string;
 
   @Column({ type: 'datetime', nullable: true })

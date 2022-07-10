@@ -2,7 +2,11 @@ import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 't
 import { uuid } from '../shared/types/uuid';
 import { Match } from './match.entity';
 import { User } from './user.entity';
-import { FeatureType } from '../shared/types/featureType';
+
+export enum FeatureType {
+  Positive = 'Positive',
+  Negative = 'Negative',
+}
 
 @Entity()
 export class Feature {

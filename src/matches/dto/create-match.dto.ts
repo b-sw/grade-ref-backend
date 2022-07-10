@@ -43,11 +43,11 @@ export class CreateMatchDto {
   observerSmsId: string;
 
   @ApiProperty({ nullable: true })
-  @Length(5, 400)
+  @Length(5, 1000)
   refereeNote: string;
 
   @ApiProperty({ nullable: true })
-  @Length(5, 400)
+  @Length(5, 500)
   overallGrade: string;
 
   @ApiProperty({ nullable: true })

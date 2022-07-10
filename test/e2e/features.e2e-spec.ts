@@ -9,7 +9,7 @@ import { MockTeam } from '../shared/mockTeam';
 import { Match } from '../../src/entities/match.entity';
 import { MockMatch } from '../shared/mockMatch';
 import { HttpStatus, INestApplication } from '@nestjs/common';
-import { Feature } from '../../src/entities/feature.entity';
+import { Feature, FeatureType } from '../../src/entities/feature.entity';
 import { Test } from '@nestjs/testing';
 import { AppModule } from '../../src/app.module';
 import { getRepository } from 'typeorm';
@@ -17,7 +17,6 @@ import * as jwt from 'jsonwebtoken';
 import request from 'supertest';
 import { CreateFeatureDto } from '../../src/features/dto/create-feature.dto';
 import { MockCreateFeatureDto } from '../shared/mockFeature';
-import { FeatureType } from '../../src/shared/types/featureType';
 import { UpdateFeatureDto } from '../../src/features/dto/update-feature.dto';
 
 describe('e2e features', () => {

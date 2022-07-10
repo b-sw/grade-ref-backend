@@ -1,7 +1,7 @@
-import { FeatureType } from '../../shared/types/featureType';
 import { uuid } from '../../shared/types/uuid';
 import { ApiProperty } from '@nestjs/swagger';
 import { IsUUID, Length } from 'class-validator';
+import { FeatureType } from '../../entities/feature.entity';
 
 export class CreateFeatureDto {
   @ApiProperty()
