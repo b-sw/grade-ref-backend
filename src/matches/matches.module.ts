@@ -6,6 +6,7 @@ import { Match } from '../entities/match.entity';
 import { UsersModule } from '../users/users.module';
 import { LeaguesModule } from '../leagues/leagues.module';
 import { TeamsModule } from '../teams/teams.module';
+import { S3Module } from 'src/aws/s3.module';
 
 @Module({
   imports: [
@@ -13,9 +14,10 @@ import { TeamsModule } from '../teams/teams.module';
     LeaguesModule,
     forwardRef(() => UsersModule),
     TeamsModule,
+    S3Module,
   ],
   controllers: [MatchesController],
   providers: [MatchesService],
-  exports: [MatchesService]
+  exports: [MatchesService],
 })
 export class MatchesModule {}
