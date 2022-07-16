@@ -225,11 +225,8 @@ export class MatchesController {
     const formattedDate = dayjs().format('YYYY-MM-DDTHH:mm:ss:SSS');
     const key = `league=${params.leagueId}/match=${params.matchId}/report=${params.reportType}/${params.reportType} ${formattedDate}.pdf`;
 
-    const match = await this.matchesService.updateReportData(params.matchId, params.reportType, key);
-
     await this.s3Service.upload(S3Bucket.GRADES_BUCKET, key, file);
-
-    return match;
+    return this.matchesService.updateReportData(params.matchId, params.reportType, key);
   }
 
   @Get('leagues/:leagueId/matches/:matchId/reports/:reportType')
