@@ -1,89 +1,9 @@
-import {
-  Column,
-  Entity,
-  JoinColumn,
-  ManyToOne,
-  PrimaryGeneratedColumn,
-} from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { uuid } from '../shared/types/uuid';
 import { User } from './user.entity';
 import { Team } from './team.entity';
 import { Type } from 'class-transformer';
 import { League } from './league.entity';
-import { Role } from 'src/shared/types/role';
-
-export enum ReportType {
-  OBSERVER = 'Observer',
-  MENTOR = 'Mentor',
-  TV = 'Tv',
-}
-
-export enum ActionType {
-  READ,
-  WRITE,
-}
-
-export const permissions: Record<
-  Role,
-  Record<ReportType, Record<ActionType, boolean>>
-> = {
-  [Role.Admin]: {
-    [ReportType.OBSERVER]: {
-      [ActionType.READ]: true,
-      [ActionType.WRITE]: true,
-    },
-    [ReportType.MENTOR]: {
-      [ActionType.READ]: true,
-      [ActionType.WRITE]: true,
-    },
-    [ReportType.TV]: {
-      [ActionType.READ]: true,
-      [ActionType.WRITE]: true,
-    },
-  },
-  [Role.Observer]: {
-    [ReportType.OBSERVER]: {
-      [ActionType.READ]: true,
-      [ActionType.WRITE]: true,
-    },
-    [ReportType.MENTOR]: {
-      [ActionType.READ]: true,
-      [ActionType.WRITE]: true,
-    },
-    [ReportType.TV]: {
-      [ActionType.READ]: true,
-      [ActionType.WRITE]: true,
-    },
-  },
-  [Role.Owner]: {
-    [ReportType.OBSERVER]: {
-      [ActionType.READ]: true,
-      [ActionType.WRITE]: true,
-    },
-    [ReportType.MENTOR]: {
-      [ActionType.READ]: true,
-      [ActionType.WRITE]: true,
-    },
-    [ReportType.TV]: {
-      [ActionType.READ]: true,
-      [ActionType.WRITE]: true,
-    },
-  },
-  [Role.Referee]: {
-    [ReportType.OBSERVER]: {
-      [ActionType.READ]: true,
-      [ActionType.WRITE]: true,
-    },
-    [ReportType.MENTOR]: {
-      [ActionType.READ]: true,
-      [ActionType.WRITE]: true,
-    },
-    [ReportType.TV]: {
-      [ActionType.READ]: true,
-      [ActionType.WRITE]: true,
-    },
-  },
-};
 
 @Entity()
 export class Match {

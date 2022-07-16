@@ -5,7 +5,7 @@ import { CreateMatchDto } from './dto/create-match.dto';
 import { UpdateMatchDto } from './dto/update-match.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Between, In, Repository } from 'typeorm';
-import { ActionType, Match, permissions, ReportType } from '../entities/match.entity';
+import { Match} from '../entities/match.entity';
 import { UserParams } from '../users/params/UserParams';
 import { uuid } from '../shared/types/uuid';
 import { LeagueMatchParams } from './params/LeagueMatchParams';
@@ -16,8 +16,9 @@ import { GradeMessage } from './dto/update-grade-sms.dto';
 import { getNotNull } from '../shared/getters';
 import { Team } from '../entities/team.entity';
 import { validateEntryTime } from '../shared/validators';
-import { Report } from 'aws-sdk/clients/codebuild';
 import { Role } from 'src/shared/types/role';
+import { ReportType } from './constants/matches.constants';
+import { ActionType, PERMISSIONS } from '../users/constants/users.constants';
 
 const SMS_API: string = 'https://api2.smsplanet.pl';
 export const DTO_DATETIME_FORMAT: string = 'YYYY-MM-DDTHH:mm';
@@ -471,13 +472,13 @@ export class MatchesService {
     const match = getNotNull(await this.getById(matchId));
 
     switch (reportType) {
-      case ReportType.MENTOR:
+      case ReportType.Mentor:
         match.mentorReportKey = key;
         break;
-      case ReportType.OBSERVER:
+      case ReportType.Observer:
         match.observerReportKey = key;
         break;
-      case ReportType.TV:
+      case ReportType.Tv:
         match.tvReportKey = key;
         break;
     }
@@ -489,11 +490,11 @@ export class MatchesService {
     const match = getNotNull(await this.getById(matchId));
 
     switch (reportType) {
-      case ReportType.MENTOR:
+      case ReportType.Mentor:
         return match.mentorReportKey;
-      case ReportType.OBSERVER:
+      case ReportType.Observer:
         return match.observerReportKey;
-      case ReportType.TV:
+      case ReportType.Tv:
         return match.tvReportKey;
     }
   }
@@ -502,13 +503,13 @@ export class MatchesService {
     const match = getNotNull(await this.getById(matchId));
 
     switch (reportType) {
-      case ReportType.MENTOR:
+      case ReportType.Mentor:
         match.mentorReportKey = null;
         break;
-      case ReportType.OBSERVER:
+      case ReportType.Observer:
         match.observerReportKey = null;
         break;
-      case ReportType.TV:
+      case ReportType.Tv:
         match.tvReportKey = null;
         break;
     }
@@ -532,7 +533,7 @@ export class MatchesService {
   }
 
   public validateUserAction(user: User, reportType: ReportType, actionType: ActionType) {
-    if (!permissions[user.role][reportType][actionType]) {
+    if (!PERMISSIONS[user.role][actionType].has(reportType)) {
       throw new HttpException(`TODO`, HttpStatus.FORBIDDEN);
     }
   }

@@ -15,7 +15,7 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { DTO_DATETIME_FORMAT, MatchesService } from './matches.service';
+import { MatchesService } from './matches.service';
 import { CreateMatchDto } from './dto/create-match.dto';
 import { UpdateMatchDto } from './dto/update-match.dto';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
@@ -23,7 +23,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { UserParams } from '../users/params/UserParams';
 import { LeagueMatchParams } from './params/LeagueMatchParams';
 import { LeagueParams } from '../leagues/params/LeagueParams';
-import { ActionType, Match } from '../entities/match.entity';
+import { Match } from '../entities/match.entity';
 import { OwnerGuard } from '../shared/guards/owner.guard';
 import { LeagueAdminGuard } from '../shared/guards/league-admin.guard';
 import { SelfGuard } from '../shared/guards/self.guard';
@@ -46,8 +46,7 @@ import { S3Bucket, S3Service } from 'src/aws/s3.service';
 import { LeagueMatchReportParams } from './params/LeagueMatchReportParams';
 import dayjs from 'dayjs';
 import { LeagueUserGuard } from 'src/shared/guards/league-user.guard';
-import { response } from 'express';
-import { isRFC3339 } from 'class-validator';
+import { ActionType } from '../users/constants/users.constants';
 
 @ApiTags('matches')
 @Controller('')
@@ -220,7 +219,7 @@ export class MatchesController {
   ): Promise<Match> {
     const user = getNotNull(await this.usersService.getById(request.user.id));
     this.matchesService.validateUserMatchAssignment(user, params.matchId);
-    this.matchesService.validateUserAction(user, params.reportType, ActionType.WRITE);
+    this.matchesService.validateUserAction(user, params.reportType, ActionType.Write);
 
     const formattedDate = dayjs().format('YYYY-MM-DDTHH:mm:ss:SSS');
     const key = `league=${params.leagueId}/match=${params.matchId}/report=${params.reportType}/${params.reportType} ${formattedDate}.pdf`;
@@ -236,7 +235,7 @@ export class MatchesController {
   async getReport(@Request() request, @Param() params: LeagueMatchReportParams, @Res() response) {
     const user = getNotNull(await this.usersService.getById(request.user.id));
     this.matchesService.validateUserMatchAssignment(user, params.matchId);
-    this.matchesService.validateUserAction(user, params.reportType, ActionType.READ);
+    this.matchesService.validateUserAction(user, params.reportType, ActionType.Read);
 
     const key = await this.matchesService.getKeyForReport(params.matchId, params.reportType);
 
@@ -253,7 +252,7 @@ export class MatchesController {
   async removeReport(@Request() request, @Param() params: LeagueMatchReportParams): Promise<Match> {
     const user = getNotNull(await this.usersService.getById(request.user.id));
     this.matchesService.validateUserMatchAssignment(user, params.matchId);
-    this.matchesService.validateUserAction(user, params.reportType, ActionType.READ);
+    this.matchesService.validateUserAction(user, params.reportType, ActionType.Read);
 
     return this.matchesService.removeReport(params.matchId, params.reportType);
   }
