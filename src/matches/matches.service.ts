@@ -11,12 +11,7 @@ import { CreateMatchDto } from './dto/create-match.dto';
 import { UpdateMatchDto } from './dto/update-match.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Between, In, Repository } from 'typeorm';
-import {
-  ActionType,
-  Match,
-  permissions,
-  ReportType,
-} from '../entities/match.entity';
+import { Match } from '../entities/match.entity';
 import { UserParams } from '../users/params/UserParams';
 import { uuid } from '../shared/types/uuid';
 import { LeagueMatchParams } from './params/LeagueMatchParams';
@@ -27,11 +22,9 @@ import { GradeMessage } from './dto/update-grade-sms.dto';
 import { getNotNull } from '../shared/getters';
 import { Team } from '../entities/team.entity';
 import { validateEntryTime } from '../shared/validators';
-import { Report } from 'aws-sdk/clients/codebuild';
-import { Role } from 'src/shared/types/role';
 
 const SMS_API: string = 'https://api2.smsplanet.pl';
-export const DTO_DATETIME_FORMAT: string = 'YYYY-MM-DDTHH:mm';
+export const DTO_DATETIME_FORMAT: string = 'YYYY-MM-DDThh:mm';
 const SMS_API_DATETIME_FORMAT: string = 'DD-MM-YYYY HH:mm:ss';
 
 const MATCH_PROPS_COUNT = 7;
@@ -618,91 +611,6 @@ export class MatchesService {
         `This user is assigned to some matches from this league.`,
         HttpStatus.BAD_REQUEST,
       );
-    }
-  }
-
-  public async updateReportData(
-    matchId: uuid,
-    reportType: ReportType,
-    key: string,
-  ): Promise<Match> {
-    const match = getNotNull(await this.getById(matchId));
-
-    switch (reportType) {
-      case ReportType.MENTOR:
-        match.mentorReportKey = key;
-        break;
-      case ReportType.OBSERVER:
-        match.observerReportKey = key;
-        break;
-      case ReportType.TV:
-        match.tvReportKey = key;
-        break;
-    }
-
-    return this.matchRepository.save(match);
-  }
-
-  public async getKeyForReport(
-    matchId: uuid,
-    reportType: ReportType,
-  ): Promise<string> {
-    const match = getNotNull(await this.getById(matchId));
-
-    switch (reportType) {
-      case ReportType.MENTOR:
-        return match.mentorReportKey;
-      case ReportType.OBSERVER:
-        return match.observerReportKey;
-      case ReportType.TV:
-        return match.tvReportKey;
-    }
-  }
-
-  public async removeReport(
-    matchId: uuid,
-    reportType: ReportType,
-  ): Promise<Match> {
-    const match = getNotNull(await this.getById(matchId));
-
-    switch (reportType) {
-      case ReportType.MENTOR:
-        match.mentorReportKey = null;
-        break;
-      case ReportType.OBSERVER:
-        match.observerReportKey = null;
-        break;
-      case ReportType.TV:
-        match.tvReportKey = null;
-        break;
-    }
-
-    return this.matchRepository.save(match);
-  }
-
-  public async validateUserMatchAssignment(user: User, matchId: uuid) {
-    if (user.role === Role.Admin) {
-      return;
-    }
-
-    const match = getNotNull(await this.getById(matchId));
-    const userIsAssignedToMatch =
-      match.refereeId === user.id || match.observerId === user.id;
-
-    if (userIsAssignedToMatch) {
-      return;
-    }
-
-    throw new HttpException(`TODO`, HttpStatus.FORBIDDEN);
-  }
-
-  public validateUserAction(
-    user: User,
-    reportType: ReportType,
-    actionType: ActionType,
-  ) {
-    if (!permissions[user.role][reportType][actionType]) {
-      throw new HttpException(`TODO`, HttpStatus.FORBIDDEN);
     }
   }
 }

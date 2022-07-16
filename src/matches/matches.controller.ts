@@ -10,12 +10,11 @@ import {
   Post,
   Put,
   Request,
-  Res,
   UploadedFile,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { DTO_DATETIME_FORMAT, MatchesService } from './matches.service';
+import { MatchesService } from './matches.service';
 import { CreateMatchDto } from './dto/create-match.dto';
 import { UpdateMatchDto } from './dto/update-match.dto';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
@@ -23,7 +22,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { UserParams } from '../users/params/UserParams';
 import { LeagueMatchParams } from './params/LeagueMatchParams';
 import { LeagueParams } from '../leagues/params/LeagueParams';
-import { ActionType, Match } from '../entities/match.entity';
+import { Match } from '../entities/match.entity';
 import { OwnerGuard } from '../shared/guards/owner.guard';
 import { LeagueAdminGuard } from '../shared/guards/league-admin.guard';
 import { SelfGuard } from '../shared/guards/self.guard';
@@ -43,11 +42,6 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { RoleGuard } from '../shared/guards/role.guard';
 import { Role } from '../shared/types/role';
 import { S3Bucket, S3Service } from 'src/aws/s3.service';
-import { LeagueMatchReportParams } from './params/LeagueMatchReportParams';
-import dayjs from 'dayjs';
-import { LeagueUserGuard } from 'src/shared/guards/league-user.guard';
-import { response } from 'express';
-import { isRFC3339 } from 'class-validator';
 
 @ApiTags('matches')
 @Controller('')
@@ -266,92 +260,8 @@ export class MatchesController {
         matches.push(match);
       }),
     );
-
-    const { originalname } = file;
-    const key = String(originalname + ' ' + dayjs().toString());
-    await this.s3Service.upload(S3Bucket.MATCHES_BUCKET, key, file);
+    await this.s3Service.uploadToS3(S3Bucket.MATCHES_BUCKET, file);
 
     return matches;
-  }
-
-  @Post('leagues/:leagueId/matches/:matchId/reports/:reportType')
-  @UseGuards(JwtAuthGuard, LeagueUserGuard)
-  @UseInterceptors(FileInterceptor('report'))
-  @ApiOperation({ summary: 'Upload file' })
-  async uploadReport(
-    @Request() request,
-    @Param() params: LeagueMatchReportParams,
-    @UploadedFile() file,
-  ): Promise<Match> {
-    const user = getNotNull(await this.usersService.getById(request.user.id));
-    this.matchesService.validateUserMatchAssignment(user, params.matchId);
-    this.matchesService.validateUserAction(
-      user,
-      params.reportType,
-      ActionType.WRITE,
-    );
-
-    const formattedDate = dayjs().format('YYYY-MM-DDTHH:mm:ss:SSS');
-    const key = `league=${params.leagueId}/match=${params.matchId}/report=${params.reportType}/${params.reportType} ${formattedDate}.pdf`;
-
-    const match = await this.matchesService.updateReportData(
-      params.matchId,
-      params.reportType,
-      key,
-    );
-
-    await this.s3Service.upload(S3Bucket.GRADES_BUCKET, key, file);
-
-    return match;
-  }
-
-  @Get('leagues/:leagueId/matches/:matchId/reports/:reportType')
-  @UseGuards(JwtAuthGuard, LeagueUserGuard)
-  @UseInterceptors(FileInterceptor('report'))
-  @ApiOperation({ summary: 'Upload file' })
-  async getReport(
-    @Request() request,
-    @Param() params: LeagueMatchReportParams,
-    @Res() response,
-  ) {
-    const user = getNotNull(await this.usersService.getById(request.user.id));
-    this.matchesService.validateUserMatchAssignment(user, params.matchId);
-    this.matchesService.validateUserAction(
-      user,
-      params.reportType,
-      ActionType.READ,
-    );
-
-    const key = await this.matchesService.getKeyForReport(
-      params.matchId,
-      params.reportType,
-    );
-
-    const s3ReadStream = await this.s3Service.getDownloadStream(
-      S3Bucket.GRADES_BUCKET,
-      key,
-    );
-
-    response.setHeader('Content-Type', 'application/pdf');
-    s3ReadStream.pipe(response);
-  }
-
-  @Delete('leagues/:leagueId/matches/:matchId/reports/:reportType')
-  @UseGuards(JwtAuthGuard, LeagueUserGuard)
-  @UseInterceptors(FileInterceptor('report'))
-  @ApiOperation({ summary: 'Upload file' })
-  async removeReport(
-    @Request() request,
-    @Param() params: LeagueMatchReportParams,
-  ): Promise<Match> {
-    const user = getNotNull(await this.usersService.getById(request.user.id));
-    this.matchesService.validateUserMatchAssignment(user, params.matchId);
-    this.matchesService.validateUserAction(
-      user,
-      params.reportType,
-      ActionType.READ,
-    );
-
-    return this.matchesService.removeReport(params.matchId, params.reportType);
   }
 }
