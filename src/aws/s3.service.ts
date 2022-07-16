@@ -25,18 +25,20 @@ export class S3Service {
     switch (bucket) {
       case S3Bucket.MATCHES_BUCKET:
         return process.env.AWS_BUCKET_MATCHES;
+      case S3Bucket.GRADES_BUCKET:
+        return process.env.AWS_BUCKET_GRADES;
       default:
         throw new Error(`Unknown bucket ${bucket}`);
     }
   };
 
-  async uploadToS3(bucket: S3Bucket, file) {
+  async upload(bucket: S3Bucket, key: string, file) {
     const { originalname, buffer } = file;
-    Logger.log(buffer.toString(), 'S3 Uploaded file buffer');
+    Logger.log(originalname, 'S3 Uploaded file buffer');
 
     const params = {
       Bucket: this.getBucketName(bucket),
-      Key: String(originalname + ' ' + dayjs().toString()),
+      Key: key,
       Body: buffer,
     };
     return new Promise((resolve, reject) => {
@@ -48,5 +50,13 @@ export class S3Service {
         resolve(data);
       });
     });
+  }
+
+  async getDownloadStream(bucket: S3Bucket, key: string) {
+    const params = {
+      Bucket: this.getBucketName(bucket),
+      Key: key,
+    };
+    return this.s3.getObject(params).createReadStream();
   }
 }

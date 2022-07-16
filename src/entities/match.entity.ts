@@ -1,9 +1,89 @@
-import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { uuid } from '../shared/types/uuid';
 import { User } from './user.entity';
 import { Team } from './team.entity';
 import { Type } from 'class-transformer';
 import { League } from './league.entity';
+import { Role } from 'src/shared/types/role';
+
+export enum ReportType {
+  OBSERVER = 'Observer',
+  MENTOR = 'Mentor',
+  TV = 'Tv',
+}
+
+export enum ActionType {
+  READ,
+  WRITE,
+}
+
+export const permissions: Record<
+  Role,
+  Record<ReportType, Record<ActionType, boolean>>
+> = {
+  [Role.Admin]: {
+    [ReportType.OBSERVER]: {
+      [ActionType.READ]: true,
+      [ActionType.WRITE]: true,
+    },
+    [ReportType.MENTOR]: {
+      [ActionType.READ]: true,
+      [ActionType.WRITE]: true,
+    },
+    [ReportType.TV]: {
+      [ActionType.READ]: true,
+      [ActionType.WRITE]: true,
+    },
+  },
+  [Role.Observer]: {
+    [ReportType.OBSERVER]: {
+      [ActionType.READ]: true,
+      [ActionType.WRITE]: true,
+    },
+    [ReportType.MENTOR]: {
+      [ActionType.READ]: true,
+      [ActionType.WRITE]: true,
+    },
+    [ReportType.TV]: {
+      [ActionType.READ]: true,
+      [ActionType.WRITE]: true,
+    },
+  },
+  [Role.Owner]: {
+    [ReportType.OBSERVER]: {
+      [ActionType.READ]: true,
+      [ActionType.WRITE]: true,
+    },
+    [ReportType.MENTOR]: {
+      [ActionType.READ]: true,
+      [ActionType.WRITE]: true,
+    },
+    [ReportType.TV]: {
+      [ActionType.READ]: true,
+      [ActionType.WRITE]: true,
+    },
+  },
+  [Role.Referee]: {
+    [ReportType.OBSERVER]: {
+      [ActionType.READ]: true,
+      [ActionType.WRITE]: true,
+    },
+    [ReportType.MENTOR]: {
+      [ActionType.READ]: true,
+      [ActionType.WRITE]: true,
+    },
+    [ReportType.TV]: {
+      [ActionType.READ]: true,
+      [ActionType.WRITE]: true,
+    },
+  },
+};
 
 @Entity()
 export class Match {
@@ -15,7 +95,7 @@ export class Match {
 
   @Column({ type: 'datetime' })
   @Type(() => Date)
-  matchDate: Date
+  matchDate: Date;
 
   @Column()
   stadium: string;
@@ -60,21 +140,30 @@ export class Match {
 
   @ManyToOne(() => Team, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'homeTeamId' })
-  homeTeam: Team
+  homeTeam: Team;
 
   @ManyToOne(() => Team, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'awayTeamId' })
-  awayTeam: Team
+  awayTeam: Team;
 
   @ManyToOne(() => User, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'refereeId' })
-  referee: User
+  referee: User;
 
   @ManyToOne(() => User, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'observerId' })
-  observer: User
+  observer: User;
 
   @ManyToOne(() => League, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'leagueId' })
-  league: League
+  league: League;
+
+  @Column({ nullable: true })
+  observerReportKey: string;
+
+  @Column({ nullable: true })
+  mentorReportKey: string;
+
+  @Column({ nullable: true })
+  tvReportKey: string;
 }

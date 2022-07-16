@@ -11,9 +11,14 @@ import { LeagueUserParams } from './params/LeagueUserParams';
 
 @Injectable()
 export class LeaguesService {
-  constructor(@InjectRepository(League) private leagueRepository: Repository<League>) {}
+  constructor(
+    @InjectRepository(League) private leagueRepository: Repository<League>,
+  ) {}
 
-  async createLeague(initialLeagueAdmin: User, dto: CreateLeagueDto): Promise<League> {
+  async createLeague(
+    initialLeagueAdmin: User,
+    dto: CreateLeagueDto,
+  ): Promise<League> {
     await this.validateUnique(dto);
     const league: League = this.leagueRepository.create({
       name: dto.name,
@@ -28,12 +33,16 @@ export class LeaguesService {
 
   async getLeagues(): Promise<League[]> {
     return this.leagueRepository.find({
-      relations: ['admins', 'referees', 'observers']
+      relations: ['admins', 'referees', 'observers'],
     });
   }
 
   async getLeaguesByUser(user: User): Promise<League[]> {
-    const tables = { 'Admin': 'admins', 'Referee': 'referees', 'Observer': 'observers' };
+    const tables = {
+      Admin: 'admins',
+      Referee: 'referees',
+      Observer: 'observers',
+    };
     const table: string = tables[user.role];
     let query = this.leagueRepository.createQueryBuilder('league');
     query.innerJoinAndSelect(`league.${table}`, `${table}Alias`);
@@ -47,16 +56,19 @@ export class LeaguesService {
   async getLeagueById(leagueId: uuid): Promise<League> {
     return this.leagueRepository.findOne({
       where: { id: leagueId },
-      relations: ['admins', 'referees', 'observers']
+      relations: ['admins', 'referees', 'observers'],
     });
   }
 
-  async updateLeague(params: LeagueParams, dto: UpdateLeagueDto): Promise<League> {
+  async updateLeague(
+    params: LeagueParams,
+    dto: UpdateLeagueDto,
+  ): Promise<League> {
     await this.validateUnique(dto, params.leagueId);
     await this.leagueRepository.update(params.leagueId, {
       name: dto.name,
       shortName: dto.shortName,
-      country: dto.country
+      country: dto.country,
     });
     return this.getLeagueById(params.leagueId);
   }
@@ -82,59 +94,88 @@ export class LeaguesService {
     return league.admins;
   }
 
-  async assignRefereeToLeague(params: LeagueUserParams, user: User): Promise<User> {
+  async assignRefereeToLeague(
+    params: LeagueUserParams,
+    user: User,
+  ): Promise<User> {
     const league: League = await this.getLeagueById(params.leagueId);
     league.referees.push(user);
     await this.leagueRepository.save(league);
     return user;
   }
 
-  async assignObserverToLeague(params: LeagueUserParams, user: User): Promise<User> {
+  async assignObserverToLeague(
+    params: LeagueUserParams,
+    user: User,
+  ): Promise<User> {
     const league: League = await this.getLeagueById(params.leagueId);
     league.observers.push(user);
     await this.leagueRepository.save(league);
     return user;
   }
 
-  async assignAdminToLeague(params: LeagueUserParams, user: User): Promise<User> {
+  async assignAdminToLeague(
+    params: LeagueUserParams,
+    user: User,
+  ): Promise<User> {
     const league: League = await this.getLeagueById(params.leagueId);
     league.admins.push(user);
     await this.leagueRepository.save(league);
     return user;
   }
 
-  async removeRefereeFromLeague(params: LeagueUserParams, user: User): Promise<User> {
+  async removeRefereeFromLeague(
+    params: LeagueUserParams,
+    user: User,
+  ): Promise<User> {
     const league: League = await this.getLeagueById(params.leagueId);
-    league.referees = league.referees.filter((referee) => referee.id !== user.id);
+    league.referees = league.referees.filter(
+      (referee) => referee.id !== user.id,
+    );
     await this.leagueRepository.save(league);
     return user;
   }
 
-  async removeObserverFromLeague(params: LeagueUserParams, user: User): Promise<User> {
+  async removeObserverFromLeague(
+    params: LeagueUserParams,
+    user: User,
+  ): Promise<User> {
     const league: League = await this.getLeagueById(params.leagueId);
-    league.observers = league.observers.filter((observer) => observer.id !== user.id);
+    league.observers = league.observers.filter(
+      (observer) => observer.id !== user.id,
+    );
     await this.leagueRepository.save(league);
     return user;
   }
 
-  async removeAdminFromLeague(params: LeagueUserParams, user: User): Promise<User> {
+  async removeAdminFromLeague(
+    params: LeagueUserParams,
+    user: User,
+  ): Promise<User> {
     const league: League = await this.getLeagueById(params.leagueId);
     league.admins = league.admins.filter((admin) => admin.id !== user.id);
     await this.leagueRepository.save(league);
     return user;
   }
 
-  async validateUnique(dto: CreateLeagueDto | UpdateLeagueDto, id?: uuid): Promise<void> {
-    const existingLeague: League | undefined = await this.leagueRepository.findOne({
-      where: [ { name: dto.name }, { shortName: dto.shortName }]
-    });
+  async validateUnique(
+    dto: CreateLeagueDto | UpdateLeagueDto,
+    id?: uuid,
+  ): Promise<void> {
+    const existingLeague: League | undefined =
+      await this.leagueRepository.findOne({
+        where: [{ name: dto.name }, { shortName: dto.shortName }],
+      });
 
     if (!existingLeague) {
       return;
     }
 
     if (!id || id !== existingLeague.id) {
-      throw new HttpException('League name or short name not unique', HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        'League name or short name not unique',
+        HttpStatus.BAD_REQUEST,
+      );
     }
   }
 }
