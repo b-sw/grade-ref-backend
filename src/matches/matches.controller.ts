@@ -78,54 +78,25 @@ export class MatchesController {
   @Post('leagues/:leagueId/matches')
   @UseGuards(JwtAuthGuard, LeagueAdminGuard, ValidRefereeObserverGuard)
   @ApiOperation({ summary: 'Create match' })
-  async createMatch(
-    @Param() params: LeagueParams,
-    @Body() dto: CreateMatchDto,
-  ): Promise<Match> {
-    const { leagueIdx, homeTeamIdx } = await this.getUserReadableKeyParams(
-      dto.homeTeamId,
-    );
-    const observer: User = getNotNull(
-      await this.usersService.getById(dto.observerId),
-    );
-    return this.matchesService.createMatch(
-      params.leagueId,
-      dto,
-      leagueIdx,
-      homeTeamIdx,
-      observer.phoneNumber,
-    );
+  async createMatch(@Param() params: LeagueParams, @Body() dto: CreateMatchDto): Promise<Match> {
+    const { leagueIdx, homeTeamIdx } = await this.getUserReadableKeyParams(dto.homeTeamId);
+    const observer: User = getNotNull(await this.usersService.getById(dto.observerId));
+    return this.matchesService.createMatch(params.leagueId, dto, leagueIdx, homeTeamIdx, observer.phoneNumber);
   }
 
   @Put('leagues/:leagueId/matches/:matchId')
   @UseGuards(JwtAuthGuard, LeagueAdminGuard, ValidRefereeObserverGuard)
   @ApiOperation({ summary: 'Update match' })
-  async updateMatch(
-    @Param() params: LeagueMatchParams,
-    @Body() dto: UpdateMatchDto,
-  ): Promise<Match> {
-    const { leagueIdx, homeTeamIdx } = await this.getUserReadableKeyParams(
-      dto.homeTeamId,
-    );
-    const observer: User = getNotNull(
-      await this.usersService.getById(dto.observerId),
-    );
-    return this.matchesService.updateMatch(
-      params,
-      dto,
-      leagueIdx,
-      homeTeamIdx,
-      observer.phoneNumber,
-    );
+  async updateMatch(@Param() params: LeagueMatchParams, @Body() dto: UpdateMatchDto): Promise<Match> {
+    const { leagueIdx, homeTeamIdx } = await this.getUserReadableKeyParams(dto.homeTeamId);
+    const observer: User = getNotNull(await this.usersService.getById(dto.observerId));
+    return this.matchesService.updateMatch(params, dto, leagueIdx, homeTeamIdx, observer.phoneNumber);
   }
 
   @Put('leagues/:leagueId/matches/:matchId/grade')
   @UseGuards(JwtAuthGuard, RoleGuard(Role.Observer))
   @ApiOperation({ summary: 'Update referee match grade' })
-  async updateMatchGrade(
-    @Param() params: LeagueMatchParams,
-    @Body() dto: Partial<UpdateMatchDto>,
-  ): Promise<Match> {
+  async updateMatchGrade(@Param() params: LeagueMatchParams, @Body() dto: Partial<UpdateMatchDto>): Promise<Match> {
     return this.matchesService.updateGrade(params, dto);
   }
 
@@ -146,9 +117,7 @@ export class MatchesController {
   async updateMatchGradeSms(@Request() req): Promise<void> {
     Logger.log(req.body, 'Update match grade sms');
     const message: GradeMessage = JSON.parse(req.body.message);
-    const observer: User = getNotNull(
-      await this.usersService.getByPhoneNumber(message.msisdn),
-    );
+    const observer: User = getNotNull(await this.usersService.getByPhoneNumber(message.msisdn));
     return this.matchesService.updateGradeSms(message, observer);
   }
 
@@ -156,12 +125,8 @@ export class MatchesController {
   @UseGuards(JwtAuthGuard, LeagueAdminGuard)
   @ApiOperation({ summary: 'Delete match' })
   async removeMatch(@Param() params: LeagueMatchParams): Promise<Match> {
-    const match: Match = getNotNull(
-      await this.matchesService.getById(params.matchId),
-    );
-    const observer: User = getNotNull(
-      await this.usersService.getById(match.observerId),
-    );
+    const match: Match = getNotNull(await this.matchesService.getById(params.matchId));
+    const observer: User = getNotNull(await this.usersService.getById(match.observerId));
     return this.matchesService.removeMatch(params, observer.phoneNumber);
   }
 
@@ -175,33 +140,21 @@ export class MatchesController {
   @Get('users/:userId/leagues/:leagueId/matches')
   @UseGuards(JwtAuthGuard) // todo: add guard
   @ApiOperation({ summary: 'Get user league matches' })
-  async getUserLeagueMatches(
-    @Param() params: LeagueUserParams,
-  ): Promise<Match[]> {
+  async getUserLeagueMatches(@Param() params: LeagueUserParams): Promise<Match[]> {
     return this.matchesService.getUserLeagueMatches(params);
   }
 
-  async getUserReadableKeyParams(
-    homeTeamId: uuid,
-  ): Promise<{ leagueIdx: number; homeTeamIdx: number }> {
+  async getUserReadableKeyParams(homeTeamId: uuid): Promise<{ leagueIdx: number; homeTeamIdx: number }> {
     const homeTeam: Team = await this.teamsService.getById(homeTeamId);
     const leagues: League[] = await this.leaguesService.getLeagues();
-    const teamLeague: League = await this.leaguesService.getLeagueById(
-      homeTeam.leagueId,
-    );
-    const teams: Team[] = await this.teamsService.getAllByLeagueId(
-      teamLeague.id,
-    );
+    const teamLeague: League = await this.leaguesService.getLeagueById(homeTeam.leagueId);
+    const teams: Team[] = await this.teamsService.getAllByLeagueId(teamLeague.id);
 
     leagues.sort((a, b) => a.name.localeCompare(b.name));
     teams.sort((a, b) => a.name.localeCompare(b.name));
 
-    const leagueIdx: number = leagues.findIndex(
-      (league) => league.id === league.id,
-    );
-    const homeTeamIdx: number = teams.findIndex(
-      (team) => team.id === homeTeam.id,
-    );
+    const leagueIdx: number = leagues.findIndex((league) => league.id === league.id);
+    const homeTeamIdx: number = teams.findIndex((team) => team.id === homeTeam.id);
 
     return { leagueIdx, homeTeamIdx };
   }
@@ -210,28 +163,13 @@ export class MatchesController {
   @UseGuards(JwtAuthGuard, LeagueAdminGuard)
   @UseInterceptors(FileInterceptor('matches'))
   @ApiOperation({ summary: 'Validate file' })
-  async validateUpload(
-    @Param() params: LeagueParams,
-    @UploadedFile() file,
-  ): Promise<CreateMatchDto[]> {
-    const teams: Team[] = await this.teamsService.getAllByLeagueId(
-      params.leagueId,
-    );
-    const referees: User[] = await this.leaguesService.getLeagueReferees(
-      params.leagueId,
-    );
-    const observers: User[] = await this.leaguesService.getLeagueObservers(
-      params.leagueId,
-    );
+  async validateUpload(@Param() params: LeagueParams, @UploadedFile() file): Promise<CreateMatchDto[]> {
+    const teams: Team[] = await this.teamsService.getAllByLeagueId(params.leagueId);
+    const referees: User[] = await this.leaguesService.getLeagueReferees(params.leagueId);
+    const observers: User[] = await this.leaguesService.getLeagueObservers(params.leagueId);
 
     const { buffer } = file;
-    await this.matchesService.validateMatches(
-      buffer.toString(),
-      params.leagueId,
-      teams,
-      referees,
-      observers,
-    );
+    await this.matchesService.validateMatches(buffer.toString(), params.leagueId, teams, referees, observers);
     const dtos: CreateMatchDto[] = await this.matchesService.getFileMatchesDtos(
       buffer.toString(),
       params.leagueId,
@@ -253,10 +191,7 @@ export class MatchesController {
   @UseGuards(JwtAuthGuard, LeagueAdminGuard)
   @UseInterceptors(FileInterceptor('matches'))
   @ApiOperation({ summary: 'Upload file' })
-  async createMatches(
-    @Param() params: LeagueParams,
-    @UploadedFile() file,
-  ): Promise<Match[]> {
+  async createMatches(@Param() params: LeagueParams, @UploadedFile() file): Promise<Match[]> {
     const dtos: CreateMatchDto[] = await this.validateUpload(params, file);
 
     let matches: Match[] = [];
@@ -285,20 +220,12 @@ export class MatchesController {
   ): Promise<Match> {
     const user = getNotNull(await this.usersService.getById(request.user.id));
     this.matchesService.validateUserMatchAssignment(user, params.matchId);
-    this.matchesService.validateUserAction(
-      user,
-      params.reportType,
-      ActionType.WRITE,
-    );
+    this.matchesService.validateUserAction(user, params.reportType, ActionType.WRITE);
 
     const formattedDate = dayjs().format('YYYY-MM-DDTHH:mm:ss:SSS');
     const key = `league=${params.leagueId}/match=${params.matchId}/report=${params.reportType}/${params.reportType} ${formattedDate}.pdf`;
 
-    const match = await this.matchesService.updateReportData(
-      params.matchId,
-      params.reportType,
-      key,
-    );
+    const match = await this.matchesService.updateReportData(params.matchId, params.reportType, key);
 
     await this.s3Service.upload(S3Bucket.GRADES_BUCKET, key, file);
 
@@ -309,28 +236,14 @@ export class MatchesController {
   @UseGuards(JwtAuthGuard, LeagueUserGuard)
   @UseInterceptors(FileInterceptor('report'))
   @ApiOperation({ summary: 'Upload file' })
-  async getReport(
-    @Request() request,
-    @Param() params: LeagueMatchReportParams,
-    @Res() response,
-  ) {
+  async getReport(@Request() request, @Param() params: LeagueMatchReportParams, @Res() response) {
     const user = getNotNull(await this.usersService.getById(request.user.id));
     this.matchesService.validateUserMatchAssignment(user, params.matchId);
-    this.matchesService.validateUserAction(
-      user,
-      params.reportType,
-      ActionType.READ,
-    );
+    this.matchesService.validateUserAction(user, params.reportType, ActionType.READ);
 
-    const key = await this.matchesService.getKeyForReport(
-      params.matchId,
-      params.reportType,
-    );
+    const key = await this.matchesService.getKeyForReport(params.matchId, params.reportType);
 
-    const s3ReadStream = await this.s3Service.getDownloadStream(
-      S3Bucket.GRADES_BUCKET,
-      key,
-    );
+    const s3ReadStream = await this.s3Service.getDownloadStream(S3Bucket.GRADES_BUCKET, key);
 
     response.setHeader('Content-Type', 'application/pdf');
     s3ReadStream.pipe(response);
@@ -340,17 +253,10 @@ export class MatchesController {
   @UseGuards(JwtAuthGuard, LeagueUserGuard)
   @UseInterceptors(FileInterceptor('report'))
   @ApiOperation({ summary: 'Upload file' })
-  async removeReport(
-    @Request() request,
-    @Param() params: LeagueMatchReportParams,
-  ): Promise<Match> {
+  async removeReport(@Request() request, @Param() params: LeagueMatchReportParams): Promise<Match> {
     const user = getNotNull(await this.usersService.getById(request.user.id));
     this.matchesService.validateUserMatchAssignment(user, params.matchId);
-    this.matchesService.validateUserAction(
-      user,
-      params.reportType,
-      ActionType.READ,
-    );
+    this.matchesService.validateUserAction(user, params.reportType, ActionType.READ);
 
     return this.matchesService.removeReport(params.matchId, params.reportType);
   }
