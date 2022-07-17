@@ -241,6 +241,7 @@ export class MatchesController {
     const s3ReadStream = await this.s3Service.getDownloadStream(S3Bucket.GRADES_BUCKET, key);
 
     response.setHeader('Content-Type', 'application/pdf');
+    response.setHeader('Content-Disposition', 'attachment; filename="' + key + '"');
     s3ReadStream.pipe(response);
   }
 
