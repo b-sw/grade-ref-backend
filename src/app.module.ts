@@ -9,13 +9,11 @@ import { LeaguesModule } from './leagues/leagues.module';
 import { HealthModule } from './health/health.module';
 import { FoulsModule } from './fouls/fouls.module';
 import { FeaturesModule } from './features/features.module';
-import { S3Module } from './aws/s3.module';
+import { AWSModule } from './aws/aws.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forRoot(
-      process.env.NODE_ENV === 'test' ? e2eConfig : dbConfig,
-    ),
+    TypeOrmModule.forRoot(process.env.NODE_ENV === 'test' ? e2eConfig : dbConfig),
     UsersModule,
     AuthModule,
     TeamsModule,
@@ -24,7 +22,7 @@ import { S3Module } from './aws/s3.module';
     HealthModule,
     FoulsModule,
     FeaturesModule,
-    S3Module,
+    AWSModule,
   ],
   controllers: [],
   providers: [],

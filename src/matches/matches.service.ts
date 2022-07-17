@@ -5,7 +5,7 @@ import { CreateMatchDto } from './dto/create-match.dto';
 import { UpdateMatchDto } from './dto/update-match.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Between, In, Repository } from 'typeorm';
-import { Match} from '../entities/match.entity';
+import { Match } from '../entities/match.entity';
 import { UserParams } from '../users/params/UserParams';
 import { uuid } from '../shared/types/uuid';
 import { LeagueMatchParams } from './params/LeagueMatchParams';
@@ -16,9 +16,9 @@ import { GradeMessage } from './dto/update-grade-sms.dto';
 import { getNotNull } from '../shared/getters';
 import { Team } from '../entities/team.entity';
 import { validateEntryTime } from '../shared/validators';
-import { Role } from 'src/shared/types/role';
 import { ReportType } from './constants/matches.constants';
-import { ActionType, PERMISSIONS } from '../users/constants/users.constants';
+import { ActionType, GRADE_FILES_PERMISSIONS } from '../users/constants/users.constants';
+import { Role } from '../../src/shared/types/role';
 
 const SMS_API: string = 'https://api2.smsplanet.pl';
 export const DTO_DATETIME_FORMAT: string = 'YYYY-MM-DDTHH:mm';
@@ -533,7 +533,9 @@ export class MatchesService {
   }
 
   public validateUserAction(user: User, reportType: ReportType, actionType: ActionType) {
-    if (!PERMISSIONS[user.role][actionType].has(reportType)) {
+    return; //TODO
+
+    if (!GRADE_FILES_PERMISSIONS[user.role][actionType].has(reportType)) {
       throw new HttpException(`TODO`, HttpStatus.FORBIDDEN);
     }
   }

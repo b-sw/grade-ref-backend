@@ -42,10 +42,10 @@ import { getNotNull } from '../shared/getters';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { RoleGuard } from '../shared/guards/role.guard';
 import { Role } from '../shared/types/role';
-import { S3Bucket, S3Service } from 'src/aws/s3.service';
+import { S3Bucket, S3Service } from '../aws/s3.service';
 import { LeagueMatchReportParams } from './params/LeagueMatchReportParams';
 import dayjs from 'dayjs';
-import { LeagueUserGuard } from 'src/shared/guards/league-user.guard';
+import { LeagueUserGuard } from '../shared/guards/league-user.guard';
 import { ActionType } from '../users/constants/users.constants';
 
 @ApiTags('matches')

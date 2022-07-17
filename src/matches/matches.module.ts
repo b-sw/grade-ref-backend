@@ -6,16 +6,10 @@ import { Match } from '../entities/match.entity';
 import { UsersModule } from '../users/users.module';
 import { LeaguesModule } from '../leagues/leagues.module';
 import { TeamsModule } from '../teams/teams.module';
-import { S3Module } from 'src/aws/s3.module';
+import { AWSModule } from '../aws/aws.module';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([Match]),
-    LeaguesModule,
-    forwardRef(() => UsersModule),
-    TeamsModule,
-    S3Module,
-  ],
+  imports: [TypeOrmModule.forFeature([Match]), LeaguesModule, forwardRef(() => UsersModule), TeamsModule, AWSModule],
   controllers: [MatchesController],
   providers: [MatchesService],
   exports: [MatchesService],
