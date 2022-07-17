@@ -218,7 +218,7 @@ export class MatchesController {
     @UploadedFile() file,
   ): Promise<Match> {
     const user = getNotNull(await this.usersService.getById(request.user.id));
-    this.matchesService.validateUserMatchAssignment(user, params.matchId);
+    await this.matchesService.validateUserMatchAssignment(user, params.matchId);
     this.matchesService.validateUserAction(user, params.reportType, ActionType.Write);
 
     const formattedDate = dayjs().format('YYYY-MM-DDTHH:mm:ss:SSS');
@@ -233,7 +233,7 @@ export class MatchesController {
   @ApiOperation({ summary: 'Download report' })
   async getReport(@Request() request, @Param() params: LeagueMatchReportParams, @Res() response) {
     const user = getNotNull(await this.usersService.getById(request.user.id));
-    this.matchesService.validateUserMatchAssignment(user, params.matchId);
+    await this.matchesService.validateUserMatchAssignment(user, params.matchId);
     this.matchesService.validateUserAction(user, params.reportType, ActionType.Read);
 
     const key = await this.matchesService.getKeyForReport(params.matchId, params.reportType);
@@ -249,8 +249,8 @@ export class MatchesController {
   @ApiOperation({ summary: 'Delete report' })
   async removeReport(@Request() request, @Param() params: LeagueMatchReportParams): Promise<Match> {
     const user = getNotNull(await this.usersService.getById(request.user.id));
-    this.matchesService.validateUserMatchAssignment(user, params.matchId);
-    this.matchesService.validateUserAction(user, params.reportType, ActionType.Read);
+    await this.matchesService.validateUserMatchAssignment(user, params.matchId);
+    this.matchesService.validateUserAction(user, params.reportType, ActionType.Write);
 
     return this.matchesService.removeReport(params.matchId, params.reportType);
   }

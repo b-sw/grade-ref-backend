@@ -518,7 +518,7 @@ export class MatchesService {
   }
 
   public async validateUserMatchAssignment(user: User, matchId: uuid) {
-    if (user.role === Role.Admin) {
+    if (user.role === Role.Admin || user.role === Role.Owner) {
       return;
     }
 
@@ -533,8 +533,6 @@ export class MatchesService {
   }
 
   public validateUserAction(user: User, reportType: ReportType, actionType: ActionType) {
-    return; //TODO
-
     if (!GRADE_FILES_PERMISSIONS[user.role][actionType].has(reportType)) {
       throw new HttpException(`TODO`, HttpStatus.FORBIDDEN);
     }
