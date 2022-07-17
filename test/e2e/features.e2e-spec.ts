@@ -1,7 +1,6 @@
 import { User } from '../../src/entities/user.entity';
 import { MockUser } from '../shared/mockUser';
 import { v4 as randomUuid } from 'uuid';
-import { Role } from '../../src/shared/types/role';
 import { League } from '../../src/entities/league.entity';
 import { MockLeague } from '../shared/mockLeague';
 import { Team } from '../../src/entities/team.entity';
@@ -18,6 +17,7 @@ import request from 'supertest';
 import { CreateFeatureDto } from '../../src/features/dto/create-feature.dto';
 import { MockCreateFeatureDto } from '../shared/mockFeature';
 import { UpdateFeatureDto } from '../../src/features/dto/update-feature.dto';
+import { Role } from '../../src/users/constants/users.constants';
 
 describe('e2e features', () => {
   const mockOwner: User = MockUser({ id: randomUuid(), role: Role.Owner, email: 'mock@mail.com', lastName: 'Doe' });

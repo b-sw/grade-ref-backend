@@ -10,10 +10,10 @@ import { FoulParams } from './params/FoulParams';
 import { MatchesService, OVERALL_GRADE_ENTRY_TIME_WINDOW } from '../matches/matches.service';
 import { validateEntryTime } from '../shared/validators';
 import { Match } from '../entities/match.entity';
-import { uuid } from '../shared/types/uuid';
+import { uuid } from '../shared/constants/uuid.constant';
 import { Foul } from '../entities/foul.entity';
 import { RoleGuard } from '../shared/guards/role.guard';
-import { Role } from '../shared/types/role';
+import { Role } from '../users/constants/users.constants';
 
 @ApiTags('fouls')
 @Controller('')

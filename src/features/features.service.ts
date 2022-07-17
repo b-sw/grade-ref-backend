@@ -1,5 +1,5 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { uuid } from 'src/shared/types/uuid';
+import { uuid } from 'src/shared/constants/uuid.constant';
 import { CreateFeatureDto } from './dto/create-feature.dto';
 import { UpdateFeatureDto } from './dto/update-feature.dto';
 import { Feature, FeatureType } from '../entities/feature.entity';

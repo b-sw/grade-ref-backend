@@ -10,9 +10,10 @@ import {
   Post,
   Put,
   Request,
+  Res,
   UploadedFile,
   UseGuards,
-  UseInterceptors
+  UseInterceptors,
 } from '@nestjs/common';
 import { MatchesService } from './matches.service';
 import { CreateMatchDto } from './dto/create-match.dto';
@@ -30,7 +31,7 @@ import { LeaguesService } from '../leagues/leagues.service';
 import { TeamsService } from '../teams/teams.service';
 import { League } from '../entities/league.entity';
 import { Team } from '../entities/team.entity';
-import { uuid } from '../shared/types/uuid';
+import { uuid } from '../shared/constants/uuid.constant';
 import { ValidRefereeObserverGuard } from '../shared/guards/valid-referee-observer-guard.service';
 import { LeagueUserParams } from '../leagues/params/LeagueUserParams';
 import { UsersService } from '../users/users.service';
@@ -40,16 +41,24 @@ import { GradeMessage } from './dto/update-grade-sms.dto';
 import { getNotNull } from '../shared/getters';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { RoleGuard } from '../shared/guards/role.guard';
-import { Role } from '../shared/types/role';
+import { S3Service } from '../aws/s3.service';
+import { LeagueMatchReportParams } from './params/LeagueMatchReportParams';
+import dayjs from 'dayjs';
+import { LeagueUserGuard } from '../shared/guards/league-user.guard';
+import { ActionType, Role } from '../users/constants/users.constants';
+import { S3Bucket, S3FileKeyDateFormat } from '../aws/constants/aws.constants';
 
 @ApiTags('matches')
 @Controller('')
 @ApiBearerAuth()
 export class MatchesController {
-  constructor(private readonly matchesService: MatchesService,
-              private readonly leaguesService: LeaguesService,
-              private readonly teamsService: TeamsService,
-              private readonly usersService: UsersService) {}
+  constructor(
+    private readonly matchesService: MatchesService,
+    private readonly leaguesService: LeaguesService,
+    private readonly teamsService: TeamsService,
+    private readonly usersService: UsersService,
+    private readonly s3Service: S3Service,
+  ) {}
 
   @Get('matches')
   @UseGuards(JwtAuthGuard, OwnerGuard)
@@ -93,7 +102,10 @@ export class MatchesController {
   @Put('leagues/:leagueId/matches/:matchId/overallGrade')
   @UseGuards(JwtAuthGuard, RoleGuard(Role.Observer))
   @ApiOperation({ summary: 'Update referee overall grade' })
-  async updateMatchOverallGrade(@Param() params: LeagueMatchParams, @Body() dto: Partial<UpdateMatchDto>): Promise<Match> {
+  async updateMatchOverallGrade(
+    @Param() params: LeagueMatchParams,
+    @Body() dto: Partial<UpdateMatchDto>,
+  ): Promise<Match> {
     return this.matchesService.updateOverallGrade(params, dto);
   }
 
@@ -143,7 +155,7 @@ export class MatchesController {
     const leagueIdx: number = leagues.findIndex((league) => league.id === league.id);
     const homeTeamIdx: number = teams.findIndex((team) => team.id === homeTeam.id);
 
-    return { leagueIdx, homeTeamIdx }
+    return { leagueIdx, homeTeamIdx };
   }
 
   @Post('leagues/:leagueId/matches/upload/validate')
@@ -157,11 +169,19 @@ export class MatchesController {
 
     const { buffer } = file;
     await this.matchesService.validateMatches(buffer.toString(), params.leagueId, teams, referees, observers);
-    const dtos: CreateMatchDto[] = await this.matchesService.getFileMatchesDtos(buffer.toString(), params.leagueId, teams, referees, observers);
+    const dtos: CreateMatchDto[] = await this.matchesService.getFileMatchesDtos(
+      buffer.toString(),
+      params.leagueId,
+      teams,
+      referees,
+      observers,
+    );
 
-    await Promise.all(dtos.map(async (dto) => {
-      await this.matchesService.validateMatch(dto);
-    }));
+    await Promise.all(
+      dtos.map(async (dto) => {
+        await this.matchesService.validateMatch(dto);
+      }),
+    );
 
     return dtos;
   }
@@ -174,12 +194,65 @@ export class MatchesController {
     const dtos: CreateMatchDto[] = await this.validateUpload(params, file);
 
     let matches: Match[] = [];
-    await Promise.all(dtos.map(async (dto: CreateMatchDto) => {
-      const match: Match = await this.createMatch(params, dto);
-      matches.push(match);
-    }));
-    await this.matchesService.uploadToS3(file);
+    await Promise.all(
+      dtos.map(async (dto: CreateMatchDto) => {
+        const match: Match = await this.createMatch(params, dto);
+        matches.push(match);
+      }),
+    );
+
+    const { originalname } = file;
+    const key = String(originalname + ' ' + dayjs().toString());
+    await this.s3Service.upload(S3Bucket.MatchesBucket, key, file);
 
     return matches;
+  }
+
+  @Post('leagues/:leagueId/matches/:matchId/reports/:reportType')
+  @UseGuards(JwtAuthGuard, LeagueUserGuard)
+  @UseInterceptors(FileInterceptor('report'))
+  @ApiOperation({ summary: 'Upload report' })
+  async uploadReport(
+    @Request() request,
+    @Param() params: LeagueMatchReportParams,
+    @UploadedFile() file,
+  ): Promise<Match> {
+    const user = getNotNull(await this.usersService.getById(request.user.id));
+    await this.matchesService.validateUserMatchAssignment(user, params.matchId);
+    this.matchesService.validateUserAction(user, params.reportType, ActionType.Write);
+
+    const formattedDate = dayjs().format(S3FileKeyDateFormat);
+    const key = `league=${params.leagueId}/match=${params.matchId}/report=${params.reportType}/${params.reportType} ${formattedDate}.pdf`;
+
+    await this.s3Service.upload(S3Bucket.GradesBucket, key, file);
+    return this.matchesService.updateReportData(params.matchId, params.reportType, key);
+  }
+
+  @Get('leagues/:leagueId/matches/:matchId/reports/:reportType')
+  @UseGuards(JwtAuthGuard, LeagueUserGuard)
+  @ApiOperation({ summary: 'Download report' })
+  async getReport(@Request() request, @Param() params: LeagueMatchReportParams, @Res() response) {
+    const user = getNotNull(await this.usersService.getById(request.user.id));
+    await this.matchesService.validateUserMatchAssignment(user, params.matchId);
+    this.matchesService.validateUserAction(user, params.reportType, ActionType.Read);
+
+    const key = await this.matchesService.getKeyForReport(params.matchId, params.reportType);
+
+    const s3ReadStream = await this.s3Service.getDownloadStream(S3Bucket.GradesBucket, key);
+
+    response.setHeader('Content-Type', 'application/pdf');
+    response.setHeader('Content-Disposition', 'attachment; filename="' + key + '"');
+    s3ReadStream.pipe(response);
+  }
+
+  @Delete('leagues/:leagueId/matches/:matchId/reports/:reportType')
+  @UseGuards(JwtAuthGuard, LeagueUserGuard)
+  @ApiOperation({ summary: 'Delete report' })
+  async removeReport(@Request() request, @Param() params: LeagueMatchReportParams): Promise<Match> {
+    const user = getNotNull(await this.usersService.getById(request.user.id));
+    await this.matchesService.validateUserMatchAssignment(user, params.matchId);
+    this.matchesService.validateUserAction(user, params.reportType, ActionType.Write);
+
+    return this.matchesService.removeReport(params.matchId, params.reportType);
   }
 }

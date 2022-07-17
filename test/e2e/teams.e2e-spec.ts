@@ -4,7 +4,6 @@ import { HttpStatus, INestApplication } from '@nestjs/common';
 import { User } from '../../src/entities/user.entity';
 import { MockUser } from '../shared/mockUser';
 import { v4 as randomUuid } from 'uuid';
-import { Role } from '../../src/shared/types/role';
 import { getRepository } from 'typeorm';
 import * as jwt from 'jsonwebtoken';
 import { League } from '../../src/entities/league.entity';
@@ -14,6 +13,7 @@ import { CreateTeamDto } from '../../src/teams/dto/create-team.dto';
 import { MockCreateTeamDto } from '../shared/mockTeam';
 import request from 'supertest';
 import { UpdateTeamDto } from '../../src/teams/dto/update-team.dto';
+import { Role } from '../../src/users/constants/users.constants';
 
 describe('e2e teams', () => {
   const mockOwner: User = MockUser({ id: randomUuid(), role: Role.Owner, email: 'mock@mail.com', lastName: 'Doe' });

@@ -4,7 +4,6 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { User } from '../entities/user.entity';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { Role } from '../shared/types/role';
 import { UserParams } from './params/UserParams';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { LeagueParams } from '../leagues/params/LeagueParams';
@@ -15,6 +14,7 @@ import { LeagueAdminGuard } from '../shared/guards/league-admin.guard';
 import { AdminGuard } from '../shared/guards/admin.guard';
 import { LeagueUserGuard } from '../shared/guards/league-user.guard';
 import { MatchesService } from '../matches/matches.service';
+import { Role } from './constants/users.constants';
 
 @ApiTags('users')
 @Controller('')

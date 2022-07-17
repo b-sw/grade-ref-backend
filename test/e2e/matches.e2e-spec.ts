@@ -5,7 +5,6 @@ import { Team } from '../../src/entities/team.entity';
 import { Match } from '../../src/entities/match.entity';
 import { MockUser } from '../shared/mockUser';
 import { v4 as randomUuid } from 'uuid';
-import { Role } from '../../src/shared/types/role';
 import { MockLeague } from '../shared/mockLeague';
 import { HttpStatus, INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
@@ -20,15 +19,28 @@ import dayjs from 'dayjs';
 import {
   GRADE_ENTRY_TIME_WINDOW,
   MATCH_DURATION,
-  OVERALL_GRADE_ENTRY_TIME_WINDOW
+  OVERALL_GRADE_ENTRY_TIME_WINDOW,
 } from '../../src/matches/matches.service';
+import { ReportType } from '../../src/matches/constants/matches.constants';
+import { Role } from '../../src/users/constants/users.constants';
 
 describe('e2e matches', () => {
   const mockOwner: User = MockUser({ id: randomUuid(), role: Role.Owner, email: 'mock@mail.com', lastName: 'Doe' });
-  const mockAdmin: User = MockUser( { id: randomUuid(), role: Role.Admin, email: 'admin@mail.com', lastName: 'Doe1' });
-  const mockReferee: User = MockUser( { id: randomUuid(), role: Role.Referee, email: 'ref@mail.com', lastName: 'Doe2' });
-  const mockRefereeB: User = MockUser( { id: randomUuid(), role: Role.Referee, email: 'ref2@mail.com', lastName: 'Doe3' });
-  const mockObserver: User = MockUser( { id: randomUuid(), role: Role.Observer, email: 'obs@mail.com', phoneNumber: '669797907', lastName: 'Doe4' });
+  const mockAdmin: User = MockUser({ id: randomUuid(), role: Role.Admin, email: 'admin@mail.com', lastName: 'Doe1' });
+  const mockReferee: User = MockUser({ id: randomUuid(), role: Role.Referee, email: 'ref@mail.com', lastName: 'Doe2' });
+  const mockRefereeB: User = MockUser({
+    id: randomUuid(),
+    role: Role.Referee,
+    email: 'ref2@mail.com',
+    lastName: 'Doe3',
+  });
+  const mockObserver: User = MockUser({
+    id: randomUuid(),
+    role: Role.Observer,
+    email: 'obs@mail.com',
+    phoneNumber: '669797907',
+    lastName: 'Doe4',
+  });
   const mockLeague: League = MockLeague({ admins: [mockAdmin], referees: [mockReferee], observers: [mockObserver] });
   const users: User[] = [mockOwner, mockAdmin, mockReferee, mockRefereeB, mockObserver];
 
@@ -76,14 +88,16 @@ describe('e2e matches', () => {
   it('should not create match', async () => {
     const dto: CreateMatchDto = MockCreateMatchDto(teamA, teamB, mockReferee, mockObserver);
 
-    await Promise.all([observerAccessToken, refereeAccessToken].map(async (token) => {
-      const response = await request(app.getHttpServer())
-        .post(`/leagues/${mockLeague.id}/matches`)
-        .auth(token, { type: 'bearer' })
-        .send(dto);
+    await Promise.all(
+      [observerAccessToken, refereeAccessToken].map(async (token) => {
+        const response = await request(app.getHttpServer())
+          .post(`/leagues/${mockLeague.id}/matches`)
+          .auth(token, { type: 'bearer' })
+          .send(dto);
 
-      expect(response.status).toBe(HttpStatus.FORBIDDEN);
-    }));
+        expect(response.status).toBe(HttpStatus.FORBIDDEN);
+      }),
+    );
   });
 
   it('should create match', async () => {
@@ -94,13 +108,14 @@ describe('e2e matches', () => {
       .auth(adminAccessToken, { type: 'bearer' })
       .send(dto);
 
-    mockMatch = { ...dto,
+    mockMatch = {
+      ...dto,
       id: expect.any(String),
       userReadableKey: expect.any(String),
       leagueId: mockLeague.id,
-      observerSmsId: expect.any(String)
+      observerSmsId: expect.any(String),
     };
-    response.body.matchDate = new Date(response.body.matchDate)
+    response.body.matchDate = new Date(response.body.matchDate);
 
     expect(response.status).toBe(HttpStatus.CREATED);
     expect(response.body).toMatchObject(mockMatch);
@@ -319,6 +334,81 @@ describe('e2e matches', () => {
       .auth(refereeAccessToken, { type: 'bearer' });
 
     expect(response.status).toBe(HttpStatus.FORBIDDEN);
+  });
+
+  it.each`
+    role             | forbiddenResourceTypes
+    ${Role.Owner}    | ${[ReportType.Mentor, ReportType.Tv, ReportType.Observer]}
+    ${Role.Admin}    | ${[ReportType.Mentor, ReportType.Tv, ReportType.Observer]}
+    ${Role.Referee}  | ${[ReportType.Observer]}
+    ${Role.Observer} | ${[ReportType.Tv, ReportType.Mentor]}
+  `('should not let $role upload $forbiddenResourceTypes reports', async ({ role, forbiddenResourceTypes }) => {
+    const tokens = {
+      [Role.Admin]: adminAccessToken,
+      [Role.Owner]: ownerAccessToken,
+      [Role.Referee]: refereeAccessToken,
+      [Role.Observer]: observerAccessToken,
+    };
+
+    await Promise.all(
+      forbiddenResourceTypes.map(async (reportType) => {
+        const response = await request(app.getHttpServer())
+          .post(`/leagues/${mockLeague.id}/matches/${mockMatch.id}/reports/${reportType}`)
+          .auth(tokens[role], { type: 'bearer' })
+          .send();
+
+        expect(response.status).toBe(HttpStatus.FORBIDDEN);
+      }),
+    );
+  });
+
+  it.each`
+    role             | forbiddenResourceTypes
+    ${Role.Observer} | ${[ReportType.Tv, ReportType.Mentor]}
+  `('should not let $role download $forbiddenResourceTypes reports', async ({ role, forbiddenResourceTypes }) => {
+    const tokens = {
+      [Role.Admin]: adminAccessToken,
+      [Role.Owner]: ownerAccessToken,
+      [Role.Referee]: refereeAccessToken,
+      [Role.Observer]: observerAccessToken,
+    };
+
+    await Promise.all(
+      forbiddenResourceTypes.map(async (reportType) => {
+        const response = await request(app.getHttpServer())
+          .post(`/leagues/${mockLeague.id}/matches/${mockMatch.id}/reports/${reportType}`)
+          .auth(tokens[role], { type: 'bearer' })
+          .send();
+
+        expect(response.status).toBe(HttpStatus.FORBIDDEN);
+      }),
+    );
+  });
+
+  it.each`
+    role             | forbiddenResourceTypes
+    ${Role.Owner}    | ${[ReportType.Mentor, ReportType.Tv, ReportType.Observer]}
+    ${Role.Admin}    | ${[ReportType.Mentor, ReportType.Tv, ReportType.Observer]}
+    ${Role.Referee}  | ${[ReportType.Observer]}
+    ${Role.Observer} | ${[ReportType.Tv, ReportType.Mentor]}
+  `('should not let $role remove $forbiddenResourceTypes reports', async ({ role, forbiddenResourceTypes }) => {
+    const tokens = {
+      [Role.Admin]: adminAccessToken,
+      [Role.Owner]: ownerAccessToken,
+      [Role.Referee]: refereeAccessToken,
+      [Role.Observer]: observerAccessToken,
+    };
+
+    await Promise.all(
+      forbiddenResourceTypes.map(async (reportType) => {
+        const response = await request(app.getHttpServer())
+          .delete(`/leagues/${mockLeague.id}/matches/${mockMatch.id}/reports/${reportType}`)
+          .auth(tokens[role], { type: 'bearer' })
+          .send();
+
+        expect(response.status).toBe(HttpStatus.FORBIDDEN);
+      }),
+    );
   });
 
   it('should delete match', async () => {

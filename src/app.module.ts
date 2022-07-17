@@ -9,6 +9,7 @@ import { LeaguesModule } from './leagues/leagues.module';
 import { HealthModule } from './health/health.module';
 import { FoulsModule } from './fouls/fouls.module';
 import { FeaturesModule } from './features/features.module';
+import { AWSModule } from './aws/aws.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { FeaturesModule } from './features/features.module';
     HealthModule,
     FoulsModule,
     FeaturesModule,
+    AWSModule,
   ],
   controllers: [],
   providers: [],

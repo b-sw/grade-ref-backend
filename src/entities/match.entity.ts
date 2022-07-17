@@ -1,5 +1,5 @@
 import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
-import { uuid } from '../shared/types/uuid';
+import { uuid } from '../shared/constants/uuid.constant';
 import { User } from './user.entity';
 import { Team } from './team.entity';
 import { Type } from 'class-transformer';
@@ -15,7 +15,7 @@ export class Match {
 
   @Column({ type: 'datetime' })
   @Type(() => Date)
-  matchDate: Date
+  matchDate: Date;
 
   @Column()
   stadium: string;
@@ -60,21 +60,30 @@ export class Match {
 
   @ManyToOne(() => Team, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'homeTeamId' })
-  homeTeam: Team
+  homeTeam: Team;
 
   @ManyToOne(() => Team, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'awayTeamId' })
-  awayTeam: Team
+  awayTeam: Team;
 
   @ManyToOne(() => User, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'refereeId' })
-  referee: User
+  referee: User;
 
   @ManyToOne(() => User, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'observerId' })
-  observer: User
+  observer: User;
 
   @ManyToOne(() => League, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'leagueId' })
-  league: League
+  league: League;
+
+  @Column({ nullable: true })
+  observerReportKey: string;
+
+  @Column({ nullable: true })
+  mentorReportKey: string;
+
+  @Column({ nullable: true })
+  tvReportKey: string;
 }
