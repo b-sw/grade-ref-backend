@@ -1,6 +1,6 @@
 import { CreateTeamDto } from '../../src/teams/dto/create-team.dto';
 import { Team } from '../../src/entities/team.entity';
-import { uuid } from '../../src/shared/types/uuid';
+import { uuid } from '../../src/shared/constants/uuid.constant';
 import { League } from '../../src/entities/league.entity';
 import { v4 as randomUuid } from 'uuid';
 

@@ -1,7 +1,6 @@
 import { Test } from '@nestjs/testing';
 import { HttpStatus, INestApplication } from '@nestjs/common';
 import { AppModule } from '../../src/app.module';
-import { Role } from '../../src/shared/types/role';
 import { getRepository } from 'typeorm';
 import { User } from '../../src/entities/user.entity';
 import * as jwt from 'jsonwebtoken';
@@ -11,6 +10,7 @@ import request from 'supertest';
 import { UpdateUserDto } from '../../src/users/dto/update-user.dto';
 import { League } from '../../src/entities/league.entity';
 import { MockLeague } from '../shared/mockLeague';
+import { Role } from '../../src/users/constants/users.constants';
 
 describe('e2e users', () => {
   const mockUser: User = MockUser({ role: Role.Owner, email: 'mock@mail.com' });

@@ -18,13 +18,12 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { LeagueMatchParams } from '../matches/params/LeagueMatchParams';
 import { LeagueUserGuard } from '../shared/guards/league-user.guard';
 import { RoleGuard } from '../shared/guards/role.guard';
-import { Role } from '../shared/types/role';
 import { Feature } from '../entities/feature.entity';
 import { CreateFeatureDto } from './dto/create-feature.dto';
 import { UpdateFeatureDto } from './dto/update-feature.dto';
 import { FeatureParams } from './params/FeatureParams';
 import { UserParams } from '../users/params/UserParams';
-import { uuid } from '../shared/types/uuid';
+import { uuid } from '../shared/constants/uuid.constant';
 import { UsersService } from '../users/users.service';
 import { SelfGuard } from '../shared/guards/self.guard';
 import { Match } from '../entities/match.entity';
@@ -32,6 +31,7 @@ import { getNotNull } from '../shared/getters';
 import { User } from '../entities/user.entity';
 import { LeaguesService } from '../leagues/leagues.service';
 import { League } from '../entities/league.entity';
+import { Role } from '../users/constants/users.constants';
 
 @ApiTags('features')
 @Controller('')

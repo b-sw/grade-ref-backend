@@ -1,5 +1,5 @@
 import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
-import { uuid } from '../shared/types/uuid';
+import { uuid } from '../shared/constants/uuid.constant';
 import { Match } from './match.entity';
 import { User } from './user.entity';
 

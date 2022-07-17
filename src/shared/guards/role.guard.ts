@@ -4,8 +4,8 @@ import { OwnerGuard } from './owner.guard';
 import { LeagueMatchParams } from '../../matches/params/LeagueMatchParams';
 import { MatchesService } from '../../matches/matches.service';
 import { Match } from '../../entities/match.entity';
-import { Role } from '../types/role';
-import { uuid } from '../types/uuid';
+import { uuid } from '../constants/uuid.constant';
+import { Role } from '../../users/constants/users.constants';
 
 export const RoleGuard = (role: Role.Observer | Role.Referee): Type<CanActivate> => {
   @Injectable()

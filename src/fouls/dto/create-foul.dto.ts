@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsUUID, Length, Max, Min } from 'class-validator';
-import { uuid } from '../../shared/types/uuid';
+import { uuid } from '../../shared/constants/uuid.constant';
 import { Card } from '../../entities/foul.entity';
 
 export class CreateFoulDto {

@@ -3,10 +3,10 @@ import { User } from '../entities/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
-import { Role } from '../shared/types/role';
-import { uuid } from '../shared/types/uuid';
+import { uuid } from '../shared/constants/uuid.constant';
 import { UserParams } from './params/UserParams';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { Role } from './constants/users.constants';
 
 @Injectable()
 export class UsersService {

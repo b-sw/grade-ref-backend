@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { CreateFoulDto } from './dto/create-foul.dto';
 import { UpdateFoulDto } from './dto/update-foul.dto';
-import { uuid } from '../shared/types/uuid';
+import { uuid } from '../shared/constants/uuid.constant';
 import { Foul } from '../entities/foul.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';

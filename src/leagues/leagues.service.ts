@@ -5,7 +5,7 @@ import { LeagueParams } from './params/LeagueParams';
 import { InjectRepository } from '@nestjs/typeorm';
 import { League } from '../entities/league.entity';
 import { In, Repository } from 'typeorm';
-import { uuid } from '../shared/types/uuid';
+import { uuid } from '../shared/constants/uuid.constant';
 import { User } from '../entities/user.entity';
 import { LeagueUserParams } from './params/LeagueUserParams';
 

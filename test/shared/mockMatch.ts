@@ -6,7 +6,7 @@ import { League } from '../../src/entities/league.entity';
 import { v4 as randomUuid } from 'uuid';
 import { getRepository } from 'typeorm';
 import { Match } from '../../src/entities/match.entity';
-import { uuid } from 'src/shared/types/uuid';
+import { uuid } from 'src/shared/constants/uuid.constant';
 
 export const MockCreateMatchDto = (homeTeam: Team, awayTeam: Team, referee: User, observer: User): CreateMatchDto => {
   return {

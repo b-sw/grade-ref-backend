@@ -31,7 +31,7 @@ import { LeaguesService } from '../leagues/leagues.service';
 import { TeamsService } from '../teams/teams.service';
 import { League } from '../entities/league.entity';
 import { Team } from '../entities/team.entity';
-import { uuid } from '../shared/types/uuid';
+import { uuid } from '../shared/constants/uuid.constant';
 import { ValidRefereeObserverGuard } from '../shared/guards/valid-referee-observer-guard.service';
 import { LeagueUserParams } from '../leagues/params/LeagueUserParams';
 import { UsersService } from '../users/users.service';
@@ -41,12 +41,12 @@ import { GradeMessage } from './dto/update-grade-sms.dto';
 import { getNotNull } from '../shared/getters';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { RoleGuard } from '../shared/guards/role.guard';
-import { Role } from '../shared/types/role';
-import { S3Bucket, S3Service } from '../aws/s3.service';
+import { S3Service } from '../aws/s3.service';
 import { LeagueMatchReportParams } from './params/LeagueMatchReportParams';
 import dayjs from 'dayjs';
 import { LeagueUserGuard } from '../shared/guards/league-user.guard';
-import { ActionType } from '../users/constants/users.constants';
+import { ActionType, Role } from '../users/constants/users.constants';
+import { S3Bucket, S3FileKeyDateFormat } from '../aws/constants/aws.constants';
 
 @ApiTags('matches')
 @Controller('')
@@ -143,7 +143,7 @@ export class MatchesController {
     return this.matchesService.getUserLeagueMatches(params);
   }
 
-  async getUserReadableKeyParams(homeTeamId: uuid): Promise<{ leagueIdx: number; homeTeamIdx: number }> {
+  async getUserReadableKeyParams(homeTeamId: uuid): Promise<{ leagueIdx: number, homeTeamIdx: number }> {
     const homeTeam: Team = await this.teamsService.getById(homeTeamId);
     const leagues: League[] = await this.leaguesService.getLeagues();
     const teamLeague: League = await this.leaguesService.getLeagueById(homeTeam.leagueId);
@@ -203,7 +203,7 @@ export class MatchesController {
 
     const { originalname } = file;
     const key = String(originalname + ' ' + dayjs().toString());
-    await this.s3Service.upload(S3Bucket.MATCHES_BUCKET, key, file);
+    await this.s3Service.upload(S3Bucket.MatchesBucket, key, file);
 
     return matches;
   }
@@ -221,10 +221,10 @@ export class MatchesController {
     await this.matchesService.validateUserMatchAssignment(user, params.matchId);
     this.matchesService.validateUserAction(user, params.reportType, ActionType.Write);
 
-    const formattedDate = dayjs().format('YYYY-MM-DDTHH:mm:ss:SSS');
+    const formattedDate = dayjs().format(S3FileKeyDateFormat);
     const key = `league=${params.leagueId}/match=${params.matchId}/report=${params.reportType}/${params.reportType} ${formattedDate}.pdf`;
 
-    await this.s3Service.upload(S3Bucket.GRADES_BUCKET, key, file);
+    await this.s3Service.upload(S3Bucket.GradesBucket, key, file);
     return this.matchesService.updateReportData(params.matchId, params.reportType, key);
   }
 
@@ -238,7 +238,7 @@ export class MatchesController {
 
     const key = await this.matchesService.getKeyForReport(params.matchId, params.reportType);
 
-    const s3ReadStream = await this.s3Service.getDownloadStream(S3Bucket.GRADES_BUCKET, key);
+    const s3ReadStream = await this.s3Service.getDownloadStream(S3Bucket.GradesBucket, key);
 
     response.setHeader('Content-Type', 'application/pdf');
     response.setHeader('Content-Disposition', 'attachment; filename="' + key + '"');

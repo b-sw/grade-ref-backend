@@ -1,7 +1,6 @@
 import { Test } from '@nestjs/testing';
 import { HttpStatus, INestApplication } from '@nestjs/common';
 import { AppModule } from '../../src/app.module';
-import { Role } from '../../src/shared/types/role';
 import { getRepository } from 'typeorm';
 import { User } from '../../src/entities/user.entity';
 import * as jwt from 'jsonwebtoken';
@@ -11,8 +10,9 @@ import request from 'supertest';
 import { CreateLeagueDto } from '../../src/leagues/dto/create-league.dto';
 import { MockCreateLeagueDto } from '../shared/mockLeague';
 import { League } from '../../src/entities/league.entity';
-import { uuid } from '../../src/shared/types/uuid';
+import { uuid } from '../../src/shared/constants/uuid.constant';
 import { UpdateLeagueDto } from '../../src/leagues/dto/update-league.dto';
+import { Role } from '../../src/users/constants/users.constants';
 
 describe('e2e leagues', () => {
   const mockOwner: User = MockUser({ id: randomUuid(), role: Role.Owner, email: 'mock@mail.com', lastName: 'Doe' });

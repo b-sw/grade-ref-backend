@@ -1,11 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { S3 } from 'aws-sdk';
-import dayjs from 'dayjs';
-
-export const enum S3Bucket {
-  GRADES_BUCKET,
-  MATCHES_BUCKET,
-}
+import { BucketNames, S3Bucket } from './constants/aws.constants';
+import { EnvironmentType } from '../users/constants/env.constants';
 
 @Injectable()
 export class S3Service {
@@ -22,24 +18,12 @@ export class S3Service {
   }
 
   private getBucketName = (bucket: S3Bucket): string => {
-    if (process.env.NODE_ENV === 'test') {
-      switch (bucket) {
-        case S3Bucket.MATCHES_BUCKET:
-          return process.env.AWS_BUCKET_MATCHES_TEST;
-        case S3Bucket.GRADES_BUCKET:
-          return process.env.AWS_BUCKET_GRADES_TEST;
-        default:
-          throw new Error(`Unknown bucket ${bucket}`);
-      }
+    const envIsTest = process.env.NODE_ENV === EnvironmentType.Test;
+
+    if (envIsTest) {
+      return BucketNames[bucket][EnvironmentType.Test];
     } else {
-      switch (bucket) {
-        case S3Bucket.MATCHES_BUCKET:
-          return process.env.AWS_BUCKET_MATCHES;
-        case S3Bucket.GRADES_BUCKET:
-          return process.env.AWS_BUCKET_GRADES;
-        default:
-          throw new Error(`Unknown bucket ${bucket}`);
-      }
+      return BucketNames[bucket][EnvironmentType.Default];
     }
   };
 

@@ -5,7 +5,6 @@ import { Team } from '../../src/entities/team.entity';
 import { Match } from '../../src/entities/match.entity';
 import { MockUser } from '../shared/mockUser';
 import { v4 as randomUuid } from 'uuid';
-import { Role } from '../../src/shared/types/role';
 import { MockLeague } from '../shared/mockLeague';
 import { HttpStatus, INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
@@ -23,6 +22,7 @@ import {
   OVERALL_GRADE_ENTRY_TIME_WINDOW,
 } from '../../src/matches/matches.service';
 import { ReportType } from '../../src/matches/constants/matches.constants';
+import { Role } from '../../src/users/constants/users.constants';
 
 describe('e2e matches', () => {
   const mockOwner: User = MockUser({ id: randomUuid(), role: Role.Owner, email: 'mock@mail.com', lastName: 'Doe' });
@@ -128,228 +128,213 @@ describe('e2e matches', () => {
     expect(match).toMatchObject(mockMatch);
   });
 
-  // it('should not update match for referee request', async () => {
-  //   const dto: UpdateMatchDto = MockCreateMatchDto(teamB, teamA, mockReferee, mockObserver);
+  it('should not update match for referee request', async () => {
+    const dto: UpdateMatchDto = MockCreateMatchDto(teamB, teamA, mockReferee, mockObserver);
 
-  //   const response = await request(app.getHttpServer())
-  //     .put(`/leagues/${mockLeague.id}/matches/${mockMatch.id}`)
-  //     .auth(refereeAccessToken, { type: 'bearer' })
-  //     .send(dto);
+    const response = await request(app.getHttpServer())
+      .put(`/leagues/${mockLeague.id}/matches/${mockMatch.id}`)
+      .auth(refereeAccessToken, { type: 'bearer' })
+      .send(dto);
 
-  //   expect(response.status).toBe(HttpStatus.FORBIDDEN);
-  // });
+    expect(response.status).toBe(HttpStatus.FORBIDDEN);
+  });
 
-  // it('should not update match with invalid assignment', async () => {
-  //   mockMatch.refereeId = mockRefereeB.id;
-  //   const dto: UpdateMatchDto = MockCreateMatchDto(teamB, teamA, mockRefereeB, mockObserver);
+  it('should not update match with invalid assignment', async () => {
+    mockMatch.refereeId = mockRefereeB.id;
+    const dto: UpdateMatchDto = MockCreateMatchDto(teamB, teamA, mockRefereeB, mockObserver);
 
-  //   const response = await request(app.getHttpServer())
-  //     .put(`/leagues/${mockLeague.id}/matches/${mockMatch.id}`)
-  //     .auth(adminAccessToken, { type: 'bearer' })
-  //     .send(dto);
+    const response = await request(app.getHttpServer())
+      .put(`/leagues/${mockLeague.id}/matches/${mockMatch.id}`)
+      .auth(adminAccessToken, { type: 'bearer' })
+      .send(dto);
 
-  //   expect(response.status).toBe(HttpStatus.BAD_REQUEST);
-  // });
+    expect(response.status).toBe(HttpStatus.BAD_REQUEST);
+  });
 
-  // it('should update match', async () => {
-  //   const dto: UpdateMatchDto = MockCreateMatchDto(teamB, teamA, mockRefereeB, mockObserver);
-  //   const league: League = await getRepository(League).findOne({
-  //     where: { id: mockLeague.id },
-  //     relations: ['admins', 'referees', 'observers'],
-  //   });
-  //   league.referees.push(mockRefereeB);
-  //   await getRepository(League).save(league);
+  it('should update match', async () => {
+    const dto: UpdateMatchDto = MockCreateMatchDto(teamB, teamA, mockRefereeB, mockObserver);
+    const league: League = await getRepository(League).findOne({
+      where: { id: mockLeague.id },
+      relations: ['admins', 'referees', 'observers'],
+    });
+    league.referees.push(mockRefereeB);
+    await getRepository(League).save(league);
 
-  //   const response = await request(app.getHttpServer())
-  //     .put(`/leagues/${mockLeague.id}/matches/${mockMatch.id}`)
-  //     .auth(adminAccessToken, { type: 'bearer' })
-  //     .send(dto);
+    const response = await request(app.getHttpServer())
+      .put(`/leagues/${mockLeague.id}/matches/${mockMatch.id}`)
+      .auth(adminAccessToken, { type: 'bearer' })
+      .send(dto);
 
-  //   response.body.matchDate = new Date(response.body.matchDate);
-  //   mockMatch = { ...mockMatch, homeTeamId: teamB.id, awayTeamId: teamA.id, matchDate: expect.any(Date) }
-  //   mockMatch.userReadableKey = response.body.userReadableKey;
-  //   mockMatch.observerSmsId = response.body.observerSmsId;
+    response.body.matchDate = new Date(response.body.matchDate);
+    mockMatch = { ...mockMatch, homeTeamId: teamB.id, awayTeamId: teamA.id, matchDate: expect.any(Date) }
+    mockMatch.userReadableKey = response.body.userReadableKey;
+    mockMatch.observerSmsId = response.body.observerSmsId;
 
-  //   expect(response.status).toBe(HttpStatus.OK);
-  //   expect(response.body).toMatchObject(mockMatch);
+    expect(response.status).toBe(HttpStatus.OK);
+    expect(response.body).toMatchObject(mockMatch);
 
-  //   const match: Match = await getRepository(Match).findOne({ where: { id: mockMatch.id } });
-  //   expect(match).toMatchObject(mockMatch);
-  // });
+    const match: Match = await getRepository(Match).findOne({ where: { id: mockMatch.id } });
+    expect(match).toMatchObject(mockMatch);
+  });
 
-  // it('should not get all matches in a league', async () => {
-  //   const response = await request(app.getHttpServer())
-  //     .get(`/leagues/${mockLeague.id}/matches`)
-  //     .auth(refereeAccessToken, { type: 'bearer' });
+  it('should not get all matches in a league', async () => {
+    const response = await request(app.getHttpServer())
+      .get(`/leagues/${mockLeague.id}/matches`)
+      .auth(refereeAccessToken, { type: 'bearer' });
 
-  //   expect(response.status).toBe(HttpStatus.FORBIDDEN);
-  // });
+    expect(response.status).toBe(HttpStatus.FORBIDDEN);
+  });
 
-  // it('should get all matches in a league', async () => {
-  //   const response = await request(app.getHttpServer())
-  //     .get(`/leagues/${mockLeague.id}/matches`)
-  //     .auth(adminAccessToken, { type: 'bearer' });
+  it('should get all matches in a league', async () => {
+    const response = await request(app.getHttpServer())
+      .get(`/leagues/${mockLeague.id}/matches`)
+      .auth(adminAccessToken, { type: 'bearer' });
 
-  //   expect(response.status).toBe(HttpStatus.OK);
-  //   response.body[0].matchDate = new Date(response.body[0].matchDate);
-  //   expect(response.body).toMatchObject([mockMatch]);
+    expect(response.status).toBe(HttpStatus.OK);
+    response.body[0].matchDate = new Date(response.body[0].matchDate);
+    expect(response.body).toMatchObject([mockMatch]);
 
-  //   const matches: Match[] = await getRepository(Match).find({ where: { leagueId: mockLeague.id } });
-  //   expect(response.body).toMatchObject(matches);
-  // });
+    const matches: Match[] = await getRepository(Match).find({ where: { leagueId: mockLeague.id } });
+    expect(response.body).toMatchObject(matches);
+  });
 
-  // it('should not get observer matches if not self', async () => {
-  //   await Promise.all([adminAccessToken, refereeAccessToken].map(async (token) => {
-  //     const response = await request(app.getHttpServer())
-  //       .get(`/users/${mockObserver.id}/matches`)
-  //       .auth(token, { type: 'bearer' });
+  it('should not get observer matches if not self', async () => {
+    await Promise.all([adminAccessToken, refereeAccessToken].map(async (token) => {
+      const response = await request(app.getHttpServer())
+        .get(`/users/${mockObserver.id}/matches`)
+        .auth(token, { type: 'bearer' });
 
-  //     expect(response.status).toBe(HttpStatus.FORBIDDEN);
-  //   }));
-  // });
+      expect(response.status).toBe(HttpStatus.FORBIDDEN);
+    }));
+  });
 
-  // it('should get observer matches for self', async () => {
-  //   const response = await request(app.getHttpServer())
-  //     .get(`/users/${mockObserver.id}/matches`)
-  //     .auth(observerAccessToken, { type: 'bearer' });
+  it('should get observer matches for self', async () => {
+    const response = await request(app.getHttpServer())
+      .get(`/users/${mockObserver.id}/matches`)
+      .auth(observerAccessToken, { type: 'bearer' });
 
-  //   expect(response.status).toBe(HttpStatus.OK);
-  //   response.body[0].matchDate = new Date(response.body[0].matchDate);
-  //   expect(response.body).toMatchObject([mockMatch]);
+    expect(response.status).toBe(HttpStatus.OK);
+    response.body[0].matchDate = new Date(response.body[0].matchDate);
+    expect(response.body).toMatchObject([mockMatch]);
 
-  //   const matches: Match[] = await getRepository(Match).find({ where: { observerId: mockObserver.id } });
-  //   expect(response.body).toMatchObject(matches);
-  // });
+    const matches: Match[] = await getRepository(Match).find({ where: { observerId: mockObserver.id } });
+    expect(response.body).toMatchObject(matches);
+  });
 
-  // it('should get referee matches', async () => {
-  //   refereeAccessToken = jwt.sign({ email: mockRefereeB.email, sub: mockRefereeB.id }, process.env.JWT_SECRET);
+  it('should get referee matches', async () => {
+    refereeAccessToken = jwt.sign({ email: mockRefereeB.email, sub: mockRefereeB.id }, process.env.JWT_SECRET);
 
-  //   const response = await request(app.getHttpServer())
-  //     .get(`/users/${mockRefereeB.id}/matches`)
-  //     .auth(refereeAccessToken, { type: 'bearer' });
+    const response = await request(app.getHttpServer())
+      .get(`/users/${mockRefereeB.id}/matches`)
+      .auth(refereeAccessToken, { type: 'bearer' });
 
-  //   expect(response.status).toBe(HttpStatus.OK);
-  //   response.body[0].matchDate = new Date(response.body[0].matchDate);
-  //   expect(response.body).toMatchObject([mockMatch]);
+    expect(response.status).toBe(HttpStatus.OK);
+    response.body[0].matchDate = new Date(response.body[0].matchDate);
+    expect(response.body).toMatchObject([mockMatch]);
 
-  //   const matches: Match[] = await getRepository(Match).find({ where: { refereeId: mockRefereeB.id } });
-  //   expect(response.body).toMatchObject(matches);
-  // });
+    const matches: Match[] = await getRepository(Match).find({ where: { refereeId: mockRefereeB.id } });
+    expect(response.body).toMatchObject(matches);
+  });
 
-  // it('should update referee match grade', async () => {
-  //   const dto: UpdateMatchDto = { refereeGrade: 5.5 } as UpdateMatchDto;
+  it('should update referee match grade', async () => {
+    const dto: UpdateMatchDto = { refereeGrade: 5.5 } as UpdateMatchDto;
 
-  //   const response = await request(app.getHttpServer())
-  //     .put(`/leagues/${mockLeague.id}/matches/${mockMatch.id}/grade`)
-  //     .auth(observerAccessToken, { type: 'bearer' })
-  //     .send(dto);
+    const response = await request(app.getHttpServer())
+      .put(`/leagues/${mockLeague.id}/matches/${mockMatch.id}/grade`)
+      .auth(observerAccessToken, { type: 'bearer' })
+      .send(dto);
 
-  //   expect(response.status).toBe(HttpStatus.OK);
-  //   response.body.matchDate = new Date(response.body.matchDate);
-  //   response.body.refereeGradeDate = new Date(response.body.refereeGradeDate);
-  //   mockMatch = { ...mockMatch, refereeGrade: 5.5, refereeGradeDate: expect.any(Date) };
-  //   expect(response.body).toMatchObject(mockMatch);
+    expect(response.status).toBe(HttpStatus.OK);
+    response.body.matchDate = new Date(response.body.matchDate);
+    response.body.refereeGradeDate = new Date(response.body.refereeGradeDate);
+    mockMatch = { ...mockMatch, refereeGrade: 5.5, refereeGradeDate: expect.any(Date) };
+    expect(response.body).toMatchObject(mockMatch);
 
-  //   const match: Match = await getRepository(Match).findOne({ where: { id: mockMatch.id } });
-  //   expect(response.body).toMatchObject(match);
-  // });
+    const match: Match = await getRepository(Match).findOne({ where: { id: mockMatch.id } });
+    expect(response.body).toMatchObject(match);
+  });
 
-  // it('should not update referee match grade if not observer', async () => {
-  //   await Promise.all([adminAccessToken, refereeAccessToken].map(async (token) => {
-  //     const dto: UpdateMatchDto = { refereeGrade: 5.5 } as UpdateMatchDto;
+  it('should not update referee match grade if not observer', async () => {
+    await Promise.all([adminAccessToken, refereeAccessToken].map(async (token) => {
+      const dto: UpdateMatchDto = { refereeGrade: 5.5 } as UpdateMatchDto;
 
-  //     const response = await request(app.getHttpServer())
-  //       .put(`/leagues/${mockLeague.id}/matches/${mockMatch.id}/grade`)
-  //       .auth(token, { type: 'bearer' })
-  //       .send(dto);
+      const response = await request(app.getHttpServer())
+        .put(`/leagues/${mockLeague.id}/matches/${mockMatch.id}/grade`)
+        .auth(token, { type: 'bearer' })
+        .send(dto);
 
-  //     expect(response.status).toBe(HttpStatus.FORBIDDEN);
-  //   }))
-  // });
+      expect(response.status).toBe(HttpStatus.FORBIDDEN);
+    }))
+  });
 
-  // it('should not update referee match grade if late', async () => {
-  //   await setMockMatchDatetime(mockMatch.id, dayjs().subtract(4, 'day'));
-  //   const dto: UpdateMatchDto = { refereeGrade: 5.5 } as UpdateMatchDto;
+  it('should not update referee match grade if late', async () => {
+    await setMockMatchDatetime(mockMatch.id, dayjs().subtract(4, 'day'));
+    const dto: UpdateMatchDto = { refereeGrade: 5.5 } as UpdateMatchDto;
 
-  //   const response = await request(app.getHttpServer())
-  //     .put(`/leagues/${mockLeague.id}/matches/${mockMatch.id}/grade`)
-  //     .auth(observerAccessToken, { type: 'bearer' })
-  //     .send(dto);
+    const response = await request(app.getHttpServer())
+      .put(`/leagues/${mockLeague.id}/matches/${mockMatch.id}/grade`)
+      .auth(observerAccessToken, { type: 'bearer' })
+      .send(dto);
 
-  //   expect(response.status).toBe(HttpStatus.BAD_REQUEST);
-  //   expect(response.body.message).toBe(`Time window of ${GRADE_ENTRY_TIME_WINDOW - MATCH_DURATION} hours for this entry has passed.`);
-  //   await setMockMatchDatetime(mockMatch.id, dayjs().add(2, 'day'));
-  // });
+    expect(response.status).toBe(HttpStatus.BAD_REQUEST);
+    expect(response.body.message).toBe(`Time window of ${GRADE_ENTRY_TIME_WINDOW - MATCH_DURATION} hours for this entry has passed.`);
+    await setMockMatchDatetime(mockMatch.id, dayjs().add(2, 'day'));
+  });
 
-  // it('should not update referee overall grade if not observer', async () => {
-  //   await Promise.all([adminAccessToken, refereeAccessToken].map(async (token) => {
-  //     const dto: UpdateMatchDto = { overallGrade: 'Mock overall grade.' } as UpdateMatchDto;
+  it('should not update referee overall grade if not observer', async () => {
+    await Promise.all([adminAccessToken, refereeAccessToken].map(async (token) => {
+      const dto: UpdateMatchDto = { overallGrade: 'Mock overall grade.' } as UpdateMatchDto;
 
-  //     const response = await request(app.getHttpServer())
-  //       .put(`/leagues/${mockLeague.id}/matches/${mockMatch.id}/overallGrade`)
-  //       .auth(token, { type: 'bearer' })
-  //       .send(dto);
+      const response = await request(app.getHttpServer())
+        .put(`/leagues/${mockLeague.id}/matches/${mockMatch.id}/overallGrade`)
+        .auth(token, { type: 'bearer' })
+        .send(dto);
 
-  //     expect(response.status).toBe(HttpStatus.FORBIDDEN);
-  //   }))
-  // });
+      expect(response.status).toBe(HttpStatus.FORBIDDEN);
+    }))
+  });
 
-  // it('should update referee overall grade', async () => {
-  //   const dto: UpdateMatchDto = { overallGrade: 'Mock overall grade.' } as UpdateMatchDto;
+  it('should update referee overall grade', async () => {
+    const dto: UpdateMatchDto = { overallGrade: 'Mock overall grade.' } as UpdateMatchDto;
 
-  //   const response = await request(app.getHttpServer())
-  //     .put(`/leagues/${mockLeague.id}/matches/${mockMatch.id}/overallGrade`)
-  //     .auth(observerAccessToken, { type: 'bearer' })
-  //     .send(dto);
+    const response = await request(app.getHttpServer())
+      .put(`/leagues/${mockLeague.id}/matches/${mockMatch.id}/overallGrade`)
+      .auth(observerAccessToken, { type: 'bearer' })
+      .send(dto);
 
-  //   expect(response.status).toBe(HttpStatus.OK);
-  //   response.body.matchDate = new Date(response.body.matchDate);
-  //   response.body.refereeGradeDate = new Date(response.body.refereeGradeDate);
-  //   response.body.overallGradeDate = new Date(response.body.overallGradeDate);
-  //   mockMatch = { ...mockMatch, overallGrade: dto.overallGrade, overallGradeDate: expect.any(Date) };
-  //   expect(response.body).toMatchObject(mockMatch);
+    expect(response.status).toBe(HttpStatus.OK);
+    response.body.matchDate = new Date(response.body.matchDate);
+    response.body.refereeGradeDate = new Date(response.body.refereeGradeDate);
+    response.body.overallGradeDate = new Date(response.body.overallGradeDate);
+    mockMatch = { ...mockMatch, overallGrade: dto.overallGrade, overallGradeDate: expect.any(Date) };
+    expect(response.body).toMatchObject(mockMatch);
 
-  //   const match: Match = await getRepository(Match).findOne({ where: { id: mockMatch.id } });
-  //   expect(response.body).toMatchObject(match);
-  // });
+    const match: Match = await getRepository(Match).findOne({ where: { id: mockMatch.id } });
+    expect(response.body).toMatchObject(match);
+  });
 
-  // it('should not update referee overall grade if late', async () => {
-  //   await setMockMatchDatetime(mockMatch.id, dayjs().subtract(8, 'day'));
-  //   const dto: UpdateMatchDto = { overallGrade: 'Mock overall grade.' } as UpdateMatchDto;
+  it('should not update referee overall grade if late', async () => {
+    await setMockMatchDatetime(mockMatch.id, dayjs().subtract(8, 'day'));
+    const dto: UpdateMatchDto = { overallGrade: 'Mock overall grade.' } as UpdateMatchDto;
 
-  //   const response = await request(app.getHttpServer())
-  //     .put(`/leagues/${mockLeague.id}/matches/${mockMatch.id}/overallGrade`)
-  //     .auth(observerAccessToken, { type: 'bearer' })
-  //     .send(dto);
+    const response = await request(app.getHttpServer())
+      .put(`/leagues/${mockLeague.id}/matches/${mockMatch.id}/overallGrade`)
+      .auth(observerAccessToken, { type: 'bearer' })
+      .send(dto);
 
-  //   expect(response.status).toBe(HttpStatus.BAD_REQUEST);
-  //   expect(response.body.message).toBe(`Time window of ${OVERALL_GRADE_ENTRY_TIME_WINDOW - MATCH_DURATION} hours for this entry has passed.`);
+    expect(response.status).toBe(HttpStatus.BAD_REQUEST);
+    expect(response.body.message).toBe(`Time window of ${OVERALL_GRADE_ENTRY_TIME_WINDOW - MATCH_DURATION} hours for this entry has passed.`);
 
-  //   await setMockMatchDatetime(mockMatch.id, dayjs().add(2, 'day'));
-  // });
+    await setMockMatchDatetime(mockMatch.id, dayjs().add(2, 'day'));
+  });
 
-  // it('should not delete match', async () => {
-  //   const response = await request(app.getHttpServer())
-  //     .delete(`/leagues/${mockLeague.id}/matches/${mockMatch.id}`)
-  //     .auth(refereeAccessToken, { type: 'bearer' });
+  it('should not delete match', async () => {
+    const response = await request(app.getHttpServer())
+      .delete(`/leagues/${mockLeague.id}/matches/${mockMatch.id}`)
+      .auth(refereeAccessToken, { type: 'bearer' });
 
-  //   expect(response.status).toBe(HttpStatus.FORBIDDEN);
-  // });
-
-  // it('should delete match', async () => {
-  //   const response = await request(app.getHttpServer())
-  //     .delete(`/leagues/${mockLeague.id}/matches/${mockMatch.id}`)
-  //     .auth(adminAccessToken, { type: 'bearer' });
-
-  //   expect(response.status).toBe(HttpStatus.OK);
-  //   response.body.matchDate = new Date(response.body.matchDate);
-  //   response.body.refereeGradeDate = new Date(response.body.refereeGradeDate);
-  //   response.body.overallGradeDate = new Date(response.body.overallGradeDate);
-  //   expect(response.body).toMatchObject(mockMatch);
-
-  //   const match: Match = await getRepository(Match).findOne({ where: { id: mockMatch.id } });
-  //   expect(match).toBeUndefined();
-  // });
+    expect(response.status).toBe(HttpStatus.FORBIDDEN);
+  });
 
   it.each`
     role             | forbiddenResourceTypes
@@ -424,5 +409,20 @@ describe('e2e matches', () => {
         expect(response.status).toBe(HttpStatus.FORBIDDEN);
       }),
     );
+  });
+
+  it('should delete match', async () => {
+    const response = await request(app.getHttpServer())
+      .delete(`/leagues/${mockLeague.id}/matches/${mockMatch.id}`)
+      .auth(adminAccessToken, { type: 'bearer' });
+
+    expect(response.status).toBe(HttpStatus.OK);
+    response.body.matchDate = new Date(response.body.matchDate);
+    response.body.refereeGradeDate = new Date(response.body.refereeGradeDate);
+    response.body.overallGradeDate = new Date(response.body.overallGradeDate);
+    expect(response.body).toMatchObject(mockMatch);
+
+    const match: Match = await getRepository(Match).findOne({ where: { id: mockMatch.id } });
+    expect(match).toBeUndefined();
   });
 });

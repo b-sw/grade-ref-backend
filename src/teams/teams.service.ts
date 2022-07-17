@@ -5,7 +5,7 @@ import { Team } from '../entities/team.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { LeagueTeamParams } from './params/LeagueTeamParams';
-import { uuid } from '../shared/types/uuid';
+import { uuid } from '../shared/constants/uuid.constant';
 
 @Injectable()
 export class TeamsService {

@@ -7,7 +7,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Between, In, Repository } from 'typeorm';
 import { Match } from '../entities/match.entity';
 import { UserParams } from '../users/params/UserParams';
-import { uuid } from '../shared/types/uuid';
+import { uuid } from '../shared/constants/uuid.constant';
 import { LeagueMatchParams } from './params/LeagueMatchParams';
 import { LeagueUserParams } from '../leagues/params/LeagueUserParams';
 import { AxiosResponse } from '@nestjs/terminus/dist/health-indicator/http/axios.interfaces';
@@ -17,8 +17,8 @@ import { getNotNull } from '../shared/getters';
 import { Team } from '../entities/team.entity';
 import { validateEntryTime } from '../shared/validators';
 import { ReportType } from './constants/matches.constants';
-import { ActionType, GRADE_FILES_PERMISSIONS } from '../users/constants/users.constants';
-import { Role } from '../../src/shared/types/role';
+import { ActionType, GradeFilePermissions, Role } from '../users/constants/users.constants';
+import { ReportFieldNames } from './constants/reports.constants';
 
 const SMS_API: string = 'https://api2.smsplanet.pl';
 export const DTO_DATETIME_FORMAT: string = 'YYYY-MM-DDTHH:mm';
@@ -471,17 +471,8 @@ export class MatchesService {
   public async updateReportData(matchId: uuid, reportType: ReportType, key: string): Promise<Match> {
     const match = getNotNull(await this.getById(matchId));
 
-    switch (reportType) {
-      case ReportType.Mentor:
-        match.mentorReportKey = key;
-        break;
-      case ReportType.Observer:
-        match.observerReportKey = key;
-        break;
-      case ReportType.Tv:
-        match.tvReportKey = key;
-        break;
-    }
+    const reportFieldName = ReportFieldNames[reportType];
+    match[reportFieldName] = key;
 
     return this.matchRepository.save(match);
   }
@@ -489,36 +480,22 @@ export class MatchesService {
   public async getKeyForReport(matchId: uuid, reportType: ReportType): Promise<string> {
     const match = getNotNull(await this.getById(matchId));
 
-    switch (reportType) {
-      case ReportType.Mentor:
-        return match.mentorReportKey;
-      case ReportType.Observer:
-        return match.observerReportKey;
-      case ReportType.Tv:
-        return match.tvReportKey;
-    }
+    const reportFieldName = ReportFieldNames[reportType];
+    return match[reportFieldName];
   }
 
   public async removeReport(matchId: uuid, reportType: ReportType): Promise<Match> {
     const match = getNotNull(await this.getById(matchId));
 
-    switch (reportType) {
-      case ReportType.Mentor:
-        match.mentorReportKey = null;
-        break;
-      case ReportType.Observer:
-        match.observerReportKey = null;
-        break;
-      case ReportType.Tv:
-        match.tvReportKey = null;
-        break;
-    }
+    const reportFieldName = ReportFieldNames[reportType];
+    match[reportFieldName] = null;
 
     return this.matchRepository.save(match);
   }
 
   public async validateUserMatchAssignment(user: User, matchId: uuid) {
-    if (user.role === Role.Admin || user.role === Role.Owner) {
+    const userIsAdminOrOwner = user.role === Role.Admin || user.role === Role.Owner;
+    if (userIsAdminOrOwner) {
       return;
     }
 
@@ -529,12 +506,12 @@ export class MatchesService {
       return;
     }
 
-    throw new HttpException(`TODO`, HttpStatus.FORBIDDEN);
+    throw new HttpException(`User is not assigned to the match.`, HttpStatus.FORBIDDEN);
   }
 
   public validateUserAction(user: User, reportType: ReportType, actionType: ActionType) {
-    if (!GRADE_FILES_PERMISSIONS[user.role][actionType].has(reportType)) {
-      throw new HttpException(`TODO`, HttpStatus.FORBIDDEN);
+    if (!GradeFilePermissions[user.role][actionType].has(reportType)) {
+      throw new HttpException(`User does not have sufficient permissions.`, HttpStatus.FORBIDDEN);
     }
   }
 }

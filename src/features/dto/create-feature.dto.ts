@@ -1,4 +1,4 @@
-import { uuid } from '../../shared/types/uuid';
+import { uuid } from '../../shared/constants/uuid.constant';
 import { ApiProperty } from '@nestjs/swagger';
 import { IsUUID, Length } from 'class-validator';
 import { FeatureType } from '../../entities/feature.entity';

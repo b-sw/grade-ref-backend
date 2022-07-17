@@ -1,4 +1,3 @@
-import { Role } from '../../shared/types/role';
 import { ReportType } from '../../matches/constants/matches.constants';
 
 export enum ActionType {
@@ -6,7 +5,14 @@ export enum ActionType {
   Write,
 }
 
-export const GRADE_FILES_PERMISSIONS: Record<Role, Record<ActionType, Set<ReportType>>> = {
+export enum Role {
+  Admin = 'Admin',
+  Referee = 'Referee',
+  Observer = 'Observer',
+  Owner = 'Owner',
+}
+
+export const GradeFilePermissions: Record<Role, Record<ActionType, Set<ReportType>>> = {
   [Role.Owner]: {
     [ActionType.Read]: new Set([ReportType.Observer, ReportType.Tv, ReportType.Mentor]),
     [ActionType.Write]: new Set(),

@@ -1,7 +1,7 @@
 import { User } from '../../src/entities/user.entity';
-import { Role } from '../../src/shared/types/role';
 import { v4 as randomUuid } from 'uuid';
 import { CreateUserDto } from '../../src/users/dto/create-user.dto';
+import { Role } from '../../src/users/constants/users.constants';
 
 export const BaseCreateUserDto = (): CreateUserDto => {
   return {
