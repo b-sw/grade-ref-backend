@@ -22,13 +22,24 @@ export class S3Service {
   }
 
   private getBucketName = (bucket: S3Bucket): string => {
-    switch (bucket) {
-      case S3Bucket.MATCHES_BUCKET:
-        return process.env.AWS_BUCKET_MATCHES;
-      case S3Bucket.GRADES_BUCKET:
-        return process.env.AWS_BUCKET_GRADES;
-      default:
-        throw new Error(`Unknown bucket ${bucket}`);
+    if (process.env.NODE_ENV === 'test') {
+      switch (bucket) {
+        case S3Bucket.MATCHES_BUCKET:
+          return process.env.AWS_BUCKET_MATCHES_TEST;
+        case S3Bucket.GRADES_BUCKET:
+          return process.env.AWS_BUCKET_GRADES_TEST;
+        default:
+          throw new Error(`Unknown bucket ${bucket}`);
+      }
+    } else {
+      switch (bucket) {
+        case S3Bucket.MATCHES_BUCKET:
+          return process.env.AWS_BUCKET_MATCHES;
+        case S3Bucket.GRADES_BUCKET:
+          return process.env.AWS_BUCKET_GRADES;
+        default:
+          throw new Error(`Unknown bucket ${bucket}`);
+      }
     }
   };
 

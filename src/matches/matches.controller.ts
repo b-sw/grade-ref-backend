@@ -211,7 +211,7 @@ export class MatchesController {
   @Post('leagues/:leagueId/matches/:matchId/reports/:reportType')
   @UseGuards(JwtAuthGuard, LeagueUserGuard)
   @UseInterceptors(FileInterceptor('report'))
-  @ApiOperation({ summary: 'Upload file' })
+  @ApiOperation({ summary: 'Upload report' })
   async uploadReport(
     @Request() request,
     @Param() params: LeagueMatchReportParams,
@@ -230,8 +230,7 @@ export class MatchesController {
 
   @Get('leagues/:leagueId/matches/:matchId/reports/:reportType')
   @UseGuards(JwtAuthGuard, LeagueUserGuard)
-  @UseInterceptors(FileInterceptor('report'))
-  @ApiOperation({ summary: 'Upload file' })
+  @ApiOperation({ summary: 'Download report' })
   async getReport(@Request() request, @Param() params: LeagueMatchReportParams, @Res() response) {
     const user = getNotNull(await this.usersService.getById(request.user.id));
     this.matchesService.validateUserMatchAssignment(user, params.matchId);
@@ -247,8 +246,7 @@ export class MatchesController {
 
   @Delete('leagues/:leagueId/matches/:matchId/reports/:reportType')
   @UseGuards(JwtAuthGuard, LeagueUserGuard)
-  @UseInterceptors(FileInterceptor('report'))
-  @ApiOperation({ summary: 'Upload file' })
+  @ApiOperation({ summary: 'Delete report' })
   async removeReport(@Request() request, @Param() params: LeagueMatchReportParams): Promise<Match> {
     const user = getNotNull(await this.usersService.getById(request.user.id));
     this.matchesService.validateUserMatchAssignment(user, params.matchId);
