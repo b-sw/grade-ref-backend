@@ -55,18 +55,12 @@ functions:
       - http:
           method: ANY
           path: /
+          cors:
+            origin: '*'
+            headers: '*'
       - http:
           method: ANY
           path: '{proxy+}'
           cors:
             origin: '*'
-            headers:
-              - Content-Type
-              - Content-Disposition
-              - X-Amz-Date
-              - Authorization
-              - X-Api-Key
-              - X-Amz-Security-Token
-              - X-Amz-User-Agent
-              - X-Amzn-Trace-Id
-            allowCredentials: false
+            headers: '*'
