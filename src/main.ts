@@ -8,8 +8,8 @@ async function bootstrap() {
   app.enableCors({
     origin: '*',
     allowedHeaders:
-      '*',
-    exposedHeaders: '*',
+      'Content-Type, Access-Control-Allow-Headers, Access-Control-Expose-Headers, Content-Disposition, Authorization, X-Requested-With',
+    exposedHeaders: 'Content-Disposition',
   });
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
