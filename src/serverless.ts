@@ -20,7 +20,7 @@ async function bootstrap() {
   await app.init();
 
   const expressApp = app.getHttpAdapter().getInstance();
-  return serverlessExpress({ app: expressApp, binaryMimeTypes: ['application/pdf'] });
+  return serverlessExpress({ app: expressApp });
 }
 
 export const handler: Handler = async (event: any, context: Context, callback: Callback) => {
