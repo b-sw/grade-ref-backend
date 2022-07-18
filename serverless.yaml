@@ -29,6 +29,13 @@ custom:
 
 provider:
   name: aws
+  iam:
+    role:
+      statements:
+        # Allow functions to list all buckets
+        - Effect: Allow
+          Action: 's3:*'
+          Resource: '*'
   runtime: nodejs16.x
   timeout: 900
   region: eu-west-1
@@ -47,6 +54,7 @@ provider:
     SMS_SENDER: ${env:SMS_SENDER}
     AWS_LOGIN_ACCESS_KEY_ID: ${env:AWS_ACCESS_KEY_ID}
     AWS_LOGIN_SECRET_ACCESS_KEY: ${env:AWS_SECRET_ACCESS_KEY}
+
 
 functions:
   main:
