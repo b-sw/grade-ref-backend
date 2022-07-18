@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { S3 } from 'aws-sdk';
 import { BucketNames, S3Bucket } from './constants/aws.constants';
 import { EnvironmentType } from '../users/constants/env.constants';
+import { Presigner } from 'aws-sdk/clients/polly';
 
 @Injectable()
 export class S3Service {
@@ -53,5 +54,14 @@ export class S3Service {
       Key: key,
     };
     return this.s3.getObject(params).createReadStream();
+  }
+
+  async getPresignedUrl(bucket: S3Bucket, key: string) {
+    const params = {
+      Bucket: this.getBucketName(bucket),
+      Key: key,
+    };
+
+    return this.s3.getSignedUrlPromise('getObject', params);
   }
 }

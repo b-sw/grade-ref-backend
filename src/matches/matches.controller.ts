@@ -11,6 +11,7 @@ import {
   Put,
   Request,
   Res,
+  StreamableFile,
   UploadedFile,
   UseGuards,
   UseInterceptors,
@@ -143,7 +144,7 @@ export class MatchesController {
     return this.matchesService.getUserLeagueMatches(params);
   }
 
-  async getUserReadableKeyParams(homeTeamId: uuid): Promise<{ leagueIdx: number, homeTeamIdx: number }> {
+  async getUserReadableKeyParams(homeTeamId: uuid): Promise<{ leagueIdx: number; homeTeamIdx: number }> {
     const homeTeam: Team = await this.teamsService.getById(homeTeamId);
     const leagues: League[] = await this.leaguesService.getLeagues();
     const teamLeague: League = await this.leaguesService.getLeagueById(homeTeam.leagueId);
@@ -231,18 +232,14 @@ export class MatchesController {
   @Get('leagues/:leagueId/matches/:matchId/reports/:reportType')
   @UseGuards(JwtAuthGuard, LeagueUserGuard)
   @ApiOperation({ summary: 'Download report' })
-  async getReport(@Request() request, @Param() params: LeagueMatchReportParams, @Res() response) {
+  async getReport(@Request() request, @Param() params: LeagueMatchReportParams) {
     const user = getNotNull(await this.usersService.getById(request.user.id));
     await this.matchesService.validateUserMatchAssignment(user, params.matchId);
     this.matchesService.validateUserAction(user, params.reportType, ActionType.Read);
 
     const key = await this.matchesService.getKeyForReport(params.matchId, params.reportType);
 
-    const s3ReadStream = await this.s3Service.getDownloadStream(S3Bucket.GradesBucket, key);
-
-    response.setHeader('Content-Type', 'application/pdf');
-    response.setHeader('Content-Disposition', 'attachment; filename="' + key + '"');
-    s3ReadStream.pipe(response);
+    return this.s3Service.getPresignedUrl(S3Bucket.GradesBucket, key);
   }
 
   @Delete('leagues/:leagueId/matches/:matchId/reports/:reportType')
