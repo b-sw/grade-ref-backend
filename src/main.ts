@@ -9,7 +9,7 @@ async function bootstrap() {
     origin: '*',
     allowedHeaders:
       'Content-Type, Access-Control-Allow-Headers, Access-Control-Expose-Headers, Content-Disposition, Authorization, X-Requested-With',
-    exposedHeaders: 'Content-Disposition',
+    exposedHeaders: 'Content-Type, Content-Disposition',
   });
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
