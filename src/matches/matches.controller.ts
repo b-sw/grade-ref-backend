@@ -242,6 +242,7 @@ export class MatchesController {
 
     response.setHeader('Content-Type', 'application/pdf');
     response.setHeader('Content-Disposition', 'attachment; filename="' + key + '"');
+    response.setHeader('Access-Control-Allow-Origin', '*');
     s3ReadStream.pipe(response);
   }
 
