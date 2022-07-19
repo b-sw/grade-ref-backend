@@ -169,6 +169,13 @@ export class MatchesService {
     return match;
   }
 
+  async updateRefereeNote(params: LeagueMatchParams, dto: Partial<UpdateMatchDto>): Promise<Match> {
+    const match: Match = getNotNull(await this.getById(params.matchId));
+    match.refereeNote = dto.refereeNote;
+    await this.matchRepository.save(match);
+    return match;
+  }
+
   async updateGradeSms(gradeMessage: GradeMessage, observer: User): Promise<void> {
     if (!(await this.requireSmsValid(gradeMessage.msg, observer.phoneNumber))) {
       return;

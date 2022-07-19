@@ -10,8 +10,6 @@ import {
   Post,
   Put,
   Request,
-  Res,
-  StreamableFile,
   UploadedFile,
   UseGuards,
   UseInterceptors,
@@ -108,6 +106,16 @@ export class MatchesController {
     @Body() dto: Partial<UpdateMatchDto>,
   ): Promise<Match> {
     return this.matchesService.updateOverallGrade(params, dto);
+  }
+
+  @Put('leagues/:leagueId/matches/:matchId/refereeNote')
+  @UseGuards(JwtAuthGuard, RoleGuard(Role.Referee))
+  @ApiOperation({ summary: 'Update referee note' })
+  async updateMatchRefereeNote(
+    @Param() params: LeagueMatchParams,
+    @Body() dto: Partial<UpdateMatchDto>,
+  ): Promise<Match> {
+    return this.matchesService.updateRefereeNote(params, dto);
   }
 
   @Post('matches/grades')
