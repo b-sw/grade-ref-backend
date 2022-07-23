@@ -16,7 +16,6 @@ import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { MatchesService } from '../matches/matches.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { LeagueMatchParams } from '../matches/params/LeagueMatchParams';
-import { LeagueUserGuard } from '../shared/guards/league-user.guard';
 import { RoleGuard } from '../shared/guards/role.guard';
 import { Feature } from '../entities/feature.entity';
 import { CreateFeatureDto } from './dto/create-feature.dto';
@@ -32,6 +31,7 @@ import { User } from '../entities/user.entity';
 import { LeaguesService } from '../leagues/leagues.service';
 import { League } from '../entities/league.entity';
 import { Role } from '../users/constants/users.constants';
+import { RoleOrGuard } from '../shared/guards/role-or.guard';
 
 @ApiTags('features')
 @Controller('')
@@ -43,7 +43,7 @@ export class FeaturesController {
               private readonly leaguesService: LeaguesService) {}
 
   @Post('leagues/:leagueId/matches/:matchId/features')
-  @UseGuards(JwtAuthGuard, RoleGuard(Role.Referee))
+  @UseGuards(JwtAuthGuard, RoleGuard(Role.Observer))
   @ApiOperation({ summary: 'Create feature' })
   async create(@Request() req, @Param() params: LeagueMatchParams, @Body() dto: CreateFeatureDto): Promise<Feature> {
     const match: Match = getNotNull(await this.matchesService.getById(params.matchId));
@@ -52,7 +52,7 @@ export class FeaturesController {
   }
 
   @Get('leagues/:leagueId/matches/:matchId/features')
-  @UseGuards(JwtAuthGuard, LeagueUserGuard)
+  @UseGuards(JwtAuthGuard, RoleOrGuard([Role.Referee, Role.Observer, Role.Admin]))
   @ApiOperation({ summary: 'Get match features' })
   async getMatchFeatures(@Request() req, @Param() params: LeagueMatchParams): Promise<Feature[]> {
     const match: Match = getNotNull(await this.matchesService.getById(params.matchId));
@@ -69,7 +69,7 @@ export class FeaturesController {
   }
 
   @Get('leagues/:leagueId/matches/:matchId/features/:featureId')
-  @UseGuards(JwtAuthGuard, LeagueUserGuard)
+  @UseGuards(JwtAuthGuard, RoleOrGuard([Role.Referee, Role.Observer, Role.Admin]))
   @ApiOperation({ summary: 'Get feature by id' })
   async getById(@Request() req, @Param() params: FeatureParams): Promise<Feature> {
     const match: Match = getNotNull(await this.matchesService.getById(params.matchId));
@@ -80,7 +80,7 @@ export class FeaturesController {
   }
 
   @Put('leagues/:leagueId/matches/:matchId/features/:featureId')
-  @UseGuards(JwtAuthGuard, RoleGuard(Role.Referee))
+  @UseGuards(JwtAuthGuard, RoleGuard(Role.Observer))
   @ApiOperation({ summary: 'Update feature' })
   async update(@Request() req, @Param() params: FeatureParams, @Body() dto: UpdateFeatureDto): Promise<Feature> {
     const match: Match = getNotNull(await this.matchesService.getById(params.matchId));
@@ -91,7 +91,7 @@ export class FeaturesController {
   }
 
   @Delete('leagues/:leagueId/matches/:matchId/features/:featureId')
-  @UseGuards(JwtAuthGuard, RoleGuard(Role.Referee))
+  @UseGuards(JwtAuthGuard, RoleGuard(Role.Observer))
   @ApiOperation({ summary: 'Delete feature' })
   async remove(@Request() req, @Param() params: FeatureParams): Promise<Feature> {
     const match: Match = getNotNull(await this.matchesService.getById(params.matchId));
