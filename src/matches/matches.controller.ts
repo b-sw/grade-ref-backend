@@ -4,6 +4,7 @@ import {
   Delete,
   Get,
   HttpCode,
+  HttpException,
   HttpStatus,
   Logger,
   Param,
@@ -12,7 +13,7 @@ import {
   Request,
   UploadedFile,
   UseGuards,
-  UseInterceptors,
+  UseInterceptors
 } from '@nestjs/common';
 import { MatchesService } from './matches.service';
 import { CreateMatchDto } from './dto/create-match.dto';
@@ -46,6 +47,7 @@ import dayjs from 'dayjs';
 import { LeagueUserGuard } from '../shared/guards/league-user.guard';
 import { ActionType, Role } from '../users/constants/users.constants';
 import { S3Bucket, S3FileKeyDateFormat } from '../aws/constants/aws.constants';
+import { RoleOrGuard } from '../shared/guards/role-or.guard';
 
 @ApiTags('matches')
 @Controller('')
@@ -80,6 +82,13 @@ export class MatchesController {
     const { leagueIdx, homeTeamIdx } = await this.getUserReadableKeyParams(dto.homeTeamId);
     const observer: User = getNotNull(await this.usersService.getById(dto.observerId));
     return this.matchesService.createMatch(params.leagueId, dto, leagueIdx, homeTeamIdx, observer.phoneNumber);
+  }
+
+  @Get('leagues/:leagueId/matches/:matchId')
+  @UseGuards(JwtAuthGuard, RoleOrGuard([Role.Admin, Role.Referee, Role.Observer]))
+  @ApiOperation({ summary: 'Get match by id' })
+  async getMatch(@Param() params: LeagueMatchParams): Promise<Match> {
+    return getNotNull(await this.matchesService.getById(params.matchId));
   }
 
   @Put('leagues/:leagueId/matches/:matchId')
@@ -146,9 +155,18 @@ export class MatchesController {
   }
 
   @Get('users/:userId/leagues/:leagueId/matches')
-  @UseGuards(JwtAuthGuard) // todo: add guard
+  @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Get user league matches' })
-  async getUserLeagueMatches(@Param() params: LeagueUserParams): Promise<Match[]> {
+  async getUserLeagueMatches(@Request() req, @Param() params: LeagueUserParams): Promise<Match[]> {
+    const user: User = getNotNull(await this.usersService.getById(req.user.id));
+    const leagueAdmins: User[] = getNotNull(await this.leaguesService.getLeagueAdmins(params.leagueId));
+
+    const isAdmin: boolean = leagueAdmins.some(admin => admin.id === user.id);
+
+    if (user.id !== params.userId && !isAdmin) {
+      throw new HttpException(`Not user and not league admin`, HttpStatus.FORBIDDEN);
+    }
+
     return this.matchesService.getUserLeagueMatches(params);
   }
 
