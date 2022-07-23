@@ -251,7 +251,7 @@ export class MatchesController {
     const formattedDate = dayjs().format(S3FileKeyDateFormat);
     const key = `league=${params.leagueId}/match=${params.matchId}/report=${params.reportType}/${params.reportType} ${formattedDate}.pdf`;
 
-    await this.s3Service.upload(S3Bucket.GradesBucket, key, file);
+    await this.s3Service.upload(S3Bucket.ReportsBucket, key, file);
     return this.matchesService.updateReportData(params.matchId, params.reportType, key);
   }
 
@@ -265,7 +265,7 @@ export class MatchesController {
 
     const key = await this.matchesService.getKeyForReport(params.matchId, params.reportType);
 
-    return this.s3Service.getPresignedUrl(S3Bucket.GradesBucket, key);
+    return this.s3Service.getPresignedUrl(S3Bucket.ReportsBucket, key);
   }
 
   @Delete('leagues/:leagueId/matches/:matchId/reports/:reportType')
