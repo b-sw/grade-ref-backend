@@ -9,7 +9,6 @@ import { MockLeague } from '../shared/mockLeague';
 import { HttpStatus, INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { AppModule } from '../../src/app.module';
-import * as jwt from 'jsonwebtoken';
 import { CreateMatchDto } from '../../src/matches/dto/create-match.dto';
 import request from 'supertest';
 import { MockCreateMatchDto, setMockMatchDatetime } from '../shared/mockMatch';
@@ -23,6 +22,7 @@ import {
 } from '../../src/matches/matches.service';
 import { ReportType } from '../../src/matches/constants/matches.constants';
 import { Role } from '../../src/users/constants/users.constants';
+import { getSignedJwt } from '../shared/jwt';
 
 describe('e2e matches', () => {
   const mockOwner: User = MockUser({ id: randomUuid(), role: Role.Owner, email: 'mock@mail.com', lastName: 'Doe' });
@@ -94,8 +94,6 @@ describe('e2e matches', () => {
     observerToken = getSignedJwt(mockObserver);
     observerBToken = getSignedJwt(mockObserverB);
   });
-
-  const getSignedJwt = (user: User) => jwt.sign({ email: user.email, sub: user.id }, process.env.JWT_SECRET);
 
   afterAll(async () => {
     await getRepository(User).clear();
@@ -281,7 +279,7 @@ describe('e2e matches', () => {
   });
 
   it('should get referee matches', async () => {
-    refereeToken = jwt.sign({ email: mockRefereeB.email, sub: mockRefereeB.id }, process.env.JWT_SECRET);
+    refereeToken = getSignedJwt(mockRefereeB);
 
     const response = await request(app.getHttpServer())
       .get(`/users/${mockRefereeB.id}/matches`)

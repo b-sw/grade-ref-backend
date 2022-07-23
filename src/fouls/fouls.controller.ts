@@ -4,7 +4,6 @@ import { CreateFoulDto } from './dto/create-foul.dto';
 import { UpdateFoulDto } from './dto/update-foul.dto';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { LeagueUserGuard } from '../shared/guards/league-user.guard';
 import { LeagueMatchParams } from '../matches/params/LeagueMatchParams';
 import { FoulParams } from './params/FoulParams';
 import { MatchesService, OVERALL_GRADE_ENTRY_TIME_WINDOW } from '../matches/matches.service';
@@ -14,6 +13,7 @@ import { uuid } from '../shared/constants/uuid.constant';
 import { Foul } from '../entities/foul.entity';
 import { RoleGuard } from '../shared/guards/role.guard';
 import { Role } from '../users/constants/users.constants';
+import { RoleOrGuard } from '../shared/guards/role-or.guard';
 
 @ApiTags('fouls')
 @Controller('')
@@ -31,14 +31,14 @@ export class FoulsController {
   }
 
   @Get('leagues/:leagueId/matches/:matchId/fouls')
-  @UseGuards(JwtAuthGuard, LeagueUserGuard)
+  @UseGuards(JwtAuthGuard, RoleOrGuard([Role.Referee, Role.Observer, Role.Admin]))
   @ApiOperation({ summary: 'Get match fouls' })
   async getMatchFouls(@Param() params: LeagueMatchParams): Promise<Foul[]> {
     return await this.foulsService.getByMatch(params.matchId);
   }
 
   @Get('leagues/:leagueId/matches/:matchId/fouls/:foulId')
-  @UseGuards(JwtAuthGuard, LeagueUserGuard)
+  @UseGuards(JwtAuthGuard, RoleOrGuard([Role.Referee, Role.Observer, Role.Admin]))
   @ApiOperation({ summary: 'Get foul by id' })
   async getById(@Param() params: FoulParams): Promise<Foul> {
     return await this.foulsService.getById(params.foulId);
