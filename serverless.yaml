@@ -47,7 +47,6 @@ provider:
     DB_USERNAME: ${env:DB_USERNAME}
     DB_PASSWORD: ${env:DB_PASSWORD}
     DB_DATABASE: ${env:DB_DATABASE}
-    DOMAIN: ${env:DOMAIN}
     SMS_API_KEY: ${env:SMS_API_KEY}
     SMS_PASSWORD: ${env:SMS_PASSWORD}
     SMS_NUMBER: ${env:SMS_NUMBER}
