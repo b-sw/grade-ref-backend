@@ -108,7 +108,7 @@ export class MatchesController {
   }
 
   @Put('leagues/:leagueId/matches/:matchId/overallGrade')
-  @UseGuards(JwtAuthGuard, RoleGuard(Role.Observer))
+  @UseGuards(JwtAuthGuard, RoleOrGuard([Role.Admin, Role.Observer]))
   @ApiOperation({ summary: 'Update referee overall grade' })
   async updateMatchOverallGrade(
     @Param() params: LeagueMatchParams,

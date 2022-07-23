@@ -340,8 +340,8 @@ describe('e2e matches', () => {
     await setMockMatchDatetime(mockMatch.id, dayjs().add(2, 'day'));
   });
 
-  it('should not update referee overall grade if not observer', async () => {
-    await Promise.all([adminToken, refereeToken].map(async (token) => {
+  it('should not update referee overall grade if not observer or league admin', async () => {
+    await Promise.all([otherLeagueAdminToken, refereeToken].map(async (token) => {
       const dto: UpdateMatchDto = { overallGrade: 'Mock overall grade.' } as UpdateMatchDto;
 
       const response = await request(app.getHttpServer())

@@ -4,7 +4,6 @@ import { OwnerGuard } from './owner.guard';
 import { LeagueMatchParams } from '../../matches/params/LeagueMatchParams';
 import { MatchesService } from '../../matches/matches.service';
 import { Match } from '../../entities/match.entity';
-import { uuid } from '../constants/uuid.constant';
 import { Role } from '../../users/constants/users.constants';
 import { User } from '../../entities/user.entity';
 import { LeaguesService } from '../../leagues/leagues.service';
@@ -36,10 +35,16 @@ export const RoleOrGuard = (roles: Role[]): Type<CanActivate> => {
           }
         }
 
-        const userId: uuid = role === Role.Observer ? match.observerId : match.refereeId;
+        if (role === Role.Observer) {
+          if (request.user.id === match.observerId) {
+            return true;
+          }
+        }
 
-        if (request.user.id === userId) {
-          return true;
+        if (role === Role.Referee) {
+          if (request.user.id === match.refereeId) {
+            return true;
+          }
         }
       }
 
