@@ -1,8 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { S3 } from 'aws-sdk';
-import { BucketNames, S3Bucket } from './constants/aws.constants';
-import { EnvironmentType } from '../users/constants/env.constants';
-import { Presigner } from 'aws-sdk/clients/polly';
+import { S3Bucket, S3BucketNames } from './constants/aws.constants';
 
 @Injectable()
 export class S3Service {
@@ -18,22 +16,12 @@ export class S3Service {
     });
   }
 
-  private getBucketName = (bucket: S3Bucket): string => {
-    const envIsTest = process.env.NODE_ENV === EnvironmentType.Test;
-
-    if (envIsTest) {
-      return BucketNames[bucket][EnvironmentType.Test];
-    } else {
-      return BucketNames[bucket][EnvironmentType.Default];
-    }
-  };
-
   async upload(bucket: S3Bucket, key: string, file) {
     const { originalname, buffer } = file;
     Logger.log(originalname, 'S3 Uploaded file buffer');
 
     const params = {
-      Bucket: this.getBucketName(bucket),
+      Bucket: S3BucketNames[bucket],
       Key: key,
       Body: buffer,
     };
@@ -48,17 +36,9 @@ export class S3Service {
     });
   }
 
-  async getDownloadStream(bucket: S3Bucket, key: string) {
-    const params = {
-      Bucket: this.getBucketName(bucket),
-      Key: key,
-    };
-    return this.s3.getObject(params).createReadStream();
-  }
-
   async getPresignedUrl(bucket: S3Bucket, key: string) {
     const params = {
-      Bucket: this.getBucketName(bucket),
+      Bucket: S3BucketNames[bucket],
       Key: key,
     };
 
