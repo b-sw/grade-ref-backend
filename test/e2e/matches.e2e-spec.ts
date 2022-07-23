@@ -313,8 +313,8 @@ describe('e2e matches', () => {
     expect(response.body).toMatchObject(match);
   });
 
-  it('should not update referee match grade if not observer', async () => {
-    await Promise.all([adminToken, refereeToken].map(async (token) => {
+  it('should not update referee match grade if not observer or league admin', async () => {
+    await Promise.all([refereeToken].map(async (token) => {
       const dto: UpdateMatchDto = { refereeGrade: 5.5 } as UpdateMatchDto;
 
       const response = await request(app.getHttpServer())

@@ -101,7 +101,7 @@ export class MatchesController {
   }
 
   @Put('leagues/:leagueId/matches/:matchId/grade')
-  @UseGuards(JwtAuthGuard, RoleGuard(Role.Observer))
+  @UseGuards(JwtAuthGuard, RoleOrGuard([Role.Admin, Role.Observer]))
   @ApiOperation({ summary: 'Update referee match grade' })
   async updateMatchGrade(@Param() params: LeagueMatchParams, @Body() dto: Partial<UpdateMatchDto>): Promise<Match> {
     return this.matchesService.updateGrade(params, dto);
