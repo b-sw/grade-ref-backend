@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { UsersModule } from './users/users.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { dbConfig, e2eConfig } from '../ormconfig';
+import dbConfig, { e2eConfig } from '../ormconfig';
 import { AuthModule } from './auth/auth.module';
 import { TeamsModule } from './teams/teams.module';
 import { MatchesModule } from './matches/matches.module';
