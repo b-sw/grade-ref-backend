@@ -1,7 +1,7 @@
 import { ReportType } from './matches.constants';
 
 export const ReportFieldNames = {
-  [ReportType.Observer]: 'mentorReportKey',
-  [ReportType.Mentor]: 'observerReportKey',
+  [ReportType.Observer]: 'observerReportKey',
+  [ReportType.Mentor]: 'mentorReportKey',
   [ReportType.Tv]: 'tvReportKey',
 }
