@@ -38,6 +38,3 @@ lerna-debug.log*
 # Local
 .env*
 dist
-
-# sqlite db
-db
