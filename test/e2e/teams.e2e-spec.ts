@@ -5,7 +5,6 @@ import { User } from '../../src/entities/user.entity';
 import { MockUser } from '../shared/mockUser';
 import { v4 as randomUuid } from 'uuid';
 import { getRepository } from 'typeorm';
-import * as jwt from 'jsonwebtoken';
 import { League } from '../../src/entities/league.entity';
 import { Team } from '../../src/entities/team.entity';
 import { MockLeague } from '../shared/mockLeague';
@@ -14,6 +13,7 @@ import { MockCreateTeamDto } from '../shared/mockTeam';
 import request from 'supertest';
 import { UpdateTeamDto } from '../../src/teams/dto/update-team.dto';
 import { Role } from '../../src/users/constants/users.constants';
+import { getSignedJwt } from '../shared/jwt';
 
 describe('e2e teams', () => {
   const mockOwner: User = MockUser({ id: randomUuid(), role: Role.Owner, email: 'mock@mail.com', lastName: 'Doe' });
@@ -41,9 +41,9 @@ describe('e2e teams', () => {
     const leagueRepository = await getRepository(League);
     await leagueRepository.save(mockLeague);
 
-    ownerAccessToken = jwt.sign({ email: mockOwner.email, sub: mockOwner.id }, process.env.JWT_SECRET);
-    adminAccessToken = jwt.sign({ email: mockAdmin.email, sub: mockAdmin.id }, process.env.JWT_SECRET);
-    refereeAccessToken = jwt.sign({ email: mockReferee.email, sub: mockReferee.id }, process.env.JWT_SECRET);
+    ownerAccessToken = getSignedJwt(mockOwner);
+    adminAccessToken = getSignedJwt(mockAdmin);
+    refereeAccessToken = getSignedJwt(mockReferee);
   });
 
   afterAll(async () => {

@@ -12,12 +12,12 @@ import { Feature, FeatureType } from '../../src/entities/feature.entity';
 import { Test } from '@nestjs/testing';
 import { AppModule } from '../../src/app.module';
 import { getRepository } from 'typeorm';
-import * as jwt from 'jsonwebtoken';
 import request from 'supertest';
 import { CreateFeatureDto } from '../../src/features/dto/create-feature.dto';
 import { MockCreateFeatureDto } from '../shared/mockFeature';
 import { UpdateFeatureDto } from '../../src/features/dto/update-feature.dto';
 import { Role } from '../../src/users/constants/users.constants';
+import { getSignedJwt } from '../shared/jwt';
 
 describe('e2e features', () => {
   const mockOwner: User = MockUser({ id: randomUuid(), role: Role.Owner, email: 'mock@mail.com', lastName: 'Doe' });
@@ -25,8 +25,9 @@ describe('e2e features', () => {
   const mockReferee: User = MockUser( { id: randomUuid(), role: Role.Referee, email: 'ref@mail.com', lastName: 'Doe2' });
   const mockReferee2: User = MockUser( { id: randomUuid(), role: Role.Referee, email: 'ref2@mail.com', lastName: 'Doe3' });
   const mockObserver: User = MockUser( { id: randomUuid(), role: Role.Observer, email: 'obs@mail.com', phoneNumber: '669797907', lastName: 'Doe4' });
-  const mockLeague: League = MockLeague({ admins: [mockAdmin], referees: [mockReferee], observers: [mockObserver] });
-  const users: User[] = [mockOwner, mockAdmin, mockReferee, mockReferee2, mockObserver];
+  const mockObserver2: User = MockUser( { id: randomUuid(), role: Role.Observer, email: 'obs2@mail.com', lastName: 'Doe5' });
+  const mockLeague: League = MockLeague({ admins: [mockAdmin], referees: [mockReferee], observers: [mockObserver, mockObserver2] });
+  const users: User[] = [mockOwner, mockAdmin, mockReferee, mockReferee2, mockObserver, mockObserver2];
 
   const teamA: Team = MockTeam(mockLeague.id, mockLeague, 'FC Team A');
   const teamB: Team = MockTeam(mockLeague.id, mockLeague, 'FC Team B');
@@ -40,6 +41,7 @@ describe('e2e features', () => {
   let refereeAccessToken: string;
   let referee2AccessToken: string;
   let observerAccessToken: string;
+  let observer2AccessToken: string;
   let app: INestApplication;
 
   beforeAll(async () => {
@@ -62,11 +64,12 @@ describe('e2e features', () => {
     const matchRepository = await getRepository(Match);
     await Promise.all([mockMatch, mockMatch2].map(async (match: Match) => await matchRepository.save(match)));
 
-    ownerAccessToken = jwt.sign({ email: mockOwner.email, sub: mockOwner.id }, process.env.JWT_SECRET);
-    adminAccessToken = jwt.sign({ email: mockAdmin.email, sub: mockAdmin.id }, process.env.JWT_SECRET);
-    refereeAccessToken = jwt.sign({ email: mockReferee.email, sub: mockReferee.id }, process.env.JWT_SECRET);
-    referee2AccessToken = jwt.sign({ email: mockReferee2.email, sub: mockReferee2.id }, process.env.JWT_SECRET);
-    observerAccessToken = jwt.sign({ email: mockObserver.email, sub: mockObserver.id }, process.env.JWT_SECRET);
+    ownerAccessToken = getSignedJwt(mockOwner);
+    adminAccessToken = getSignedJwt(mockAdmin);
+    refereeAccessToken = getSignedJwt(mockReferee);
+    referee2AccessToken = getSignedJwt(mockReferee2);
+    observerAccessToken = getSignedJwt(mockObserver);
+    observer2AccessToken = getSignedJwt(mockObserver2);
   });
 
   afterAll(async () => {
@@ -77,10 +80,10 @@ describe('e2e features', () => {
     await getRepository(Feature).clear();
   });
 
-  it('should not create feature for not match referee', async () => {
+  it('should not create feature for not match observer', async () => {
     const dto: CreateFeatureDto = MockCreateFeatureDto(mockReferee.id);
 
-    await Promise.all([adminAccessToken, observerAccessToken, referee2AccessToken].map(async (token) => {
+    await Promise.all([adminAccessToken, refereeAccessToken, referee2AccessToken].map(async (token) => {
       const response = await request(app.getHttpServer())
         .post(`/leagues/${mockLeague.id}/matches/${mockMatch.id}/features`)
         .auth(token, { type: 'bearer' })
@@ -90,12 +93,12 @@ describe('e2e features', () => {
     }));
   });
 
-  it('should create feature for referee', async () => {
+  it('should create feature for match observer', async () => {
     const dto: CreateFeatureDto = MockCreateFeatureDto(mockReferee.id);
 
     const response = await request(app.getHttpServer())
       .post(`/leagues/${mockLeague.id}/matches/${mockMatch.id}/features`)
-      .auth(refereeAccessToken, { type: 'bearer' })
+      .auth(observerAccessToken, { type: 'bearer' })
       .send(dto);
 
     mockFeature = {
@@ -120,7 +123,7 @@ describe('e2e features', () => {
 
     const response = await request(app.getHttpServer())
       .post(`/leagues/${mockLeague.id}/matches/${mockMatch.id}/features`)
-      .auth(refereeAccessToken, { type: 'bearer' })
+      .auth(observerAccessToken, { type: 'bearer' })
       .send(dto);
 
     expect(response.status).toBe(HttpStatus.BAD_REQUEST);
@@ -133,7 +136,7 @@ describe('e2e features', () => {
 
     const response = await request(app.getHttpServer())
       .post(`/leagues/${mockLeague.id}/matches/${mockMatch.id}/features`)
-      .auth(refereeAccessToken, { type: 'bearer' })
+      .auth(observerAccessToken, { type: 'bearer' })
       .send(dto);
 
     mockFeature2 = {
@@ -151,7 +154,7 @@ describe('e2e features', () => {
   it('should not get feature for wrong match', async () => {
     const response = await request(app.getHttpServer())
       .get(`/leagues/${mockLeague.id}/matches/${mockMatch2.id}/features/${mockFeature.id}`)
-      .auth(refereeAccessToken, { type: 'bearer' });
+      .auth(observerAccessToken, { type: 'bearer' });
 
     expect(response.status).toBe(HttpStatus.FORBIDDEN);
   });
@@ -159,15 +162,15 @@ describe('e2e features', () => {
   it('should not get feature for non-existing match', async () => {
     const response = await request(app.getHttpServer())
       .get(`/leagues/${mockLeague.id}/matches/mockMatchId/features/${mockFeature.id}`)
-      .auth(refereeAccessToken, { type: 'bearer' });
+      .auth(observerAccessToken, { type: 'bearer' });
 
     expect(response.status).toBe(HttpStatus.BAD_REQUEST);
   });
 
-  it('should not update feature for not match referee', async () => {
+  it('should not update feature for not match observer', async () => {
     const dto: UpdateFeatureDto = MockCreateFeatureDto(mockReferee.id, FeatureType.Negative);
 
-    await Promise.all([adminAccessToken, observerAccessToken, referee2AccessToken].map(async (token) => {
+    await Promise.all([adminAccessToken, refereeAccessToken, observer2AccessToken].map(async (token) => {
       const response = await request(app.getHttpServer())
         .put(`/leagues/${mockLeague.id}/matches/${mockMatch.id}/features/${mockFeature.id}`)
         .auth(token, { type: 'bearer' })
@@ -182,7 +185,7 @@ describe('e2e features', () => {
 
     const response = await request(app.getHttpServer())
       .put(`/leagues/${mockLeague.id}/matches/${mockMatch2.id}/features/${mockFeature.id}`)
-      .auth(refereeAccessToken, { type: 'bearer' })
+      .auth(observerAccessToken, { type: 'bearer' })
       .send(dto);
 
     expect(response.status).toBe(HttpStatus.FORBIDDEN);
@@ -198,7 +201,7 @@ describe('e2e features', () => {
 
     const response = await request(app.getHttpServer())
       .put(`/leagues/${mockLeague.id}/matches/${mockMatch.id}/features/${mockFeature.id}`)
-      .auth(refereeAccessToken, { type: 'bearer' })
+      .auth(observerAccessToken, { type: 'bearer' })
       .send(dto);
 
     expect(response.status).toBe(HttpStatus.BAD_REQUEST);
@@ -206,12 +209,12 @@ describe('e2e features', () => {
     await Promise.all([feature2, feature3].map(async (feature: Feature) => await featuresRepository.delete(feature.id)));
   });
 
-  it('should update feature for referee', async () => {
+  it('should update feature for match observer', async () => {
     const dto: UpdateFeatureDto = MockCreateFeatureDto(mockReferee.id, FeatureType.Positive);
 
     const response = await request(app.getHttpServer())
       .put(`/leagues/${mockLeague.id}/matches/${mockMatch.id}/features/${mockFeature2.id}`)
-      .auth(refereeAccessToken, { type: 'bearer' })
+      .auth(observerAccessToken, { type: 'bearer' })
       .send(dto);
 
     mockFeature2 = {
@@ -229,7 +232,7 @@ describe('e2e features', () => {
   it('should not remove feature for non-existing match', async () => {
     const response = await request(app.getHttpServer())
       .delete(`/leagues/${mockLeague.id}/matches/mockMatchId/features/${mockFeature.id}`)
-      .auth(refereeAccessToken, { type: 'bearer' });
+      .auth(observerAccessToken, { type: 'bearer' });
 
     expect(response.status).toBe(HttpStatus.BAD_REQUEST);
   });
@@ -237,13 +240,13 @@ describe('e2e features', () => {
   it('should not remove feature for invalid match', async () => {
     const response = await request(app.getHttpServer())
       .delete(`/leagues/${mockLeague.id}/matches/${mockMatch2.id}/features/${mockFeature.id}`)
-      .auth(refereeAccessToken, { type: 'bearer' });
+      .auth(observerAccessToken, { type: 'bearer' });
 
     expect(response.status).toBe(HttpStatus.FORBIDDEN);
   });
 
-  it('should not remove feature for not match referee', async () => {
-    await Promise.all([adminAccessToken, observerAccessToken, referee2AccessToken].map(async (token) => {
+  it('should not remove feature for not match observer', async () => {
+    await Promise.all([adminAccessToken, refereeAccessToken, observer2AccessToken].map(async (token) => {
       const response = await request(app.getHttpServer())
         .delete(`/leagues/${mockLeague.id}/matches/${mockMatch.id}/features/${mockFeature.id}`)
         .auth(token, { type: 'bearer' });
@@ -252,10 +255,10 @@ describe('e2e features', () => {
     }));
   });
 
-  it('should remove feature for referee', async () => {
+  it('should remove feature for match observer', async () => {
     const response = await request(app.getHttpServer())
       .delete(`/leagues/${mockLeague.id}/matches/${mockMatch.id}/features/${mockFeature.id}`)
-      .auth(refereeAccessToken, { type: 'bearer' });
+      .auth(observerAccessToken, { type: 'bearer' });
 
     expect(response.status).toBe(HttpStatus.OK);
     expect(response.body).toMatchObject(mockFeature);

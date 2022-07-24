@@ -10,7 +10,6 @@ import { MockUser } from '../shared/mockUser';
 import { v4 as randomUuid } from 'uuid';
 import { MockLeague } from '../shared/mockLeague';
 import { MockTeam } from '../shared/mockTeam';
-import * as jwt from 'jsonwebtoken';
 import { MockMatch, setMockMatchDatetime } from '../shared/mockMatch';
 import request from 'supertest';
 import { CreateFoulDto } from '../../src/fouls/dto/create-foul.dto';
@@ -21,6 +20,7 @@ import dayjs from 'dayjs';
 import { UpdateMatchDto } from '../../src/matches/dto/update-match.dto';
 import { MATCH_DURATION, OVERALL_GRADE_ENTRY_TIME_WINDOW } from '../../src/matches/matches.service';
 import { Role } from '../../src/users/constants/users.constants';
+import { getSignedJwt } from '../shared/jwt';
 
 describe('e2e fouls', () => {
   const mockOwner: User = MockUser({ id: randomUuid(), role: Role.Owner, email: 'mock@mail.com', lastName: 'Doe' });
@@ -28,7 +28,8 @@ describe('e2e fouls', () => {
   const mockReferee: User = MockUser( { id: randomUuid(), role: Role.Referee, email: 'ref@mail.com', lastName: 'Doe2' });
   const mockReferee2: User = MockUser( { id: randomUuid(), role: Role.Referee, email: 'ref2@mail.com', lastName: 'Doe3' });
   const mockObserver: User = MockUser( { id: randomUuid(), role: Role.Observer, email: 'obs@mail.com', phoneNumber: '669797907', lastName: 'Doe4' });
-  const mockLeague: League = MockLeague({ admins: [mockAdmin], referees: [mockReferee], observers: [mockObserver] });
+  const mockObserver2: User = MockUser( { id: randomUuid(), role: Role.Observer, email: 'obs2@mail.com', lastName: 'Doe5' });
+  const mockLeague: League = MockLeague({ admins: [mockAdmin], referees: [mockReferee], observers: [mockObserver, mockObserver2] });
   const users: User[] = [mockOwner, mockAdmin, mockReferee, mockReferee2, mockObserver];
 
   const teamA: Team = MockTeam(mockLeague.id, mockLeague, 'FC Team A');
@@ -41,6 +42,7 @@ describe('e2e fouls', () => {
   let refereeAccessToken: string;
   let referee2AccessToken: string;
   let observerAccessToken: string;
+  let observer2AccessToken: string;
   let app: INestApplication;
 
   beforeAll(async () => {
@@ -63,11 +65,12 @@ describe('e2e fouls', () => {
     const matchRepository = await getRepository(Match);
     await matchRepository.save(mockMatch);
 
-    ownerAccessToken = jwt.sign({ email: mockOwner.email, sub: mockOwner.id }, process.env.JWT_SECRET);
-    adminAccessToken = jwt.sign({ email: mockAdmin.email, sub: mockAdmin.id }, process.env.JWT_SECRET);
-    refereeAccessToken = jwt.sign({ email: mockReferee.email, sub: mockReferee.id }, process.env.JWT_SECRET);
-    referee2AccessToken = jwt.sign({ email: mockReferee2.email, sub: mockReferee2.id }, process.env.JWT_SECRET);
-    observerAccessToken = jwt.sign({ email: mockObserver.email, sub: mockObserver.id }, process.env.JWT_SECRET);
+    ownerAccessToken = getSignedJwt(mockOwner);
+    adminAccessToken = getSignedJwt(mockAdmin);
+    refereeAccessToken = getSignedJwt(mockReferee);
+    referee2AccessToken = getSignedJwt(mockReferee2);
+    observerAccessToken = getSignedJwt(mockObserver);
+    observer2AccessToken = getSignedJwt(mockObserver2);
   });
 
   afterAll(async () => {
@@ -78,7 +81,7 @@ describe('e2e fouls', () => {
     await getRepository(Foul).clear();
   });
 
-  it('should not create foul for not observer', async () => {
+  it('should not create foul for not match observer', async () => {
     const dto: CreateFoulDto = MockCreateFoulDto(teamA.id);
 
     await Promise.all([adminAccessToken, refereeAccessToken].map(async (token) => {
@@ -91,7 +94,7 @@ describe('e2e fouls', () => {
     }));
   });
 
-  it('should create foul', async () => {
+  it('should create foul for match observer', async () => {
     const dto: CreateFoulDto = MockCreateFoulDto(teamA.id);
 
     const response = await request(app.getHttpServer())
@@ -112,7 +115,7 @@ describe('e2e fouls', () => {
     expect(foul).toMatchObject(mockFoul);
   });
 
-  it('should not get foul for invalid user', async () => {
+  it('should not get foul for not match user', async () => {
     const response = await request(app.getHttpServer())
       .get(`/leagues/${mockLeague.id}/matches/${mockMatch.id}/fouls/${mockFoul.id}`)
       .auth(referee2AccessToken, { type: 'bearer' });
@@ -120,19 +123,21 @@ describe('e2e fouls', () => {
     expect(response.status).toBe(HttpStatus.FORBIDDEN);
   });
 
-  it('should get foul', async () => {
-    const response = await request(app.getHttpServer())
-      .get(`/leagues/${mockLeague.id}/matches/${mockMatch.id}/fouls/${mockFoul.id}`)
-      .auth(refereeAccessToken, { type: 'bearer' });
+  it('should get foul for match user', async () => {
+    await Promise.all([adminAccessToken, refereeAccessToken, observerAccessToken].map(async (token) => {
+      const response = await request(app.getHttpServer())
+        .get(`/leagues/${mockLeague.id}/matches/${mockMatch.id}/fouls/${mockFoul.id}`)
+        .auth(token, { type: 'bearer' });
 
-    expect(response.status).toBe(HttpStatus.OK);
-    expect(response.body).toMatchObject(mockFoul);
+      expect(response.status).toBe(HttpStatus.OK);
+      expect(response.body).toMatchObject(mockFoul);
 
-    const foul: Foul | undefined = await getRepository(Foul).findOne({ where: { id: mockFoul.id } });
-    expect(foul).toMatchObject(mockFoul);
+      const foul: Foul | undefined = await getRepository(Foul).findOne({ where: { id: mockFoul.id } });
+      expect(foul).toMatchObject(mockFoul);
+    }));
   });
 
-  it('should not get match fouls for invalid user', async () => {
+  it('should not get match fouls for not match user', async () => {
     const response = await request(app.getHttpServer())
       .get(`/leagues/${mockLeague.id}/matches/${mockMatch.id}/fouls`)
       .auth(referee2AccessToken, { type: 'bearer' });
@@ -140,23 +145,25 @@ describe('e2e fouls', () => {
     expect(response.status).toBe(HttpStatus.FORBIDDEN);
   });
 
-  it('should get match fouls', async () => {
-    const response = await request(app.getHttpServer())
-      .get(`/leagues/${mockLeague.id}/matches/${mockMatch.id}/fouls`)
-      .auth(refereeAccessToken, { type: 'bearer' });
+  it('should get match fouls for match users', async () => {
+    await Promise.all([adminAccessToken, refereeAccessToken, observerAccessToken].map(async (token) => {
+      const response = await request(app.getHttpServer())
+        .get(`/leagues/${mockLeague.id}/matches/${mockMatch.id}/fouls`)
+        .auth(token, { type: 'bearer' });
 
-    expect(response.status).toBe(HttpStatus.OK);
-    expect(response.body).toMatchObject([mockFoul]);
+      expect(response.status).toBe(HttpStatus.OK);
+      expect(response.body).toMatchObject([mockFoul]);
 
-    const fouls: Foul[] = await getRepository(Foul).find({ where: { matchId: mockMatch.id } });
-    expect(fouls.length).toBe(1);
-    expect(fouls[0]).toMatchObject(mockFoul);
+      const fouls: Foul[] = await getRepository(Foul).find({ where: { matchId: mockMatch.id } });
+      expect(fouls.length).toBe(1);
+      expect(fouls[0]).toMatchObject(mockFoul);
+    }));
   });
 
-  it('should not update foul for not observer', async () => {
+  it('should not update foul for not match observer', async () => {
     const dto: UpdateFoulDto = MockCreateFoulDto(teamB.id);
 
-    await Promise.all([adminAccessToken, refereeAccessToken].map(async (token) => {
+    await Promise.all([adminAccessToken, refereeAccessToken, observer2AccessToken].map(async (token) => {
       const response = await request(app.getHttpServer())
         .put(`/leagues/${mockLeague.id}/matches/${mockMatch.id}/fouls/${mockFoul.id}`)
         .auth(token, { type: 'bearer' })
@@ -166,7 +173,7 @@ describe('e2e fouls', () => {
     }));
   });
 
-  it('should update foul', async () => {
+  it('should update foul for match observer', async () => {
     const dto: UpdateFoulDto = MockCreateFoulDto(teamB.id);
 
     const response = await request(app.getHttpServer())
@@ -198,8 +205,8 @@ describe('e2e fouls', () => {
     await setMockMatchDatetime(mockMatch.id, dayjs().add(2, 'day'));
   });
 
-  it('should not remove foul for not observer', async () => {
-    await Promise.all([adminAccessToken, refereeAccessToken].map(async (token) => {
+  it('should not remove foul for not match observer', async () => {
+    await Promise.all([adminAccessToken, refereeAccessToken, observer2AccessToken].map(async (token) => {
       const response = await request(app.getHttpServer())
         .delete(`/leagues/${mockLeague.id}/matches/${mockMatch.id}/fouls/${mockFoul.id}`)
         .auth(token, { type: 'bearer' });

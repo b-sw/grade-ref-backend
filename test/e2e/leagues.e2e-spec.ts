@@ -3,7 +3,6 @@ import { HttpStatus, INestApplication } from '@nestjs/common';
 import { AppModule } from '../../src/app.module';
 import { getRepository } from 'typeorm';
 import { User } from '../../src/entities/user.entity';
-import * as jwt from 'jsonwebtoken';
 import { MockUser } from '../shared/mockUser';
 import { v4 as randomUuid } from 'uuid';
 import request from 'supertest';
@@ -13,6 +12,7 @@ import { League } from '../../src/entities/league.entity';
 import { uuid } from '../../src/shared/constants/uuid.constant';
 import { UpdateLeagueDto } from '../../src/leagues/dto/update-league.dto';
 import { Role } from '../../src/users/constants/users.constants';
+import { getSignedJwt } from '../shared/jwt';
 
 describe('e2e leagues', () => {
   const mockOwner: User = MockUser({ id: randomUuid(), role: Role.Owner, email: 'mock@mail.com', lastName: 'Doe' });
@@ -39,9 +39,9 @@ describe('e2e leagues', () => {
     const usersRepository = await getRepository(User);
     await Promise.all(users.map(async (user) => await usersRepository.save(user)));
 
-    ownerAccessToken = jwt.sign({ email: mockOwner.email, sub: mockOwner.id }, process.env.JWT_SECRET);
-    adminAccessToken = jwt.sign({ email: mockAdmin.email, sub: mockAdmin.id }, process.env.JWT_SECRET);
-    observerAccessToken = jwt.sign({ email: mockObserver.email, sub: mockObserver.id }, process.env.JWT_SECRET);
+    ownerAccessToken = getSignedJwt(mockOwner);
+    adminAccessToken = getSignedJwt(mockAdmin);
+    observerAccessToken = getSignedJwt(mockObserver);
   });
 
   afterAll(async () => {
