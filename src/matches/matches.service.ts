@@ -17,7 +17,7 @@ import { getNotNull } from '../shared/getters';
 import { Team } from '../entities/team.entity';
 import { validateEntryTime } from '../shared/validators';
 import { ReportType } from './constants/matches.constants';
-import { ActionType, GradeFilePermissions, Role } from '../users/constants/users.constants';
+import { ActionType, GradeFilePermissions } from '../users/constants/users.constants';
 import { ReportFieldNames } from './constants/reports.constants';
 
 const SMS_API: string = 'https://api2.smsplanet.pl';
@@ -498,22 +498,6 @@ export class MatchesService {
     match[reportFieldName] = null;
 
     return this.matchRepository.save(match);
-  }
-
-  public async validateUserMatchAssignment(user: User, matchId: uuid) {
-    const userIsAdminOrOwner = user.role === Role.Admin || user.role === Role.Owner;
-    if (userIsAdminOrOwner) {
-      return;
-    }
-
-    const match = getNotNull(await this.getById(matchId));
-    const userIsAssignedToMatch = match.refereeId === user.id || match.observerId === user.id;
-
-    if (userIsAssignedToMatch) {
-      return;
-    }
-
-    throw new HttpException(`User is not assigned to the match.`, HttpStatus.FORBIDDEN);
   }
 
   public validateUserAction(user: User, reportType: ReportType, actionType: ActionType) {
