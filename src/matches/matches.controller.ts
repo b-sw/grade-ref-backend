@@ -44,7 +44,6 @@ import { RoleGuard } from '../shared/guards/role.guard';
 import { S3Service } from '../aws/s3.service';
 import { LeagueMatchReportParams } from './params/LeagueMatchReportParams';
 import dayjs from 'dayjs';
-import { LeagueUserGuard } from '../shared/guards/league-user.guard';
 import { ActionType, Role } from '../users/constants/users.constants';
 import { S3Bucket, S3FileKeyDateFormat } from '../aws/constants/aws.constants';
 import { RoleOrGuard } from '../shared/guards/role-or.guard';
@@ -236,7 +235,7 @@ export class MatchesController {
   }
 
   @Post('leagues/:leagueId/matches/:matchId/reports/:reportType')
-  @UseGuards(JwtAuthGuard, LeagueUserGuard)
+  @UseGuards(JwtAuthGuard, RoleOrGuard([Role.Admin, Role.Referee, Role.Observer]))
   @UseInterceptors(FileInterceptor('report'))
   @ApiOperation({ summary: 'Upload report' })
   async uploadReport(
@@ -245,7 +244,6 @@ export class MatchesController {
     @UploadedFile() file,
   ): Promise<Match> {
     const user = getNotNull(await this.usersService.getById(request.user.id));
-    await this.matchesService.validateUserMatchAssignment(user, params.matchId);
     this.matchesService.validateUserAction(user, params.reportType, ActionType.Write);
 
     const formattedDate = dayjs().format(S3FileKeyDateFormat);
@@ -256,11 +254,10 @@ export class MatchesController {
   }
 
   @Get('leagues/:leagueId/matches/:matchId/reports/:reportType')
-  @UseGuards(JwtAuthGuard, LeagueUserGuard)
+  @UseGuards(JwtAuthGuard, RoleOrGuard([Role.Admin, Role.Referee, Role.Observer]))
   @ApiOperation({ summary: 'Download report' })
   async getReport(@Request() request, @Param() params: LeagueMatchReportParams) {
     const user = getNotNull(await this.usersService.getById(request.user.id));
-    await this.matchesService.validateUserMatchAssignment(user, params.matchId);
     this.matchesService.validateUserAction(user, params.reportType, ActionType.Read);
 
     const key = await this.matchesService.getKeyForReport(params.matchId, params.reportType);
@@ -269,11 +266,10 @@ export class MatchesController {
   }
 
   @Delete('leagues/:leagueId/matches/:matchId/reports/:reportType')
-  @UseGuards(JwtAuthGuard, LeagueUserGuard)
+  @UseGuards(JwtAuthGuard, RoleOrGuard([Role.Admin, Role.Referee, Role.Observer]))
   @ApiOperation({ summary: 'Delete report' })
   async removeReport(@Request() request, @Param() params: LeagueMatchReportParams): Promise<Match> {
     const user = getNotNull(await this.usersService.getById(request.user.id));
-    await this.matchesService.validateUserMatchAssignment(user, params.matchId);
     this.matchesService.validateUserAction(user, params.reportType, ActionType.Write);
 
     return this.matchesService.removeReport(params.matchId, params.reportType);
