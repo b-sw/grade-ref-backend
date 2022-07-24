@@ -18,7 +18,7 @@ config();
 const entities = [User, Team, Match, League, Foul, Feature];
 
 const dbConfig: MysqlConnectionOptions = {
-  type: 'mysql',
+  type: 'mariadb',
   host: process.env.DB_HOST,
   port: +process.env.DB_PORT,
   username: process.env.DB_USERNAME,

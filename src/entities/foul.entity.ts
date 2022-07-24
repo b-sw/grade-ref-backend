@@ -41,7 +41,4 @@ export class Foul {
   @ManyToOne(() => Match, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'matchId' })
   match: Match;
-
-  @Column({ nullable: true })
-  dummy: string;
 }
