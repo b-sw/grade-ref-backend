@@ -15,7 +15,7 @@ export class TeamsService {
     await this.validateUnique(dto);
     const team: Team = this.teamRepository.create({
       name: dto.name,
-      leagueId: leagueId
+      leagueId: leagueId,
     });
     return this.teamRepository.save(team);
   }
@@ -35,7 +35,7 @@ export class TeamsService {
   async update(params: LeagueTeamParams, dto: UpdateTeamDto) {
     await this.validateUnique(dto, params.teamId);
     await this.teamRepository.update(params.teamId, {
-      name: dto.name
+      name: dto.name,
     });
     return this.getById(params.teamId);
   }
@@ -48,7 +48,7 @@ export class TeamsService {
 
   async validateUnique(dto: CreateTeamDto | UpdateTeamDto, id?: uuid): Promise<void> {
     const existingTeam: Team | undefined = await this.teamRepository.findOne({
-      where: { name: dto.name }
+      where: { name: dto.name },
     });
 
     if (!existingTeam) {

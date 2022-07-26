@@ -4,4 +4,4 @@ export const ReportFieldNames = {
   [ReportType.Observer]: 'observerReportKey',
   [ReportType.Mentor]: 'mentorReportKey',
   [ReportType.Tv]: 'tvReportKey',
-}
+};

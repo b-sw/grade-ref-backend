@@ -15,5 +15,5 @@ export class Team {
 
   @ManyToOne(() => League, { cascade: true, onDelete: 'CASCADE' })
   @JoinColumn({ name: 'leagueId' })
-  league: League
+  league: League;
 }

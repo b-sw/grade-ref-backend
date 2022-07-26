@@ -7,13 +7,9 @@ import { LeaguesModule } from '../leagues/leagues.module';
 import { MatchesModule } from '../matches/matches.module';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([User]),
-    forwardRef(() => LeaguesModule),
-    forwardRef(() => MatchesModule),
-  ],
+  imports: [TypeOrmModule.forFeature([User]), forwardRef(() => LeaguesModule), forwardRef(() => MatchesModule)],
   controllers: [UsersController],
   providers: [UsersService],
-  exports: [UsersService]
+  exports: [UsersService],
 })
 export class UsersModule {}

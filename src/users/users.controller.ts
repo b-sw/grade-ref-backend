@@ -19,9 +19,11 @@ import { MatchRoleGuard } from '../shared/guards/matchRoleGuard';
 @Controller('')
 @ApiBearerAuth()
 export class UsersController {
-  constructor(private readonly usersService: UsersService,
-              private readonly leaguesService: LeaguesService,
-              private readonly matchesService: MatchesService) {}
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly leaguesService: LeaguesService,
+    private readonly matchesService: MatchesService,
+  ) {}
 
   @Get('users')
   @UseGuards(JwtAuthGuard, OwnerGuard)

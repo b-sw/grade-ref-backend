@@ -17,8 +17,7 @@ import { Team } from '../entities/team.entity';
 @Controller('')
 @ApiBearerAuth()
 export class TeamsController {
-  constructor(private readonly teamsService: TeamsService,
-              private readonly leaguesService: LeaguesService) {}
+  constructor(private readonly teamsService: TeamsService, private readonly leaguesService: LeaguesService) {}
 
   @Get('teams')
   @UseGuards(JwtAuthGuard, OwnerGuard)
@@ -28,7 +27,7 @@ export class TeamsController {
   }
 
   @Get('leagues/:leagueId/teams')
-  @UseGuards(JwtAuthGuard, )
+  @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Get all teams in a league' })
   async getAllByLeagueId(@Param() params: LeagueParams): Promise<Team[]> {
     const league: League = await this.leaguesService.getLeagueById(params.leagueId);

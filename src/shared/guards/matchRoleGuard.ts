@@ -11,9 +11,11 @@ import { LeaguesService } from '../../leagues/leagues.service';
 export const MatchRoleGuard = (roles: Role[]): Type<CanActivate> => {
   @Injectable()
   class RoleGuardMixin extends OwnerGuard implements CanActivate {
-    constructor(protected usersService: UsersService,
-                private matchesService: MatchesService,
-                private leaguesService: LeaguesService) {
+    constructor(
+      protected usersService: UsersService,
+      private matchesService: MatchesService,
+      private leaguesService: LeaguesService,
+    ) {
       super(usersService);
     }
 
@@ -38,7 +40,7 @@ export const MatchRoleGuard = (roles: Role[]): Type<CanActivate> => {
 
       for (const role of roles) {
         if (role === Role.Admin) {
-          const isLeagueAdmin = leagueAdmins.some(admin => admin.id === request.user.id);
+          const isLeagueAdmin = leagueAdmins.some((admin) => admin.id === request.user.id);
           if (isLeagueAdmin) {
             return true;
           }
@@ -62,4 +64,4 @@ export const MatchRoleGuard = (roles: Role[]): Type<CanActivate> => {
   }
 
   return mixin(RoleGuardMixin);
-}
+};

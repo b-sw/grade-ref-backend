@@ -39,7 +39,7 @@ export class UsersService {
       role: dto.role,
       phoneNumber: dto.phoneNumber,
       firstName: dto.firstName,
-      lastName: dto.lastName
+      lastName: dto.lastName,
     });
     return this.usersRepository.save(newUser);
   }
@@ -50,7 +50,7 @@ export class UsersService {
       email: dto.email,
       phoneNumber: dto.phoneNumber,
       firstName: dto.firstName,
-      lastName: dto.lastName
+      lastName: dto.lastName,
     });
     return this.getById(params.userId);
   }
@@ -63,7 +63,7 @@ export class UsersService {
 
   async validateUnique(dto: CreateUserDto | UpdateUserDto, id?: uuid): Promise<void> {
     const existingLeague: User | undefined = await this.usersRepository.findOne({
-      where: { email: dto.email }
+      where: { email: dto.email },
     });
 
     if (!existingLeague) {
