@@ -4,6 +4,7 @@ import { User } from './user.entity';
 import { Team } from './team.entity';
 import { Type } from 'class-transformer';
 import { League } from './league.entity';
+import { MatchInfo } from '../matches/types/match-info.type';
 
 @Entity()
 export class Match {

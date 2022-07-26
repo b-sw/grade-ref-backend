@@ -24,7 +24,7 @@ export class TeamsService {
     return this.teamRepository.find();
   }
 
-  async getAllByLeagueId(leagueId: uuid) {
+  async getAllByLeagueId(leagueId: uuid): Promise<Team[]> {
     return this.teamRepository.find({ where: { leagueId: leagueId } });
   }
 

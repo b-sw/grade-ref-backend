@@ -19,10 +19,11 @@ import { validateEntryTime } from '../shared/validators';
 import { ReportType } from './constants/matches.constants';
 import { ActionType, GradeFilePermissions } from '../users/constants/users.constants';
 import { ReportFieldNames } from './constants/reports.constants';
+import { MatchInfo } from './types/match-info.type';
 
-const SMS_API: string = 'https://api2.smsplanet.pl';
-export const DTO_DATETIME_FORMAT: string = 'YYYY-MM-DDTHH:mm';
-const SMS_API_DATETIME_FORMAT: string = 'DD-MM-YYYY HH:mm:ss';
+const SMS_API = 'https://api2.smsplanet.pl';
+export const DTO_DATETIME_FORMAT = 'YYYY-MM-DDTHH:mm';
+const SMS_API_DATETIME_FORMAT = 'DD-MM-YYYY HH:mm:ss';
 
 const MATCH_PROPS_COUNT = 7;
 const DELIMITER = ';';
@@ -65,9 +66,9 @@ export class MatchesService {
     /*
      *  + 1 because JavaScript's Date is a copy of Java's java.util.Date
      */
-    const day: String = String(dtoDate.getUTCDate()).slice(-2);
-    const month: String = String(dtoDate.getUTCMonth() + 1).slice(-2);
-    const year: String = String(dtoDate.getUTCFullYear()).slice(-2);
+    const day: string = String(dtoDate.getUTCDate()).slice(-2);
+    const month: string = String(dtoDate.getUTCMonth() + 1).slice(-2);
+    const year: string = String(dtoDate.getUTCFullYear()).slice(-2);
     return (
       day.padStart(2, '0') +
       month.padStart(2, '0') +
@@ -327,7 +328,7 @@ export class MatchesService {
   }
 
   async cancelSMS(smsId: string): Promise<void> {
-    let smsIdInt: number = +smsId;
+    const smsIdInt: number = +smsId;
 
     const response = await axios.post(
       `${SMS_API}/cancelMessage`,
@@ -427,7 +428,7 @@ export class MatchesService {
     const { teamsDict, refereesDict, observersDict } = this.getMaps(teams, referees, observers);
 
     const matchesEntries: string[] = csv.split(/\r?\n|\r/);
-    let dtos: CreateMatchDto[] = [];
+    const dtos: CreateMatchDto[] = [];
 
     matchesEntries.forEach((matchEntry: string) => {
       const matchProps: string[] = matchEntry.split(DELIMITER);
@@ -445,9 +446,9 @@ export class MatchesService {
   }
 
   getMaps(teams: Team[], referees: User[], observers: User[]) {
-    let teamsDict: { [key: string]: Team } = {};
-    let refereesDict: { [key: string]: User } = {};
-    let observersDict: { [key: string]: User } = {};
+    const teamsDict: { [key: string]: Team } = {};
+    const refereesDict: { [key: string]: User } = {};
+    const observersDict: { [key: string]: User } = {};
 
     teams.forEach((team: Team) => (teamsDict[team.name] = team));
     referees.forEach((referee: User) => (refereesDict[referee.lastName] = referee));
@@ -503,6 +504,45 @@ export class MatchesService {
   public validateUserAction(user: User, reportType: ReportType, actionType: ActionType) {
     if (!GradeFilePermissions[user.role][actionType].has(reportType)) {
       throw new HttpException(`User does not have sufficient permissions.`, HttpStatus.FORBIDDEN);
+    }
+  }
+
+  public getMatchInfo(
+    match: Match,
+    teams: { [key: uuid]: Team },
+    referees: { [key: uuid]: User },
+    observers: { [key: uuid]: User },
+    hideObserver = false,
+  ): MatchInfo {
+    const referee = referees[match.refereeId];
+    const observer = observers[match.observerId];
+
+    const refereeFullName = `${referee.firstName} ${referee.lastName}`;
+    const observerFullName = `${observer.firstName} ${observer.lastName}`;
+
+    const matchIsUpcoming = dayjs(match.matchDate).isAfter(dayjs());
+
+    return {
+      id: match.id,
+      userReadableKey: match.userReadableKey,
+      matchDate: match.matchDate,
+      stadium: match.stadium,
+      homeTeam: teams[match.homeTeamId].name,
+      awayTeam: teams[match.awayTeamId].name,
+      referee: refereeFullName,
+      observer: hideObserver && matchIsUpcoming ? 'hidden' : observerFullName,
+      league: match.leagueId,
+      refereeGrade: match.refereeGrade,
+      refereeGradeDate: match.refereeGradeDate,
+      refereeNote: match.refereeNote,
+      overallGrade: match.overallGrade,
+      overallGradeDate: match.overallGradeDate,
+    };
+  }
+
+  public validateMatchNotUpcoming(match: Match) {
+    if (dayjs(match.matchDate).isAfter(dayjs())) {
+      throw new HttpException(`Match is upcoming.`, HttpStatus.BAD_REQUEST);
     }
   }
 }

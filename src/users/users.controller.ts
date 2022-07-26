@@ -10,11 +10,10 @@ import { LeagueParams } from '../leagues/params/LeagueParams';
 import { LeagueUserParams } from '../leagues/params/LeagueUserParams';
 import { LeaguesService } from '../leagues/leagues.service';
 import { OwnerGuard } from '../shared/guards/owner.guard';
-import { LeagueAdminGuard } from '../shared/guards/league-admin.guard';
 import { AdminGuard } from '../shared/guards/admin.guard';
-import { LeagueUserGuard } from '../shared/guards/league-user.guard';
 import { MatchesService } from '../matches/matches.service';
 import { Role } from './constants/users.constants';
+import { MatchRoleGuard } from '../shared/guards/matchRoleGuard';
 
 @ApiTags('users')
 @Controller('')
@@ -73,29 +72,31 @@ export class UsersController {
     return this.usersService.remove(params);
   }
 
+  // todo: adjust guard tests
   @Get('leagues/:leagueId/referees')
-  @UseGuards(JwtAuthGuard, LeagueUserGuard)
+  @UseGuards(JwtAuthGuard, MatchRoleGuard([Role.Admin]))
   @ApiOperation({ summary: 'Get referees assigned to a league' })
   async getReferees(@Param() params: LeagueParams): Promise<User[]> {
     return this.leaguesService.getLeagueReferees(params.leagueId);
   }
 
+  // todo: adjust guard tests
   @Get('leagues/:leagueId/observers')
-  @UseGuards(JwtAuthGuard, LeagueUserGuard)
+  @UseGuards(JwtAuthGuard, MatchRoleGuard([Role.Admin]))
   @ApiOperation({ summary: 'Get observers assigned to a league' })
   async getObservers(@Param() params: LeagueParams): Promise<User[]> {
     return this.leaguesService.getLeagueObservers(params.leagueId);
   }
 
   @Get('leagues/:leagueId/admins')
-  @UseGuards(JwtAuthGuard, LeagueAdminGuard)
+  @UseGuards(JwtAuthGuard, MatchRoleGuard([Role.Admin]))
   @ApiOperation({ summary: 'Get league admins' })
   async getAdmins(@Param() params: LeagueParams): Promise<User[]> {
     return this.leaguesService.getLeagueAdmins(params.leagueId);
   }
 
   @Post('leagues/:leagueId/referees/:userId')
-  @UseGuards(JwtAuthGuard, LeagueAdminGuard)
+  @UseGuards(JwtAuthGuard, MatchRoleGuard([Role.Admin]))
   @ApiOperation({ summary: 'Assign referee to a league' })
   async assignReferee(@Param() params: LeagueUserParams): Promise<User> {
     const user: User = await this.usersService.getById(params.userId);
@@ -103,7 +104,7 @@ export class UsersController {
   }
 
   @Post('leagues/:leagueId/observers/:userId')
-  @UseGuards(JwtAuthGuard, LeagueAdminGuard)
+  @UseGuards(JwtAuthGuard, MatchRoleGuard([Role.Admin]))
   @ApiOperation({ summary: 'Assign observer to a league' })
   async assignObserver(@Param() params: LeagueUserParams): Promise<User> {
     const user: User = await this.usersService.getById(params.userId);
@@ -119,7 +120,7 @@ export class UsersController {
   }
 
   @Delete('leagues/:leagueId/referees/:userId')
-  @UseGuards(JwtAuthGuard, LeagueAdminGuard)
+  @UseGuards(JwtAuthGuard, MatchRoleGuard([Role.Admin]))
   @ApiOperation({ summary: 'Unassign referee from a league' })
   async unassignReferee(@Param() params: LeagueUserParams): Promise<User> {
     const user: User = await this.usersService.getById(params.userId);
@@ -128,7 +129,7 @@ export class UsersController {
   }
 
   @Delete('leagues/:leagueId/observers/:userId')
-  @UseGuards(JwtAuthGuard, LeagueAdminGuard)
+  @UseGuards(JwtAuthGuard, MatchRoleGuard([Role.Admin]))
   @ApiOperation({ summary: 'Unassign observer from a league' })
   async unassignObserver(@Param() params: LeagueUserParams): Promise<User> {
     const user: User = await this.usersService.getById(params.userId);
@@ -137,7 +138,7 @@ export class UsersController {
   }
 
   @Delete('leagues/:leagueId/admins/:userId')
-  @UseGuards(JwtAuthGuard, LeagueAdminGuard)
+  @UseGuards(JwtAuthGuard, MatchRoleGuard([Role.Admin]))
   @ApiOperation({ summary: 'Unassign league admin' })
   async unassignAdmin(@Param() params: LeagueUserParams): Promise<User> {
     const user: User = await this.usersService.getById(params.userId);

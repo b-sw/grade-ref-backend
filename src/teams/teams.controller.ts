@@ -9,7 +9,9 @@ import { LeagueTeamParams } from './params/LeagueTeamParams';
 import { LeaguesService } from '../leagues/leagues.service';
 import { League } from '../entities/league.entity';
 import { OwnerGuard } from '../shared/guards/owner.guard';
-import { LeagueAdminGuard } from '../shared/guards/league-admin.guard';
+import { MatchRoleGuard } from '../shared/guards/matchRoleGuard';
+import { Role } from '../users/constants/users.constants';
+import { Team } from '../entities/team.entity';
 
 @ApiTags('teams')
 @Controller('')
@@ -21,35 +23,35 @@ export class TeamsController {
   @Get('teams')
   @UseGuards(JwtAuthGuard, OwnerGuard)
   @ApiOperation({ summary: 'Get all teams' })
-  async getAll() {
+  async getAll(): Promise<Team[]> {
     return this.teamsService.getAll();
   }
 
   @Get('leagues/:leagueId/teams')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, )
   @ApiOperation({ summary: 'Get all teams in a league' })
-  async getAllByLeagueId(@Param() params: LeagueParams) {
+  async getAllByLeagueId(@Param() params: LeagueParams): Promise<Team[]> {
     const league: League = await this.leaguesService.getLeagueById(params.leagueId);
     return this.teamsService.getAllByLeagueId(league.id);
   }
 
   @Post('leagues/:leagueId/teams')
-  @UseGuards(JwtAuthGuard, LeagueAdminGuard)
+  @UseGuards(JwtAuthGuard, MatchRoleGuard([Role.Admin]))
   @ApiOperation({ summary: 'Create team' })
-  async create(@Param() params: LeagueParams, @Body() createTeamDto: CreateTeamDto) {
+  async create(@Param() params: LeagueParams, @Body() createTeamDto: CreateTeamDto): Promise<Team> {
     const league: League = await this.leaguesService.getLeagueById(params.leagueId);
     return this.teamsService.create(league.id, createTeamDto);
   }
 
   @Put('leagues/:leagueId/teams/:teamId')
-  @UseGuards(JwtAuthGuard, LeagueAdminGuard)
+  @UseGuards(JwtAuthGuard, MatchRoleGuard([Role.Admin]))
   @ApiOperation({ summary: 'Update team' })
-  async update(@Param() params: LeagueTeamParams, @Body() dto: UpdateTeamDto) {
+  async update(@Param() params: LeagueTeamParams, @Body() dto: UpdateTeamDto): Promise<Team> {
     return this.teamsService.update(params, dto);
   }
 
   @Delete('leagues/:leagueId/teams/:teamId')
-  @UseGuards(JwtAuthGuard, LeagueAdminGuard)
+  @UseGuards(JwtAuthGuard, MatchRoleGuard([Role.Admin]))
   @ApiOperation({ summary: 'Delete team' })
   async remove(@Param() params: LeagueTeamParams) {
     return this.teamsService.remove(params);

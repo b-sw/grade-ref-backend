@@ -1,14 +1,13 @@
 import { CanActivate, ExecutionContext, HttpException, HttpStatus, Injectable, mixin, Type } from '@nestjs/common';
 import { UsersService } from '../../users/users.service';
 import { OwnerGuard } from './owner.guard';
-import { LeagueMatchParams } from '../../matches/params/LeagueMatchParams';
 import { MatchesService } from '../../matches/matches.service';
-import { Match } from '../../entities/match.entity';
 import { Role } from '../../users/constants/users.constants';
 import { User } from '../../entities/user.entity';
 import { LeaguesService } from '../../leagues/leagues.service';
+import { LeagueParams } from '../../leagues/params/LeagueParams';
 
-export const RoleOrGuard = (roles: Role[]): Type<CanActivate> => {
+export const LeagueRoleGuard = (roles: Role[]): Type<CanActivate> => {
   @Injectable()
   class RoleGuardMixin extends OwnerGuard implements CanActivate {
     constructor(protected usersService: UsersService,
@@ -19,13 +18,15 @@ export const RoleOrGuard = (roles: Role[]): Type<CanActivate> => {
 
     async canActivate(context: ExecutionContext): Promise<boolean> {
       const request = context.switchToHttp().getRequest();
-      const params: LeagueMatchParams = request.params;
-      const match: Match | undefined = await this.matchesService.getById(params.matchId);
-      const leagueAdmins: User[] = await this.leaguesService.getLeagueAdmins(params.leagueId);
 
-      if (!match) {
-        throw new HttpException('Invalid match id ' + params.matchId, HttpStatus.BAD_REQUEST);
+      const params: LeagueParams = request.params;
+      if (!params.leagueId) {
+        throw new HttpException('No league id', HttpStatus.BAD_REQUEST);
       }
+
+      const leagueAdmins: User[] = await this.leaguesService.getLeagueAdmins(params.leagueId);
+      const leagueReferees: User[] = await this.leaguesService.getLeagueReferees(params.leagueId);
+      const leagueObservers: User[] = await this.leaguesService.getLeagueObservers(params.leagueId);
 
       for (const role of roles) {
         if (role === Role.Admin) {
@@ -36,13 +37,15 @@ export const RoleOrGuard = (roles: Role[]): Type<CanActivate> => {
         }
 
         if (role === Role.Observer) {
-          if (request.user.id === match.observerId) {
+          const isLeagueObserver = leagueObservers.some(observer => observer.id === request.user.id);
+          if (isLeagueObserver) {
             return true;
           }
         }
 
         if (role === Role.Referee) {
-          if (request.user.id === match.refereeId) {
+          const isLeagueReferee = leagueReferees.some(referee => referee.id === request.user.id);
+          if (isLeagueReferee) {
             return true;
           }
         }
