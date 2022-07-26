@@ -8,12 +8,7 @@ import { MatchesModule } from '../matches/matches.module';
 import { LeaguesModule } from '../leagues/leagues.module';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([Foul]),
-    UsersModule,
-    MatchesModule,
-    LeaguesModule,
-  ],
+  imports: [TypeOrmModule.forFeature([Foul]), UsersModule, MatchesModule, LeaguesModule],
   controllers: [FoulsController],
   providers: [FoulsService],
   exports: [FoulsService],

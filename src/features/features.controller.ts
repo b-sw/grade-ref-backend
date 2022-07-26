@@ -9,7 +9,7 @@ import {
   Post,
   Put,
   Request,
-  UseGuards
+  UseGuards,
 } from '@nestjs/common';
 import { FeaturesService } from './features.service';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
@@ -36,15 +36,17 @@ import { MatchRoleGuard } from '../shared/guards/matchRoleGuard';
 @Controller('')
 @ApiBearerAuth()
 export class FeaturesController {
-  constructor(private readonly featuresService: FeaturesService,
-              private readonly matchesService: MatchesService,
-              private readonly usersService: UsersService,
-              private readonly leaguesService: LeaguesService) {}
+  constructor(
+    private readonly featuresService: FeaturesService,
+    private readonly matchesService: MatchesService,
+    private readonly usersService: UsersService,
+    private readonly leaguesService: LeaguesService,
+  ) {}
 
   @Post('leagues/:leagueId/matches/:matchId/features')
   @UseGuards(JwtAuthGuard, MatchRoleGuard([Role.Observer]))
   @ApiOperation({ summary: 'Create feature' })
-  async create(@Request() req, @Param() params: LeagueMatchParams, @Body() dto: CreateFeatureDto): Promise<FeatureInfo> {
+  async create(@Request() req, @Param() params: LeagueMatchParams, @Body() dto: CreateFeatureDto): Promise<Feature> {
     const match: Match = getNotNull(await this.matchesService.getById(params.matchId));
     await this.validateUserAssignedToMatch(req.user.id, params.leagueId, match);
     return await this.featuresService.create(dto, params.matchId);
@@ -53,7 +55,7 @@ export class FeaturesController {
   @Get('leagues/:leagueId/matches/:matchId/features')
   @UseGuards(JwtAuthGuard, MatchRoleGuard([Role.Referee, Role.Observer, Role.Admin]))
   @ApiOperation({ summary: 'Get match features' })
-  async getMatchFeatures(@Request() req, @Param() params: LeagueMatchParams): Promise<FeatureInfo[]> {
+  async getMatchFeatures(@Request() req, @Param() params: LeagueMatchParams): Promise<Feature[]> {
     const match: Match = getNotNull(await this.matchesService.getById(params.matchId));
     await this.validateUserAssignedToMatch(req.user.id, params.leagueId, match);
 
@@ -63,14 +65,14 @@ export class FeaturesController {
   @Get('users/:userId/features')
   @UseGuards(JwtAuthGuard, SelfGuard)
   @ApiOperation({ summary: 'Get user features' })
-  async getUserFeatures(@Param() params: UserParams): Promise<FeatureInfo[]> {
+  async getUserFeatures(@Param() params: UserParams): Promise<Feature[]> {
     return await this.featuresService.getByUser(params.userId);
   }
 
   @Get('leagues/:leagueId/matches/:matchId/features/:featureId')
   @UseGuards(JwtAuthGuard, MatchRoleGuard([Role.Referee, Role.Observer, Role.Admin]))
   @ApiOperation({ summary: 'Get feature by id' })
-  async getById(@Request() req, @Param() params: FeatureParams): Promise<FeatureInfo> {
+  async getById(@Request() req, @Param() params: FeatureParams): Promise<Feature> {
     const match: Match = getNotNull(await this.matchesService.getById(params.matchId));
     await this.validateUserAssignedToMatch(req.user.id, params.leagueId, match);
     await this.validateFeatureFromMatch(params.featureId, match);
@@ -81,7 +83,7 @@ export class FeaturesController {
   @Put('leagues/:leagueId/matches/:matchId/features/:featureId')
   @UseGuards(JwtAuthGuard, MatchRoleGuard([Role.Observer]))
   @ApiOperation({ summary: 'Update feature' })
-  async update(@Request() req, @Param() params: FeatureParams, @Body() dto: UpdateFeatureDto): Promise<FeatureInfo> {
+  async update(@Request() req, @Param() params: FeatureParams, @Body() dto: UpdateFeatureDto): Promise<Feature> {
     const match: Match = getNotNull(await this.matchesService.getById(params.matchId));
     await this.validateUserAssignedToMatch(req.user.id, params.leagueId, match);
     await this.validateFeatureFromMatch(params.featureId, match);
@@ -92,7 +94,7 @@ export class FeaturesController {
   @Delete('leagues/:leagueId/matches/:matchId/features/:featureId')
   @UseGuards(JwtAuthGuard, MatchRoleGuard([Role.Observer]))
   @ApiOperation({ summary: 'Delete feature' })
-  async remove(@Request() req, @Param() params: FeatureParams): Promise<FeatureInfo> {
+  async remove(@Request() req, @Param() params: FeatureParams): Promise<Feature> {
     const match: Match = getNotNull(await this.matchesService.getById(params.matchId));
     await this.validateUserAssignedToMatch(req.user.id, params.leagueId, match);
     await this.validateFeatureFromMatch(params.featureId, match);

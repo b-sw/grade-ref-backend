@@ -29,10 +29,12 @@ export class FoulsService {
   }
 
   async getByMatch(matchId: uuid): Promise<Foul[]> {
-    return getNotNull(await this.foulRepository.find({
-      where: { matchId: matchId },
-      order: { minute: 'ASC' }
-    }));
+    return getNotNull(
+      await this.foulRepository.find({
+        where: { matchId: matchId },
+        order: { minute: 'ASC' },
+      }),
+    );
   }
 
   async update(foulId: uuid, dto: UpdateFoulDto): Promise<Foul> {

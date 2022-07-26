@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Delete, UseGuards, Put } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Put, UseGuards } from '@nestjs/common';
 import { FoulsService } from './fouls.service';
 import { CreateFoulDto } from './dto/create-foul.dto';
 import { UpdateFoulDto } from './dto/update-foul.dto';
@@ -18,13 +18,12 @@ import { MatchRoleGuard } from '../shared/guards/matchRoleGuard';
 @Controller('')
 @ApiBearerAuth()
 export class FoulsController {
-  constructor(private readonly foulsService: FoulsService,
-              private readonly matchesService: MatchesService) {}
+  constructor(private readonly foulsService: FoulsService, private readonly matchesService: MatchesService) {}
 
   @Post('leagues/:leagueId/matches/:matchId/fouls')
   @UseGuards(JwtAuthGuard, MatchRoleGuard([Role.Observer]))
   @ApiOperation({ summary: 'Create foul' })
-  async create(@Param() params: LeagueMatchParams, @Body() createFoulDto: CreateFoulDto): Promise<FoulInfo> {
+  async create(@Param() params: LeagueMatchParams, @Body() createFoulDto: CreateFoulDto): Promise<Foul> {
     await this.validateFoulEntryTime(params.matchId);
     return await this.foulsService.create(createFoulDto, params.matchId);
   }
@@ -32,21 +31,21 @@ export class FoulsController {
   @Get('leagues/:leagueId/matches/:matchId/fouls')
   @UseGuards(JwtAuthGuard, MatchRoleGuard([Role.Referee, Role.Observer, Role.Admin]))
   @ApiOperation({ summary: 'Get match fouls' })
-  async getMatchFouls(@Param() params: LeagueMatchParams): Promise<FoulInfo[]> {
+  async getMatchFouls(@Param() params: LeagueMatchParams): Promise<Foul[]> {
     return await this.foulsService.getByMatch(params.matchId);
   }
 
   @Get('leagues/:leagueId/matches/:matchId/fouls/:foulId')
   @UseGuards(JwtAuthGuard, MatchRoleGuard([Role.Referee, Role.Observer, Role.Admin]))
   @ApiOperation({ summary: 'Get foul by id' })
-  async getById(@Param() params: FoulParams): Promise<FoulInfo> {
+  async getById(@Param() params: FoulParams): Promise<Foul> {
     return await this.foulsService.getById(params.foulId);
   }
 
   @Put('leagues/:leagueId/matches/:matchId/fouls/:foulId')
   @UseGuards(JwtAuthGuard, MatchRoleGuard([Role.Observer]))
   @ApiOperation({ summary: 'Update foul' })
-  async update(@Param() params: FoulParams, @Body() updateFoulDto: UpdateFoulDto): Promise<FoulInfo> {
+  async update(@Param() params: FoulParams, @Body() updateFoulDto: UpdateFoulDto): Promise<Foul> {
     await this.validateFoulEntryTime(params.matchId);
     return await this.foulsService.update(params.foulId, updateFoulDto);
   }
@@ -54,7 +53,7 @@ export class FoulsController {
   @Delete('leagues/:leagueId/matches/:matchId/fouls/:foulId')
   @UseGuards(JwtAuthGuard, MatchRoleGuard([Role.Observer]))
   @ApiOperation({ summary: 'Delete foul' })
-  async remove(@Param() params: FoulParams): Promise<FoulInfo> {
+  async remove(@Param() params: FoulParams): Promise<Foul> {
     return await this.foulsService.remove(params.foulId);
   }
 
