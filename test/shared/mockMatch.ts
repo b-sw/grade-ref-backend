@@ -1,4 +1,4 @@
-import { CreateMatchDto } from '../../src/matches/dto/create-match.dto';
+import { CreateMatchDto } from '../../src/domains/matches/dto/create-match.dto';
 import { Team } from '../../src/entities/team.entity';
 import { User } from '../../src/entities/user.entity';
 import dayjs, { Dayjs } from 'dayjs';

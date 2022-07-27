@@ -1,15 +1,15 @@
 import { Module } from '@nestjs/common';
-import { UsersModule } from './users/users.module';
+import { UsersModule } from './domains/users/users.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import dbConfig, { e2eConfig } from '../ormconfig';
-import { AuthModule } from './auth/auth.module';
-import { TeamsModule } from './teams/teams.module';
-import { MatchesModule } from './matches/matches.module';
-import { LeaguesModule } from './leagues/leagues.module';
-import { HealthModule } from './health/health.module';
-import { FoulsModule } from './fouls/fouls.module';
-import { FeaturesModule } from './features/features.module';
-import { AWSModule } from './aws/aws.module';
+import { AuthModule } from './domains/auth/auth.module';
+import { TeamsModule } from './domains/teams/teams.module';
+import { MatchesModule } from './domains/matches/matches.module';
+import { LeaguesModule } from './domains/leagues/leagues.module';
+import { HealthModule } from './domains/health/health.module';
+import { FoulsModule } from './domains/fouls/fouls.module';
+import { FeaturesModule } from './domains/features/features.module';
+import { AWSModule } from './domains/aws/aws.module';
 
 @Module({
   imports: [

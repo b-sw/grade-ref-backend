@@ -4,29 +4,31 @@ import { AppModule } from '../../src/app.module';
 import { getRepository } from 'typeorm';
 import { User } from '../../src/entities/user.entity';
 import { MockUser } from '../shared/mockUser';
-import { v4 as randomUuid } from 'uuid';
 import request from 'supertest';
-import { CreateLeagueDto } from '../../src/leagues/dto/create-league.dto';
 import { MockCreateLeagueDto } from '../shared/mockLeague';
 import { League } from '../../src/entities/league.entity';
-import { uuid } from '../../src/shared/constants/uuid.constant';
-import { UpdateLeagueDto } from '../../src/leagues/dto/update-league.dto';
-import { Role } from '../../src/users/constants/users.constants';
+import { Role } from '../../src/domains/users/constants/users.constants';
 import { getSignedJwt } from '../shared/jwt';
+import { uuid } from 'src/shared/constants/uuid.constant';
 
 describe('e2e leagues', () => {
-  const mockOwner: User = MockUser({ id: randomUuid(), role: Role.Owner, email: 'mock@mail.com', lastName: 'Doe' });
-  const mockAdmin: User = MockUser( { id: randomUuid(), role: Role.Admin, email: 'admin@mail.com', lastName: 'Doe1' });
-  const mockReferee: User = MockUser( { id: randomUuid(), role: Role.Referee, email: 'ref@mail.com', lastName: 'Doe2' });
-  const mockObserver: User = MockUser( { id: randomUuid(), role: Role.Observer, email: 'obs@mail.com', lastName: 'Doe3' });
-  const users: User[] = [mockOwner, mockAdmin, mockReferee, mockObserver];
+  const adminA = MockUser({ role: Role.Admin, email: 'admin@mail.com', lastName: 'Doe1' });
+  const adminB = MockUser({ role: Role.Admin, email: 'admin2@mail.com', lastName: 'Doe2' });
+  const referee = MockUser({ role: Role.Referee, email: 'ref@mail.com', lastName: 'Doe3' });
+  const observer = MockUser({
+    role: Role.Observer,
+    email: 'obs@mail.com',
+    lastName: 'Doe4',
+  });
+  const users = [adminA, adminB, referee, observer];
 
   let app: INestApplication;
-  let ownerAccessToken: string;
-  let adminAccessToken: string;
-  let observerAccessToken: string;
-  let leagueId: uuid;
-  let expectedLeague: League;
+  let adminAJWT: string;
+  let adminBJWT: string;
+  let observerJWT: string;
+  let refereeJWT: string;
+  let league: League;
+  let tokens: { [key: uuid]: string };
 
   beforeAll(async () => {
     const moduleFixture = await Test.createTestingModule({
@@ -39,9 +41,17 @@ describe('e2e leagues', () => {
     const usersRepository = await getRepository(User);
     await Promise.all(users.map(async (user) => await usersRepository.save(user)));
 
-    ownerAccessToken = getSignedJwt(mockOwner);
-    adminAccessToken = getSignedJwt(mockAdmin);
-    observerAccessToken = getSignedJwt(mockObserver);
+    adminAJWT = getSignedJwt(adminA);
+    adminBJWT = getSignedJwt(adminB);
+    observerJWT = getSignedJwt(observer);
+    refereeJWT = getSignedJwt(referee);
+
+    tokens = {
+      [adminA.id]: adminAJWT,
+      [adminB.id]: adminBJWT,
+      [observer.id]: observerJWT,
+      [referee.id]: refereeJWT,
+    };
   });
 
   afterAll(async () => {
@@ -49,143 +59,140 @@ describe('e2e leagues', () => {
     await getRepository(League).clear();
   });
 
-  it('should create league', async () => {
-    const dto: CreateLeagueDto = MockCreateLeagueDto({});
-    expectedLeague = { ...dto, id: expect.any(String), admins: [mockAdmin], referees: [], observers: [] };
+  it('should create league for admin', async () => {
+    const dto = MockCreateLeagueDto({});
+    league = { ...dto, id: expect.any(String), admins: [adminA], referees: [], observers: [] };
 
-    const response = await request(app.getHttpServer())
-      .post('/leagues')
-      .auth(adminAccessToken, { type: 'bearer' })
-      .send(dto);
+    const response = await request(app.getHttpServer()).post('/leagues').auth(adminAJWT, { type: 'bearer' }).send(dto);
 
     expect(response.status).toBe(HttpStatus.CREATED);
-    expect(response.body).toMatchObject(expectedLeague);
+    expect(response.body).toMatchObject(league);
 
-    leagueId = response.body.id;
-    expectedLeague.id = leagueId;
+    league.id = response.body.id;
 
-    const leagues: League[] = await getRepository(League).find({ relations: ['admins', 'referees', 'observers'] });
+    const leagues = await getRepository(League).find({ relations: ['admins', 'referees', 'observers'] });
     expect(leagues).toHaveLength(1);
-    expect(leagues[0]).toMatchObject(expectedLeague);
+    expect(leagues[0]).toMatchObject(league);
   });
 
-  it('should not create league', async () => {
-    const dto: CreateLeagueDto = MockCreateLeagueDto({});
+  it('should not create league for not admin', async () => {
+    const dto = MockCreateLeagueDto({});
 
-    const response = await request(app.getHttpServer())
-      .post('/leagues')
-      .auth(observerAccessToken, { type: 'bearer' })
-      .send(dto);
+    await Promise.all(
+      [refereeJWT, observerJWT].map(async (token) => {
+        const response = await request(app.getHttpServer()).post('/leagues').auth(token, { type: 'bearer' }).send(dto);
 
-    expect(response.status).toBe(HttpStatus.FORBIDDEN);
+        expect(response.status).toBe(HttpStatus.FORBIDDEN);
+      }),
+    );
   });
 
-  it('should get admin leagues', async () => {
+  it('should get leagues for self', async () => {
+    const leagueRepository = await getRepository(League);
+    const mockLeague = await leagueRepository.findOne({
+      where: { id: league.id },
+      relations: ['admins', 'referees', 'observers'],
+    });
+    mockLeague.referees = [referee];
+    mockLeague.observers = [observer];
+    await leagueRepository.save(mockLeague);
+    league = mockLeague;
+
+    await Promise.all(
+      [adminA, observer, referee].map(async (user) => {
+        const response = await request(app.getHttpServer())
+          .get(`/users/${user.id}/leagues`)
+          .auth(tokens[user.id], { type: 'bearer' });
+
+        expect(response.status).toBe(HttpStatus.OK);
+        expect(response.body).toHaveLength(1);
+      }),
+    );
+  });
+
+  it('should not get leagues for not app user', async () => {
+    const response = await request(app.getHttpServer()).get(`/users/${adminA.id}/leagues`);
+
+    expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
+  });
+
+  it('should get league for league admin', async () => {
     const response = await request(app.getHttpServer())
-      .get(`/users/${mockAdmin.id}/leagues`)
-      .auth(adminAccessToken, { type: 'bearer' });
+      .get(`/leagues/${league.id}`)
+      .auth(adminAJWT, { type: 'bearer' });
 
     expect(response.status).toBe(HttpStatus.OK);
-    expect(response.body).toHaveLength(1);
+    expect(response.body).toMatchObject(league);
   });
 
-  it('should get referee leagues', async () => {
-    const refResponse = await request(app.getHttpServer())
-      .post(`/leagues/${leagueId}/referees/${mockReferee.id}`)
-      .auth(adminAccessToken, { type: 'bearer' });
+  it('should not get league for not league admin', async () => {
+    await Promise.all(
+      [adminBJWT, refereeJWT, observerJWT].map(async (token) => {
+        const response = await request(app.getHttpServer())
+          .get(`/leagues/${league.id}`)
+          .auth(token, { type: 'bearer' });
 
-    expect(refResponse.status).toBe(HttpStatus.CREATED);
-    expectedLeague.referees = [mockReferee];
-
-    const response = await request(app.getHttpServer())
-      .get(`/users/${mockReferee.id}/leagues`)
-      .auth(ownerAccessToken, { type: 'bearer' });
-
-    expect(response.status).toBe(HttpStatus.OK);
-    expect(response.body).toHaveLength(1);
-  });
-
-  it('should get observer leagues', async () => {
-    const obsResponse = await request(app.getHttpServer())
-      .post(`/leagues/${leagueId}/observers/${mockObserver.id}`)
-      .auth(adminAccessToken, { type: 'bearer' });
-
-    expect(obsResponse.status).toBe(HttpStatus.CREATED);
-    expectedLeague.observers = [mockObserver];
-
-    const response = await request(app.getHttpServer())
-      .get(`/users/${mockObserver.id}/leagues`)
-      .auth(observerAccessToken, { type: 'bearer' });
-
-    expect(response.status).toBe(HttpStatus.OK);
-    expect(response.body).toHaveLength(1);
-  });
-
-  it('should get league', async () => {
-    const response = await request(app.getHttpServer())
-      .get(`/leagues/${leagueId}`)
-      .auth(adminAccessToken, { type: 'bearer' });
-
-    expect(response.status).toBe(HttpStatus.OK);
-    expect(response.body).toMatchObject(expectedLeague);
-  });
-
-  it('should not get league', async () => {
-    const response = await request(app.getHttpServer())
-      .get(`/leagues/${leagueId}`)
-      .auth(observerAccessToken, { type: 'bearer' });
-
-    expect(response.status).toBe(HttpStatus.FORBIDDEN);
+        expect(response.status).toBe(HttpStatus.FORBIDDEN);
+      }),
+    );
   });
 
   it('should update league', async () => {
-    const dto: UpdateLeagueDto = MockCreateLeagueDto({ name: 'Mock League Updated' });
+    const dto = MockCreateLeagueDto({ name: 'Mock League Updated' });
 
     const response = await request(app.getHttpServer())
-      .put(`/leagues/${leagueId}`)
-      .auth(adminAccessToken, { type: 'bearer' })
+      .put(`/leagues/${league.id}`)
+      .auth(adminAJWT, { type: 'bearer' })
       .send(dto);
 
-    expectedLeague.name = dto.name;
+    league.name = dto.name;
 
     expect(response.status).toBe(HttpStatus.OK);
-    expect(response.body).toMatchObject(expectedLeague);
+    expect(response.body).toMatchObject(league);
 
-    const updatedLeague: League = await getRepository(League).findOne({
-      where: { id: expectedLeague.id },
-      relations: ['admins', 'referees', 'observers']
+    const updatedLeague = await getRepository(League).findOne({
+      where: { id: league.id },
+      relations: ['admins', 'referees', 'observers'],
     });
-    expect(updatedLeague).toMatchObject(expectedLeague);
+    expect(updatedLeague).toMatchObject(league);
   });
 
   it('should not update league', async () => {
-    const dto: UpdateLeagueDto = MockCreateLeagueDto({ name: 'Mock League Updated' });
+    const dto = MockCreateLeagueDto({ name: 'Mock League Updated' });
 
-    const response = await request(app.getHttpServer())
-      .put(`/leagues/${leagueId}`)
-      .auth(observerAccessToken, { type: 'bearer' })
-      .send(dto);
+    await Promise.all(
+      [adminBJWT, refereeJWT, observerJWT].map(async (token) => {
+        const response = await request(app.getHttpServer())
+          .put(`/leagues/${league.id}`)
+          .auth(token, { type: 'bearer' })
+          .send(dto);
 
-    expect(response.status).toBe(HttpStatus.FORBIDDEN);
+        expect(response.status).toBe(HttpStatus.FORBIDDEN);
+      }),
+    );
   });
 
   it('should not delete league', async () => {
-    const response = await request(app.getHttpServer())
-      .delete(`/leagues/${leagueId}`)
-      .auth(observerAccessToken, { type: 'bearer' });
+    await Promise.all(
+      [adminBJWT, refereeJWT, observerJWT].map(async (token) => {
+        const response = await request(app.getHttpServer())
+          .delete(`/leagues/${league.id}`)
+          .auth(token, { type: 'bearer' });
 
-    expect(response.status).toBe(HttpStatus.FORBIDDEN);
+        expect(response.status).toBe(HttpStatus.FORBIDDEN);
+      }),
+    );
   });
 
   it('should delete league', async () => {
     const response = await request(app.getHttpServer())
-      .delete(`/leagues/${leagueId}`)
-      .auth(adminAccessToken, { type: 'bearer' });
+      .delete(`/leagues/${league.id}`)
+      .auth(adminAJWT, { type: 'bearer' });
 
     expect(response.status).toBe(HttpStatus.OK);
-    expect(response.body).toMatchObject(expectedLeague);
+    expect(response.body).toMatchObject(league);
 
-    const leagues: League[] = await getRepository(League).find();
+    const leagues = await getRepository(League).find();
     expect(leagues).toHaveLength(0);
   });
 });

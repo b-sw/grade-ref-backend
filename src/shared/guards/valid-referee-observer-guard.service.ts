@@ -1,11 +1,11 @@
 import { CanActivate, ExecutionContext, HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { UsersService } from '../../users/users.service';
+import { UsersService } from '../../domains/users/users.service';
 import { User } from '../../entities/user.entity';
-import { LeaguesService } from '../../leagues/leagues.service';
-import { LeagueParams } from '../../leagues/params/LeagueParams';
-import { LeagueMatchParams } from '../../matches/params/LeagueMatchParams';
-import { CreateMatchDto } from '../../matches/dto/create-match.dto';
-import { UpdateMatchDto } from '../../matches/dto/update-match.dto';
+import { LeaguesService } from '../../domains/leagues/leagues.service';
+import { LeagueParams } from '../../domains/leagues/params/LeagueParams';
+import { LeagueMatchParams } from '../../domains/matches/params/LeagueMatchParams';
+import { CreateMatchDto } from '../../domains/matches/dto/create-match.dto';
+import { UpdateMatchDto } from '../../domains/matches/dto/update-match.dto';
 import { League } from '../../entities/league.entity';
 
 @Injectable()

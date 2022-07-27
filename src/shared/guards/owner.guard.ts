@@ -1,7 +1,7 @@
 import { CanActivate, ExecutionContext, HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { UsersService } from '../../users/users.service';
+import { UsersService } from '../../domains/users/users.service';
 import { User } from '../../entities/user.entity';
-import { Role } from '../../users/constants/users.constants';
+import { Role } from '../../domains/users/constants/users.constants';
 
 @Injectable()
 export class OwnerGuard implements CanActivate {

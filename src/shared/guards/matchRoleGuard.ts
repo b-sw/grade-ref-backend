@@ -1,12 +1,12 @@
 import { CanActivate, ExecutionContext, HttpException, HttpStatus, Injectable, mixin, Type } from '@nestjs/common';
-import { UsersService } from '../../users/users.service';
+import { UsersService } from '../../domains/users/users.service';
 import { OwnerGuard } from './owner.guard';
-import { LeagueMatchParams } from '../../matches/params/LeagueMatchParams';
-import { MatchesService } from '../../matches/matches.service';
+import { LeagueMatchParams } from '../../domains/matches/params/LeagueMatchParams';
+import { MatchesService } from '../../domains/matches/matches.service';
 import { Match } from '../../entities/match.entity';
-import { Role } from '../../users/constants/users.constants';
+import { Role } from '../../domains/users/constants/users.constants';
 import { User } from '../../entities/user.entity';
-import { LeaguesService } from '../../leagues/leagues.service';
+import { LeaguesService } from '../../domains/leagues/leagues.service';
 
 export const MatchRoleGuard = (roles: Role[]): Type<CanActivate> => {
   @Injectable()
@@ -24,15 +24,18 @@ export const MatchRoleGuard = (roles: Role[]): Type<CanActivate> => {
 
       const params: LeagueMatchParams = request.params;
       if (!params.leagueId) {
+        console.log('no leagueId');
         throw new HttpException('No league id', HttpStatus.BAD_REQUEST);
       }
 
       if (!params.matchId) {
+        console.log('no matchId');
         throw new HttpException('No match id ' + params.matchId, HttpStatus.BAD_REQUEST);
       }
 
       const match: Match | undefined = await this.matchesService.getById(params.matchId);
       if (!match) {
+        console.log('no match');
         throw new HttpException('Invalid match id ' + params.matchId, HttpStatus.BAD_REQUEST);
       }
 
