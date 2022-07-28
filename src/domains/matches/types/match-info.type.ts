@@ -5,8 +5,8 @@ export type MatchInfo = {
   userReadableKey: string;
   matchDate: Date;
   stadium: string;
-  homeTeam: string;
-  awayTeam: string;
+  homeTeamId: uuid;
+  awayTeamId: uuid;
   referee: string;
   observer: string;
   leagueId: uuid;

@@ -150,8 +150,8 @@ describe('e2e matches', () => {
       userReadableKey: match.userReadableKey,
       matchDate: expect.any(Date),
       stadium: match.stadium,
-      homeTeam: teamA.name,
-      awayTeam: teamB.name,
+      homeTeamId: teamA.id,
+      awayTeamId: teamB.id,
       referee: refereeA.firstName + ' ' + refereeA.lastName,
       observer: observerA.firstName + ' ' + observerA.lastName,
       leagueId: league.id,
@@ -208,8 +208,8 @@ describe('e2e matches', () => {
     match.userReadableKey = response.body.userReadableKey;
     match.observerSmsId = response.body.observerSmsId;
 
-    matchInfo.homeTeam = teamB.name;
-    matchInfo.awayTeam = teamA.name;
+    matchInfo.homeTeamId = teamB.id;
+    matchInfo.awayTeamId = teamA.id;
     matchInfo.referee = refereeB.firstName + ' ' + refereeB.lastName;
     matchInfo.observer = observerA.firstName + ' ' + observerA.lastName;
     matchInfo.userReadableKey = match.userReadableKey;
@@ -259,7 +259,12 @@ describe('e2e matches', () => {
 
     expect(response.status).toBe(HttpStatus.OK);
     response.body.matchDate = new Date(response.body.matchDate);
-    expect(response.body).toMatchObject(matchInfo);
+
+    if (role === Role.Referee) {
+      expect(response.body).toMatchObject({ ...matchInfo, observer: 'hidden' });
+    } else {
+      expect(response.body).toMatchObject(matchInfo);
+    }
   });
 
   it.each([[Role.Admin], [Role.Referee], [Role.Observer]])(

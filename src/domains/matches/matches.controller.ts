@@ -82,12 +82,20 @@ export class MatchesController {
 
   @Get('leagues/:leagueId/matches/:matchId')
   @UseGuards(JwtAuthGuard, MatchRoleGuard([Role.Admin, Role.Referee, Role.Observer]))
-  @ApiOperation({ summary: 'Get match by id' })
+  @ApiOperation({ summary: 'Get league match by id' })
   async getMatch(@Request() req, @Param() params: LeagueMatchParams): Promise<MatchInfo> {
-    const userIsReferee = req.user.role === Role.Referee;
+    const user = getNotNull(await this.usersService.getById(req.user.id));
+    const userIsReferee = user.role === Role.Referee;
     const match = getNotNull(await this.matchesService.getById(params.matchId));
-    const { teams, referees, observers } = await this.getLeagueDataDictionaries(match.leagueId);
-    return this.getMatchInfo(match, teams, referees, observers, userIsReferee);
+    const { referees, observers } = await this.getLeagueDataDictionaries(match.leagueId);
+    return this.getMatchInfo(match, referees, observers, userIsReferee);
+  }
+
+  @Get('leagues/:leagueId/matches/:matchId/details')
+  @UseGuards(JwtAuthGuard, LeagueRoleGuard([Role.Admin]))
+  @ApiOperation({ summary: 'Get league match details' })
+  async getMatchDetails(@Param() params: LeagueMatchParams): Promise<Match> {
+    return getNotNull(this.matchesService.getById(params.matchId));
   }
 
   @Put('leagues/:leagueId/matches/:matchId')
@@ -104,8 +112,8 @@ export class MatchesController {
   @ApiOperation({ summary: 'Update referee match grade' })
   async updateMatchGrade(@Param() params: LeagueMatchParams, @Body() dto: Partial<UpdateMatchDto>): Promise<MatchInfo> {
     const match = await this.matchesService.updateGrade(params, dto);
-    const { teams, referees, observers } = await this.getLeagueDataDictionaries(match.leagueId);
-    return this.getMatchInfo(match, teams, referees, observers);
+    const { referees, observers } = await this.getLeagueDataDictionaries(match.leagueId);
+    return this.getMatchInfo(match, referees, observers);
   }
 
   @Put('leagues/:leagueId/matches/:matchId/overallGrade')
@@ -116,8 +124,8 @@ export class MatchesController {
     @Body() dto: Partial<UpdateMatchDto>,
   ): Promise<MatchInfo> {
     const match = await this.matchesService.updateOverallGrade(params, dto);
-    const { teams, referees, observers } = await this.getLeagueDataDictionaries(match.leagueId);
-    return this.getMatchInfo(match, teams, referees, observers);
+    const { referees, observers } = await this.getLeagueDataDictionaries(match.leagueId);
+    return this.getMatchInfo(match, referees, observers);
   }
 
   @Put('leagues/:leagueId/matches/:matchId/refereeNote')
@@ -128,8 +136,8 @@ export class MatchesController {
     @Body() dto: Partial<UpdateMatchDto>,
   ): Promise<MatchInfo> {
     const match = await this.matchesService.updateRefereeNote(params, dto);
-    const { teams, referees, observers } = await this.getLeagueDataDictionaries(match.leagueId);
-    return this.getMatchInfo(match, teams, referees, observers, true);
+    const { referees, observers } = await this.getLeagueDataDictionaries(match.leagueId);
+    return this.getMatchInfo(match, referees, observers, true);
   }
 
   @Post('matches/grades')
@@ -156,11 +164,12 @@ export class MatchesController {
   @UseGuards(JwtAuthGuard, LeagueRoleGuard([Role.Admin, Role.Referee, Role.Observer]))
   @ApiOperation({ summary: 'Get user league matches' })
   async getUserLeagueMatches(@Request() req, @Param() params: LeagueUserParams): Promise<MatchInfo[]> {
-    const userIsReferee = req.user.role === Role.Referee;
+    const user = getNotNull(await this.usersService.getById(req.user.id));
+    const userIsReferee = user.role === Role.Referee;
     const matches = await this.matchesService.getUserLeagueMatches(params);
 
-    const { teams, referees, observers } = await this.getLeagueDataDictionaries(params.leagueId);
-    return matches.map((match) => this.getMatchInfo(match, teams, referees, observers, userIsReferee));
+    const { referees, observers } = await this.getLeagueDataDictionaries(params.leagueId);
+    return matches.map((match) => this.getMatchInfo(match, referees, observers, userIsReferee));
   }
 
   async getUserReadableKeyParams(homeTeamId: uuid): Promise<{ leagueIdx: number; homeTeamIdx: number }> {
@@ -247,8 +256,8 @@ export class MatchesController {
 
     await this.s3Service.upload(S3Bucket.ReportsBucket, key, file);
     match = await this.matchesService.updateReportData(params.matchId, params.reportType, key);
-    const { teams, referees, observers } = await this.getLeagueDataDictionaries(match.leagueId);
-    return this.getMatchInfo(match, teams, referees, observers, user.role === Role.Referee);
+    const { referees, observers } = await this.getLeagueDataDictionaries(match.leagueId);
+    return this.getMatchInfo(match, referees, observers, user.role === Role.Referee);
   }
 
   @Get('leagues/:leagueId/matches/:matchId/reports/:reportType')
@@ -274,13 +283,8 @@ export class MatchesController {
     this.matchesService.validateUserAction(user, params.reportType, ActionType.Write);
 
     match = await this.matchesService.removeReport(params.matchId, params.reportType);
-    const { teams, referees, observers } = await this.getLeagueDataDictionaries(match.leagueId);
-    return this.getMatchInfo(match, teams, referees, observers, user.role === Role.Referee);
-  }
-
-  private async getLeagueTeams(leagueId: uuid): Promise<{ [key: uuid]: Team }> {
-    const teams: Team[] = await this.teamsService.getAllByLeagueId(leagueId);
-    return Object.assign({}, ...teams.map((team) => ({ [team.id]: team })));
+    const { referees, observers } = await this.getLeagueDataDictionaries(match.leagueId);
+    return this.getMatchInfo(match, referees, observers, user.role === Role.Referee);
   }
 
   private async getLeagueReferees(leagueId: uuid): Promise<{ [key: uuid]: User }> {
@@ -295,20 +299,18 @@ export class MatchesController {
 
   private async getLeagueDataDictionaries(
     leagueId: uuid,
-  ): Promise<{ teams: { [key: uuid]: Team }; referees: { [key: uuid]: User }; observers: { [key: uuid]: User } }> {
-    const teams: { [key: uuid]: Team } = await this.getLeagueTeams(leagueId);
+  ): Promise<{ referees: { [key: uuid]: User }; observers: { [key: uuid]: User } }> {
     const referees: { [key: uuid]: User } = await this.getLeagueReferees(leagueId);
     const observers: { [key: uuid]: User } = await this.getLeagueObservers(leagueId);
-    return { teams, referees, observers };
+    return { referees, observers };
   }
 
   private getMatchInfo(
     match: Match,
-    teams: { [key: uuid]: Team },
     referees: { [key: uuid]: User },
     observers: { [key: uuid]: User },
-    userIsReferee = false,
+    hideObserver = false,
   ): MatchInfo {
-    return this.matchesService.getMatchInfo(match, teams, referees, observers, userIsReferee);
+    return this.matchesService.getMatchInfo(match, referees, observers, hideObserver);
   }
 }

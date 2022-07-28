@@ -501,7 +501,6 @@ export class MatchesService {
 
   public getMatchInfo(
     match: Match,
-    teams: { [key: uuid]: Team },
     referees: { [key: uuid]: User },
     observers: { [key: uuid]: User },
     hideObserver = false,
@@ -519,8 +518,8 @@ export class MatchesService {
       userReadableKey: match.userReadableKey,
       matchDate: match.matchDate,
       stadium: match.stadium,
-      homeTeam: teams[match.homeTeamId].name,
-      awayTeam: teams[match.awayTeamId].name,
+      homeTeamId: match.homeTeamId,
+      awayTeamId: match.awayTeamId,
       referee: refereeFullName,
       observer: hideObserver && matchIsUpcoming ? 'hidden' : observerFullName,
       leagueId: match.leagueId,
