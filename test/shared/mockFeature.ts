@@ -6,6 +6,5 @@ export const MockCreateFeatureDto = (refereeId: uuid, type?: FeatureType): Creat
   return {
     type: type ?? FeatureType.Positive,
     description: 'Mock feature',
-    refereeId: refereeId,
   };
 };

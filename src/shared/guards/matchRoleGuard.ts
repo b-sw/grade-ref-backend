@@ -23,19 +23,17 @@ export const MatchRoleGuard = (roles: Role[]): Type<CanActivate> => {
       const request = context.switchToHttp().getRequest();
 
       const params: LeagueMatchParams = request.params;
+
       if (!params.leagueId) {
-        console.log('no leagueId');
         throw new HttpException('No league id', HttpStatus.BAD_REQUEST);
       }
 
       if (!params.matchId) {
-        console.log('no matchId');
         throw new HttpException('No match id ' + params.matchId, HttpStatus.BAD_REQUEST);
       }
 
       const match: Match | undefined = await this.matchesService.getById(params.matchId);
       if (!match) {
-        console.log('no match');
         throw new HttpException('Invalid match id ' + params.matchId, HttpStatus.BAD_REQUEST);
       }
 
