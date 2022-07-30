@@ -528,6 +528,9 @@ export class MatchesService {
       refereeNote: match.refereeNote,
       overallGrade: match.overallGrade,
       overallGradeDate: match.overallGradeDate,
+      observerReportKey: match.observerReportKey,
+      mentorReportKey: match.mentorReportKey,
+      tvReportKey: match.tvReportKey,
     };
   }
 

@@ -12,14 +12,14 @@ const FEATURES_MATCH_LIMIT = 3;
 export class FeaturesService {
   constructor(@InjectRepository(Feature) private featureRepository: Repository<Feature>) {}
 
-  async create(dto: CreateFeatureDto, matchId: uuid): Promise<Feature> {
+  async create(dto: CreateFeatureDto, matchId: uuid, refereeId: uuid): Promise<Feature> {
     await this.validateFeatureTypeLimit(dto.type, matchId);
 
     const feature: Feature = await this.featureRepository.create({
       matchId: matchId,
       type: dto.type,
       description: dto.description,
-      refereeId: dto.refereeId,
+      refereeId: refereeId,
     });
     return this.featureRepository.save(feature);
   }
