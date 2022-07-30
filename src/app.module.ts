@@ -10,16 +10,10 @@ import { HealthModule } from './domains/health/health.module';
 import { FoulsModule } from './domains/fouls/fouls.module';
 import { FeaturesModule } from './domains/features/features.module';
 import { AWSModule } from './domains/aws/aws.module';
-import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
-import { APP_GUARD } from '@nestjs/core';
 
 @Module({
   imports: [
     TypeOrmModule.forRoot(process.env.NODE_ENV === 'test' ? e2eConfig : dbConfig),
-    ThrottlerModule.forRoot({
-      ttl: 60,
-      limit: 60 * 100,
-    }),
     UsersModule,
     AuthModule,
     TeamsModule,
@@ -31,12 +25,7 @@ import { APP_GUARD } from '@nestjs/core';
     AWSModule,
   ],
   controllers: [],
-  providers: [
-    {
-      provide: APP_GUARD,
-      useClass: ThrottlerGuard,
-    },
-  ],
+  providers: [],
   exports: [],
 })
 export class AppModule {}

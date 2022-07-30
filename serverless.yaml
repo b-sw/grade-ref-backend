@@ -13,7 +13,7 @@ custom:
       enabled: true
       events:
         - schedule: cron(0/5 8-17 ? * MON-FRI *)
-      concurrency: 50
+      concurrency: 10
       verbose: true
       logRetentionInDays: 14
     outOfOfficeHoursWarmer:
