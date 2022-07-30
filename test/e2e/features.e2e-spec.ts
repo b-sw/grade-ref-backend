@@ -93,7 +93,7 @@ describe('e2e features', () => {
   });
 
   it('should not create feature for not match observer', async () => {
-    const dto = MockCreateFeatureDto(refereeA.id);
+    const dto = MockCreateFeatureDto();
 
     await Promise.all(
       [adminJWT, refereeAJWT, refereeBJWT].map(async (token) => {
@@ -108,7 +108,7 @@ describe('e2e features', () => {
   });
 
   it('should create feature for match observer', async () => {
-    const dto = MockCreateFeatureDto(refereeA.id);
+    const dto = MockCreateFeatureDto();
 
     const response = await request(app.getHttpServer())
       .post(`/leagues/${league.id}/matches/${matchA.id}/features`)
@@ -129,9 +129,9 @@ describe('e2e features', () => {
 
   it('should not create feature because of type limit', async () => {
     const featuresRepository = await getRepository(Feature);
-    const dto = MockCreateFeatureDto(refereeA.id);
-    const feature2 = { ...dto, id: randomUuid(), matchId: matchA.id } as Feature;
-    const feature3 = { ...dto, id: randomUuid(), matchId: matchA.id } as Feature;
+    const dto = MockCreateFeatureDto();
+    const feature2 = { ...dto, id: randomUuid(), matchId: matchA.id, refereeId: matchA.referee.id } as Feature;
+    const feature3 = { ...dto, id: randomUuid(), matchId: matchA.id, refereeId: matchA.referee.id } as Feature;
 
     await Promise.all([feature2, feature3].map(async (feature: Feature) => await featuresRepository.save(feature)));
 
@@ -148,7 +148,7 @@ describe('e2e features', () => {
   });
 
   it('should create feature of different type', async () => {
-    const dto = MockCreateFeatureDto(refereeA.id, FeatureType.Negative);
+    const dto = MockCreateFeatureDto(FeatureType.Negative);
 
     const response = await request(app.getHttpServer())
       .post(`/leagues/${league.id}/matches/${matchA.id}/features`)
@@ -184,7 +184,7 @@ describe('e2e features', () => {
   });
 
   it('should not update feature for not match observer', async () => {
-    const dto = MockCreateFeatureDto(refereeA.id, FeatureType.Negative);
+    const dto = MockCreateFeatureDto(FeatureType.Negative);
 
     await Promise.all(
       [adminJWT, refereeAJWT, observerBJWT].map(async (token) => {
@@ -199,7 +199,7 @@ describe('e2e features', () => {
   });
 
   it('should not update feature for invalid match', async () => {
-    const dto = MockCreateFeatureDto(refereeA.id, FeatureType.Negative);
+    const dto = MockCreateFeatureDto(FeatureType.Negative);
 
     const response = await request(app.getHttpServer())
       .put(`/leagues/${league.id}/matches/${matchB.id}/features/${mockFeatureA.id}`)
@@ -211,9 +211,9 @@ describe('e2e features', () => {
 
   it('should not update feature because of type limit', async () => {
     const featuresRepository = await getRepository(Feature);
-    const dto = MockCreateFeatureDto(refereeA.id);
-    const feature2 = { ...dto, id: randomUuid(), matchId: matchA.id } as Feature;
-    const feature3 = { ...dto, id: randomUuid(), matchId: matchA.id } as Feature;
+    const dto = MockCreateFeatureDto();
+    const feature2 = { ...dto, id: randomUuid(), matchId: matchA.id, refereeId: matchA.referee.id } as Feature;
+    const feature3 = { ...dto, id: randomUuid(), matchId: matchA.id, refereeId: matchA.referee.id } as Feature;
 
     await Promise.all([feature2, feature3].map(async (feature: Feature) => await featuresRepository.save(feature)));
 
@@ -230,7 +230,7 @@ describe('e2e features', () => {
   });
 
   it('should update feature for match observer', async () => {
-    const dto = MockCreateFeatureDto(refereeA.id, FeatureType.Positive);
+    const dto = MockCreateFeatureDto(FeatureType.Positive);
 
     const response = await request(app.getHttpServer())
       .put(`/leagues/${league.id}/matches/${matchA.id}/features/${mockFeatureB.id}`)
