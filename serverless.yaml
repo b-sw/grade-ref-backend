@@ -53,6 +53,9 @@ provider:
     SMS_SENDER: ${env:SMS_SENDER}
     AWS_BUCKET_REPORTS: ${env:AWS_BUCKET_REPORTS}
     AWS_BUCKET_MATCHES: ${env:AWS_BUCKET_MATCHES}
+  apiGateway:
+    binaryMediaTypes:
+      - '*/*'
 
 
 functions:
