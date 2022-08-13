@@ -316,6 +316,10 @@ export class MatchesService {
       throw new ServiceUnavailableException('SMS API error: ', response.data);
     }
 
+    if (response.data.errorCode) {
+      throw new ServiceUnavailableException('SMS API error: ', response.data.errorMsg);
+    }
+
     return response.data.messageId.toString();
   }
 

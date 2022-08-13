@@ -197,14 +197,9 @@ export class MatchesController {
     const observers: User[] = await this.leaguesService.getLeagueObservers(params.leagueId);
 
     const { buffer } = file;
-    await this.matchesService.validateMatches(buffer.toString(), params.leagueId, teams, referees, observers);
-    const dtos: CreateMatchDto[] = await this.matchesService.getFileMatchesDtos(
-      buffer.toString(),
-      params.leagueId,
-      teams,
-      referees,
-      observers,
-    );
+    const csv = buffer.toString().trim();
+    await this.matchesService.validateMatches(csv, params.leagueId, teams, referees, observers);
+    const dtos = await this.matchesService.getFileMatchesDtos(csv, params.leagueId, teams, referees, observers);
 
     await Promise.all(
       dtos.map(async (dto) => {
