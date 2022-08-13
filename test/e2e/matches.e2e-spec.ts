@@ -135,6 +135,7 @@ describe('e2e matches', () => {
       mentorReportKey: null,
       observerReportKey: null,
       tvReportKey: null,
+      selfReportKey: null,
     };
     response.body.matchDate = new Date(response.body.matchDate);
 
@@ -393,10 +394,10 @@ describe('e2e matches', () => {
 
   it.each`
     role             | forbiddenResourceTypes
-    ${Role.Owner}    | ${[ReportType.Mentor, ReportType.Tv, ReportType.Observer]}
-    ${Role.Admin}    | ${[ReportType.Mentor, ReportType.Tv, ReportType.Observer]}
-    ${Role.Referee}  | ${[ReportType.Observer]}
-    ${Role.Observer} | ${[ReportType.Tv, ReportType.Mentor]}
+    ${Role.Owner}    | ${[ReportType.Mentor, ReportType.Tv, ReportType.Observer, ReportType.Self]}
+    ${Role.Admin}    | ${[ReportType.Mentor, ReportType.Tv, ReportType.Observer, ReportType.Self]}
+    ${Role.Observer} | ${[ReportType.Observer]}
+    ${Role.Referee}  | ${[ReportType.Mentor, ReportType.Self]}
   `(
     'should not let $role upload $forbiddenResourceTypes reports for upcoming match',
     async ({ role, forbiddenResourceTypes }) => {
@@ -422,8 +423,8 @@ describe('e2e matches', () => {
   );
 
   it.each`
-    role             | forbiddenResourceTypes
-    ${Role.Observer} | ${[ReportType.Tv, ReportType.Mentor]}
+    role            | forbiddenResourceTypes
+    ${Role.Referee} | ${[ReportType.Mentor, ReportType.Self]}
   `(
     'should not let $role download $forbiddenResourceTypes reports for upcoming match',
     async ({ role, forbiddenResourceTypes }) => {
@@ -450,10 +451,10 @@ describe('e2e matches', () => {
 
   it.each`
     role             | forbiddenResourceTypes
-    ${Role.Owner}    | ${[ReportType.Mentor, ReportType.Tv, ReportType.Observer]}
-    ${Role.Admin}    | ${[ReportType.Mentor, ReportType.Tv, ReportType.Observer]}
-    ${Role.Referee}  | ${[ReportType.Observer]}
-    ${Role.Observer} | ${[ReportType.Tv, ReportType.Mentor]}
+    ${Role.Owner}    | ${[ReportType.Mentor, ReportType.Tv, ReportType.Observer, ReportType.Self]}
+    ${Role.Admin}    | ${[ReportType.Mentor, ReportType.Tv, ReportType.Observer, ReportType.Self]}
+    ${Role.Observer} | ${[ReportType.Observer]}
+    ${Role.Referee}  | ${[ReportType.Mentor, ReportType.Self]}
   `(
     'should not let $role remove $forbiddenResourceTypes reports for upcoming match',
     async ({ role, forbiddenResourceTypes }) => {
@@ -488,10 +489,10 @@ describe('e2e matches', () => {
 
     it.each`
       role             | forbiddenResourceTypes
-      ${Role.Owner}    | ${[ReportType.Mentor, ReportType.Tv, ReportType.Observer]}
-      ${Role.Admin}    | ${[ReportType.Mentor, ReportType.Tv, ReportType.Observer]}
-      ${Role.Referee}  | ${[ReportType.Observer]}
-      ${Role.Observer} | ${[ReportType.Tv, ReportType.Mentor]}
+      ${Role.Owner}    | ${[ReportType.Mentor, ReportType.Tv, ReportType.Observer, ReportType.Self]}
+      ${Role.Admin}    | ${[ReportType.Mentor, ReportType.Observer, ReportType.Self]}
+      ${Role.Referee}  | ${[ReportType.Observer, ReportType.Tv]}
+      ${Role.Observer} | ${[ReportType.Tv, ReportType.Mentor, ReportType.Self]}
     `('should not let $role upload $forbiddenResourceTypes reports', async ({ role, forbiddenResourceTypes }) => {
       const tokens = {
         [Role.Admin]: adminAJWT,
@@ -514,7 +515,7 @@ describe('e2e matches', () => {
 
     it.each`
       role             | forbiddenResourceTypes
-      ${Role.Observer} | ${[ReportType.Tv, ReportType.Mentor]}
+      ${Role.Observer} | ${[ReportType.Tv, ReportType.Mentor, ReportType.Self]}
     `('should not let $role download $forbiddenResourceTypes reports', async ({ role, forbiddenResourceTypes }) => {
       const tokens = {
         [Role.Admin]: adminAJWT,
@@ -537,10 +538,10 @@ describe('e2e matches', () => {
 
     it.each`
       role             | forbiddenResourceTypes
-      ${Role.Owner}    | ${[ReportType.Mentor, ReportType.Tv, ReportType.Observer]}
-      ${Role.Admin}    | ${[ReportType.Mentor, ReportType.Tv, ReportType.Observer]}
-      ${Role.Referee}  | ${[ReportType.Observer]}
-      ${Role.Observer} | ${[ReportType.Tv, ReportType.Mentor]}
+      ${Role.Owner}    | ${[ReportType.Mentor, ReportType.Observer, ReportType.Self, ReportType.Tv]}
+      ${Role.Admin}    | ${[ReportType.Mentor, ReportType.Observer, ReportType.Self]}
+      ${Role.Referee}  | ${[ReportType.Observer, ReportType.Tv]}
+      ${Role.Observer} | ${[ReportType.Tv, ReportType.Mentor, ReportType.Self]}
     `('should not let $role remove $forbiddenResourceTypes reports ', async ({ role, forbiddenResourceTypes }) => {
       const tokens = {
         [Role.Admin]: adminAJWT,

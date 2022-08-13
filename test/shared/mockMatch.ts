@@ -44,6 +44,7 @@ export const MockMatch = (homeTeam: Team, awayTeam: Team, referee: User, observe
     tvReportKey: null,
     mentorReportKey: null,
     observerReportKey: null,
+    selfReportKey: null,
   };
 };
 

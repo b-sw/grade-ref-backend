@@ -86,4 +86,7 @@ export class Match {
 
   @Column({ nullable: true })
   tvReportKey: string;
+
+  @Column({ nullable: true })
+  selfReportKey: string;
 }
