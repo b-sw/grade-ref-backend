@@ -535,6 +535,7 @@ export class MatchesService {
       observerReportKey: match.observerReportKey,
       mentorReportKey: match.mentorReportKey,
       tvReportKey: match.tvReportKey,
+      selfReportKey: match.selfReportKey,
     };
   }
 

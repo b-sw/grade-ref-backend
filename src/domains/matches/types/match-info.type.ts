@@ -18,4 +18,5 @@ export type MatchInfo = {
   observerReportKey?: string;
   mentorReportKey?: string;
   tvReportKey?: string;
+  selfReportKey?: string;
 };
