@@ -1,6 +1,7 @@
 import { uuid } from '../../../shared/constants/uuid.constant';
 import { ApiProperty } from '@nestjs/swagger';
-import { IsDate, IsUUID, Length, Max, Min } from 'class-validator';
+import { IsDate, IsUUID, Length, Matches } from 'class-validator';
+import { gradeDtoRegex } from '../constants/matches.constants';
 
 export class CreateMatchDto {
   @ApiProperty({ type: Date })
@@ -28,9 +29,10 @@ export class CreateMatchDto {
   observerId: uuid;
 
   @ApiProperty({ nullable: true })
-  @Min(0)
-  @Max(10)
-  refereeGrade: number;
+  @Matches(gradeDtoRegex, {
+    message: 'Grade must match regex',
+  })
+  refereeGrade: string;
 
   @ApiProperty({ nullable: true })
   @IsDate()
