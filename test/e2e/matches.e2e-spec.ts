@@ -284,26 +284,54 @@ describe('e2e matches', () => {
     },
   );
 
-  it('should update referee match grade', async () => {
-    const dto = { refereeGrade: 5.5 } as UpdateMatchDto;
+  it.each([['6.0'], ['6.1'], ['9.9'], ['10.0'], ['10'], ['6'], ['7.6/8.0'], ['7.6/8.5'], ['7.9/8.0'], ['7.9/8.8']])(
+    'should update referee match grade for valid',
+    async (grade: string) => {
+      const dto = { refereeGrade: grade } as UpdateMatchDto;
+
+      const response = await request(app.getHttpServer())
+        .put(`/leagues/${league.id}/matches/${match.id}/grade`)
+        .auth(observerAJWT, { type: 'bearer' })
+        .send(dto);
+
+      expect(response.status).toBe(HttpStatus.OK);
+      response.body.matchDate = new Date(response.body.matchDate);
+      response.body.refereeGradeDate = new Date(response.body.refereeGradeDate);
+      match = { ...match, refereeGrade: grade, refereeGradeDate: expect.any(Date) };
+      matchInfo = { ...matchInfo, refereeGrade: grade, refereeGradeDate: expect.any(Date) };
+      expect(response.body).toMatchObject(matchInfo);
+    },
+  );
+
+  it.each([
+    ['5.9'],
+    ['6.'],
+    ['9.'],
+    ['10.1'],
+    ['10.'],
+    ['0.0'],
+    ['7.9/7.8'],
+    ['8.3/8.3'],
+    ['7.7/8.9'],
+    ['7.5/8.5'],
+    ['7.6/8.'],
+    ['8./8.3'],
+    ['7.8/8.31'],
+  ])('should not update referee match grade for invalid', async (grade: string) => {
+    const dto = { refereeGrade: grade } as UpdateMatchDto;
 
     const response = await request(app.getHttpServer())
       .put(`/leagues/${league.id}/matches/${match.id}/grade`)
       .auth(observerAJWT, { type: 'bearer' })
       .send(dto);
 
-    expect(response.status).toBe(HttpStatus.OK);
-    response.body.matchDate = new Date(response.body.matchDate);
-    response.body.refereeGradeDate = new Date(response.body.refereeGradeDate);
-    match = { ...match, refereeGrade: 5.5, refereeGradeDate: expect.any(Date) };
-    matchInfo = { ...matchInfo, refereeGrade: 5.5, refereeGradeDate: expect.any(Date) };
-    expect(response.body).toMatchObject(matchInfo);
+    expect(response.status).toBe(HttpStatus.BAD_REQUEST);
   });
 
   it('should not update referee match grade if not match observer or league admin', async () => {
     await Promise.all(
       [refereeAJWT, observerBJWT].map(async (token) => {
-        const dto = { refereeGrade: 5.5 } as UpdateMatchDto;
+        const dto = { refereeGrade: '5.5' } as UpdateMatchDto;
 
         const response = await request(app.getHttpServer())
           .put(`/leagues/${league.id}/matches/${match.id}/grade`)
@@ -317,7 +345,7 @@ describe('e2e matches', () => {
 
   it('should not update referee match grade if late', async () => {
     await setMockMatchDatetime(match.id, dayjs().subtract(4, 'day'));
-    const dto = { refereeGrade: 5.5 } as UpdateMatchDto;
+    const dto = { refereeGrade: '8.5' } as UpdateMatchDto;
 
     const response = await request(app.getHttpServer())
       .put(`/leagues/${league.id}/matches/${match.id}/grade`)
