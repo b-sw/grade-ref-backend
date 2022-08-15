@@ -1,4 +1,11 @@
-import { HttpException, HttpStatus, Injectable, Logger, ServiceUnavailableException } from '@nestjs/common';
+import {
+  BadRequestException,
+  HttpException,
+  HttpStatus,
+  Injectable,
+  Logger,
+  ServiceUnavailableException,
+} from '@nestjs/common';
 import axios from 'axios';
 import dayjs, { Dayjs } from 'dayjs';
 import { CreateMatchDto } from './dto/create-match.dto';
@@ -15,7 +22,7 @@ import { GradeMessage } from './dto/update-grade-sms.dto';
 import { getNotNull } from '../../shared/getters';
 import { Team } from '../../entities/team.entity';
 import { validateEntryTime } from '../../shared/validators';
-import { ReportType } from './constants/matches.constants';
+import { gradeDtoRegex, mixedGradeRegex, ReportType } from './constants/matches.constants';
 import { ActionType, GradeFilePermissions } from '../users/constants/users.constants';
 import { ReportFieldNames } from './constants/reports.constants';
 import { MatchInfo } from './types/match-info.type';
@@ -141,6 +148,7 @@ export class MatchesService {
   }
 
   async updateGrade(params: LeagueMatchParams, dto: Partial<UpdateMatchDto>): Promise<Match> {
+    this.validateGrade(dto.refereeGrade);
     const match: Match = getNotNull(await this.getById(params.matchId));
     if (match.refereeGrade) {
       validateEntryTime(match.matchDate, GRADE_ENTRY_TIME_WINDOW);
@@ -149,6 +157,53 @@ export class MatchesService {
     match.refereeGradeDate = new Date();
     await this.matchRepository.save(match);
     return match;
+  }
+
+  validateGrade(grade: string) {
+    if (!gradeDtoRegex.test(grade)) {
+      throw new BadRequestException('Grade must match regex');
+    }
+
+    if (mixedGradeRegex.test(grade)) {
+      const [leftPartial, rightPartial] = grade.split('/');
+      [leftPartial, rightPartial].forEach((partial) => this.validateDecimals(partial));
+
+      const [leftGrade, rightGrade] = [Number(leftPartial), Number(rightPartial)];
+
+      if (rightGrade < 8.0 || rightGrade > 8.8) {
+        throw new BadRequestException('Right partial grade must be between 8.0 and 8.8');
+      }
+
+      if (leftGrade < 7.6 || leftGrade > 7.9) {
+        throw new BadRequestException('Left partial grade must be between 7.6 and 7.9');
+      }
+
+      if (leftGrade >= rightGrade) {
+        throw new BadRequestException('Left grade must be less than right grade');
+      }
+    } else {
+      this.validateDecimals(grade);
+      const gradeNumber = Number(grade);
+
+      if (gradeNumber < 6.0 || gradeNumber > 10) {
+        throw new BadRequestException('Grade must be >=6.0 and <=10.0');
+      }
+    }
+  }
+
+  validateDecimals(num: string) {
+    if (!num.includes('.')) {
+      return;
+    }
+
+    const decimals = num.split('.')[1];
+    if (!decimals) {
+      throw new BadRequestException('No number after dot');
+    }
+
+    if (decimals.length != 1) {
+      throw new BadRequestException('Only one decimal allowed');
+    }
   }
 
   async updateOverallGrade(params: LeagueMatchParams, dto: Partial<UpdateMatchDto>): Promise<Match> {
@@ -185,10 +240,13 @@ export class MatchesService {
       return;
     }
 
-    match.refereeGrade = +gradeMessage.msg.split('#')[1].split('/')[0];
+    match.refereeGrade = gradeMessage.msg.split('#')[1];
     match.refereeGradeDate = new Date();
     await this.matchRepository.save(match);
-    await this.sendOneWaySms(observer.phoneNumber, `Grade for match ${match.userReadableKey} has been entered.`);
+    await this.sendOneWaySms(
+      observer.phoneNumber,
+      `Grade ` + match.refereeGrade + ` for match ${match.userReadableKey} has been entered.`,
+    );
   }
 
   async requireSmsValid(smsText: string, phoneNumber: string): Promise<boolean> {
@@ -306,7 +364,7 @@ export class MatchesService {
           password: process.env.SMS_PASSWORD,
           from: process.env.SMS_NUMBER,
           to: phoneNumber,
-          msg: `Nowa obsada, mecz ${messageKey}, ${matchDate}. Po zakończeniu spotkania wyślij sms o treści: ID_meczu#ocena/ocena`,
+          msg: `Nowa obsada, mecz ${messageKey}, ${matchDate}. Po zakończeniu meczu wyślij sms o treści: ID_meczu#ocena`,
           date: sendDate,
         },
       },
