@@ -30,7 +30,8 @@ import { Messages } from './constants/messages.constants';
 
 const SMS_API = 'https://api2.smsplanet.pl';
 export const DTO_DATETIME_FORMAT = 'YYYY-MM-DDTHH:mm';
-const SMS_API_DATETIME_FORMAT = 'DD-MM-YYYY HH:mm';
+const SMS_API_DATETIME_FORMAT = 'DD-MM-YYYY HH:mm:ss';
+const SMS_DATETIME_FORMAT = 'DD-MM-YYYY HH:mm';
 
 const MATCH_PROPS_COUNT = 7;
 const DELIMITER = ';';
@@ -353,7 +354,7 @@ export class MatchesService {
   }
 
   async scheduleSms(dtoDate: Date, messageKey: string, phoneNumber: string): Promise<string> {
-    const matchDate: string = dayjs(dtoDate, DTO_DATETIME_FORMAT).format(SMS_API_DATETIME_FORMAT);
+    const matchDate: string = dayjs(dtoDate, DTO_DATETIME_FORMAT).format(SMS_DATETIME_FORMAT);
     const sendDate: string = dayjs(dtoDate, DTO_DATETIME_FORMAT).subtract(1, 'day').format(SMS_API_DATETIME_FORMAT);
 
     const response: AxiosResponse = await axios.post(
