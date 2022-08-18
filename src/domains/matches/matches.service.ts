@@ -26,10 +26,11 @@ import { gradeDtoRegex, mixedGradeRegex, ReportType } from './constants/matches.
 import { ActionType, GradeFilePermissions } from '../users/constants/users.constants';
 import { ReportFieldNames } from './constants/reports.constants';
 import { MatchInfo } from './types/match-info.type';
+import { Messages } from './constants/messages.constants';
 
 const SMS_API = 'https://api2.smsplanet.pl';
 export const DTO_DATETIME_FORMAT = 'YYYY-MM-DDTHH:mm';
-const SMS_API_DATETIME_FORMAT = 'DD-MM-YYYY HH:mm:ss';
+const SMS_API_DATETIME_FORMAT = 'DD-MM-YYYY HH:mm';
 
 const MATCH_PROPS_COUNT = 7;
 const DELIMITER = ';';
@@ -132,7 +133,7 @@ export class MatchesService {
   async removeMatch(params: LeagueMatchParams, phoneNumber: string): Promise<Match> {
     const match: Match = getNotNull(await this.getById(params.matchId));
     await this.cancelSMS(match.observerSmsId);
-    await this.sendOneWaySms(phoneNumber, `Match #${match.userReadableKey} has been canceled.`);
+    await this.sendOneWaySms(phoneNumber, `Mecz #${match.userReadableKey} został odwołany.`);
     await this.matchRepository.delete(params.matchId);
     return match;
   }
@@ -245,7 +246,7 @@ export class MatchesService {
     await this.matchRepository.save(match);
     await this.sendOneWaySms(
       observer.phoneNumber,
-      `Grade ` + match.refereeGrade + ` for match ${match.userReadableKey} has been entered.`,
+      `Ocena ` + match.refereeGrade + ` z meczu ${match.userReadableKey} została wprowadzona.`,
     );
   }
 
@@ -255,19 +256,19 @@ export class MatchesService {
     try {
       smsElems = smsText.split('#');
     } catch (_e) {
-      await this.sendOneWaySms(phoneNumber, 'Invalid sms format.');
+      await this.sendOneWaySms(phoneNumber, Messages.InvalidSmsFormat);
       return false;
     }
 
     if (smsElems.length !== 2) {
-      await this.sendOneWaySms(phoneNumber, 'Invalid sms format.');
+      await this.sendOneWaySms(phoneNumber, Messages.InvalidSmsFormat);
       return false;
     }
 
     const matchKey: string = smsElems[0];
 
     if (!matchKey) {
-      await this.sendOneWaySms(phoneNumber, `Invalid match key.`);
+      await this.sendOneWaySms(phoneNumber, Messages.InvalidMatchId);
       return false;
     }
 
@@ -275,18 +276,18 @@ export class MatchesService {
     try {
       gradeElems = smsElems[1].split('/');
     } catch (_e) {
-      await this.sendOneWaySms(phoneNumber, 'Invalid sms grade format.');
+      await this.sendOneWaySms(phoneNumber, Messages.InvalidGradeFormat);
       return false;
     }
 
     if (gradeElems.length !== 2) {
-      await this.sendOneWaySms(phoneNumber, 'Invalid sms grade format.');
+      await this.sendOneWaySms(phoneNumber, Messages.InvalidGradeFormat);
       return false;
     }
 
     const grade: number = +gradeElems[0];
     if (isNaN(grade)) {
-      await this.sendOneWaySms(phoneNumber, `Invalid grade.`);
+      await this.sendOneWaySms(phoneNumber, Messages.InvalidGradeFormat);
       return false;
     }
     return true;
@@ -294,17 +295,17 @@ export class MatchesService {
 
   async requireSmsMatchKeyValid(match: Match | undefined, phoneNumber: string): Promise<boolean> {
     if (!match) {
-      await this.sendOneWaySms(phoneNumber, `Invalid match key.`);
+      await this.sendOneWaySms(phoneNumber, Messages.InvalidMatchId);
       return false;
     }
 
     if (match.refereeGrade) {
-      await this.sendOneWaySms(phoneNumber, `Grade has already been entered.`);
+      await this.sendOneWaySms(phoneNumber, Messages.GradeAlreadyEntered);
       return false;
     }
 
     if (dayjs().isBefore(dayjs(match.matchDate).add(MATCH_DURATION, 'hour'))) {
-      await this.sendOneWaySms(phoneNumber, `Cannot enter a grade before match end.`);
+      await this.sendOneWaySms(phoneNumber, Messages.CantEnterGradeBeforeMatchEnd);
       return false;
     }
     return true;
@@ -315,12 +316,12 @@ export class MatchesService {
     try {
       grade = +smsText.split('#')[1].split('/')[0];
     } catch (_e) {
-      await this.sendOneWaySms(phoneNumber, `Invalid sms grade format.`);
+      await this.sendOneWaySms(phoneNumber, Messages.InvalidGradeFormat);
       return false;
     }
 
     if (isNaN(grade)) {
-      await this.sendOneWaySms(phoneNumber, `Invalid grade.`);
+      await this.sendOneWaySms(phoneNumber, Messages.InvalidGradeFormat);
       return false;
     }
     return true;
@@ -364,7 +365,7 @@ export class MatchesService {
           password: process.env.SMS_PASSWORD,
           from: process.env.SMS_NUMBER,
           to: phoneNumber,
-          msg: `Nowa obsada, mecz ${messageKey}, ${matchDate}. Po zakończeniu meczu wyślij sms o treści: ID_meczu#ocena`,
+          msg: `Nowa obsada, kod meczu ${messageKey}, ${matchDate}. Po zakończeniu meczu wyślij sms o treści: ID_meczu#ocena`,
           date: sendDate,
         },
       },
