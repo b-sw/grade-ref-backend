@@ -27,6 +27,7 @@ import { ActionType, GradeFilePermissions } from '../users/constants/users.const
 import { ReportFieldNames } from './constants/reports.constants';
 import { MatchInfo } from './types/match-info.type';
 import { Messages } from './constants/messages.constants';
+import { TeamsService } from '../teams/teams.service';
 
 const SMS_API = 'https://api2.smsplanet.pl';
 export const DTO_DATETIME_FORMAT = 'YYYY-MM-DDTHH:mm';
@@ -42,7 +43,10 @@ export const OVERALL_GRADE_ENTRY_TIME_WINDOW = 48 + MATCH_DURATION;
 
 @Injectable()
 export class MatchesService {
-  constructor(@InjectRepository(Match) private matchRepository: Repository<Match>) {}
+  constructor(
+    @InjectRepository(Match) private matchRepository: Repository<Match>,
+    private readonly teamsService: TeamsService,
+  ) {}
 
   async createMatch(
     leagueId: uuid,
@@ -53,7 +57,7 @@ export class MatchesService {
   ): Promise<Match> {
     await this.validateMatch(dto);
     const matchKey: string = this.getUserReadableKey(dto.matchDate, leagueIdx, homeTeamIdx);
-    const observerSmsId: string = await this.scheduleSms(dto.matchDate, matchKey, observerPhoneNumber);
+    const observerSmsId: string = await this.scheduleSms(dto, matchKey, observerPhoneNumber);
 
     const match: Match = this.matchRepository.create({
       matchDate: dto.matchDate,
@@ -116,7 +120,7 @@ export class MatchesService {
     const match: Match = getNotNull(await this.getById(params.matchId));
     await this.cancelSMS(match.observerSmsId);
     const matchKey: string = this.getUserReadableKey(dto.matchDate, leagueIdx, homeTeamIdx);
-    const observerSmsId: string = await this.scheduleSms(dto.matchDate, matchKey, observerPhoneNumber);
+    const observerSmsId: string = await this.scheduleSms(dto, matchKey, observerPhoneNumber);
 
     await this.matchRepository.update(params.matchId, {
       matchDate: dto.matchDate,
@@ -353,9 +357,14 @@ export class MatchesService {
     }
   }
 
-  async scheduleSms(dtoDate: Date, messageKey: string, phoneNumber: string): Promise<string> {
-    const matchDate: string = dayjs(dtoDate, DTO_DATETIME_FORMAT).format(SMS_DATETIME_FORMAT);
-    const sendDate: string = dayjs(dtoDate, DTO_DATETIME_FORMAT).subtract(1, 'day').format(SMS_API_DATETIME_FORMAT);
+  async scheduleSms(dto: CreateMatchDto | UpdateMatchDto, messageKey: string, phoneNumber: string): Promise<string> {
+    const matchDate: string = dayjs(dto.matchDate, DTO_DATETIME_FORMAT).format(SMS_DATETIME_FORMAT);
+    const sendDate: string = dayjs(dto.matchDate, DTO_DATETIME_FORMAT)
+      .subtract(1, 'day')
+      .format(SMS_API_DATETIME_FORMAT);
+
+    const homeTeamName = await this.teamsService.getById(dto.homeTeamId).then((t) => t.name);
+    const awayTeamName = await this.teamsService.getById(dto.awayTeamId).then((t) => t.name);
 
     const response: AxiosResponse = await axios.post(
       `${SMS_API}/sms`,
@@ -366,7 +375,7 @@ export class MatchesService {
           password: process.env.SMS_PASSWORD,
           from: process.env.SMS_NUMBER,
           to: phoneNumber,
-          msg: `Nowa obsada, kod meczu ${messageKey}, ${matchDate}. Po zakończeniu meczu wyślij sms o treści: ID_meczu#ocena`,
+          msg: `Obsada, mecz ${homeTeamName} - ${awayTeamName}, ${matchDate}, kod: ${messageKey}. Po zakończeniu spotkania wyślij sms o treści: kod#ocena`,
           date: sendDate,
         },
       },

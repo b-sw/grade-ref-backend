@@ -28,11 +28,11 @@ export class TeamsService {
     return this.teamRepository.find({ where: { leagueId: leagueId } });
   }
 
-  async getById(teamId: uuid) {
+  async getById(teamId: uuid): Promise<Team> {
     return this.teamRepository.findOne({ where: { id: teamId } });
   }
 
-  async update(params: LeagueTeamParams, dto: UpdateTeamDto) {
+  async update(params: LeagueTeamParams, dto: UpdateTeamDto): Promise<Team> {
     await this.validateUnique(dto, params.teamId);
     await this.teamRepository.update(params.teamId, {
       name: dto.name,
@@ -40,7 +40,7 @@ export class TeamsService {
     return this.getById(params.teamId);
   }
 
-  async remove(params: LeagueTeamParams) {
+  async remove(params: LeagueTeamParams): Promise<Team> {
     const team: Team = await this.getById(params.teamId);
     await this.teamRepository.delete(params.teamId);
     return team;
