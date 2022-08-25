@@ -1,8 +1,8 @@
-import { CreateTeamDto } from '../../src/domains/teams/dto/create-team.dto';
-import { Team } from '../../src/entities/team.entity';
-import { uuid } from '../../src/shared/constants/uuid.constant';
-import { League } from '../../src/entities/league.entity';
 import { v4 as randomUuid } from 'uuid';
+import { League } from 'src/entities/league.entity';
+import { CreateTeamDto } from 'src/modules/teams/dto/create-team.dto';
+import { Team } from 'src/entities/team.entity';
+import { uuid } from 'src/shared/types/uuid.type';
 
 const BaseCreateTeamDto: CreateTeamDto = {
   name: 'FC Mock Team',

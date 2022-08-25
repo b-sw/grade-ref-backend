@@ -1,12 +1,12 @@
 import { CanActivate, ExecutionContext, HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { UsersService } from '../../domains/users/users.service';
-import { User } from '../../entities/user.entity';
-import { LeaguesService } from '../../domains/leagues/leagues.service';
-import { LeagueParams } from '../../domains/leagues/params/LeagueParams';
-import { LeagueMatchParams } from '../../domains/matches/params/LeagueMatchParams';
-import { CreateMatchDto } from '../../domains/matches/dto/create-match.dto';
-import { UpdateMatchDto } from '../../domains/matches/dto/update-match.dto';
-import { League } from '../../entities/league.entity';
+import { LeaguesService } from 'src/modules/leagues/leagues.service';
+import { CreateMatchDto } from 'src/modules/matches/dto/create-match.dto';
+import { LeagueMatchParams } from 'src/modules/matches/params/LeagueMatchParams';
+import { League } from 'src/entities/league.entity';
+import { UsersService } from 'src/modules/users/users.service';
+import { UpdateMatchDto } from 'src/modules/matches/dto/update-match.dto';
+import { LeagueParams } from 'src/modules/leagues/params/LeagueParams';
+import { User } from 'src/entities/user.entity';
 
 @Injectable()
 export class ValidRefereeObserverGuard implements CanActivate {

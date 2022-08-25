@@ -1,12 +1,12 @@
 import { SqliteConnectionOptions } from 'typeorm/driver/sqlite/SqliteConnectionOptions';
 import { MysqlConnectionOptions } from 'typeorm/driver/mysql/MysqlConnectionOptions';
-import { User } from './src/entities/user.entity';
+import { Foul } from 'src/entities/foul.entity';
+import { League } from 'src/entities/league.entity';
+import { User } from 'src/entities/user.entity';
+import { Team } from 'src/entities/team.entity';
+import { Feature } from 'src/entities/feature.entity';
+import { Match } from 'src/entities/match.entity';
 import { config } from 'dotenv';
-import { Team } from './src/entities/team.entity';
-import { Match } from './src/entities/match.entity';
-import { League } from './src/entities/league.entity';
-import { Foul } from './src/entities/foul.entity';
-import { Feature } from './src/entities/feature.entity';
 
 config();
 /*

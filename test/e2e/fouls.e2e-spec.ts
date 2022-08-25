@@ -1,8 +1,4 @@
 import { getRepository } from 'typeorm';
-import { User } from '../../src/entities/user.entity';
-import { League } from '../../src/entities/league.entity';
-import { Team } from '../../src/entities/team.entity';
-import { Match } from '../../src/entities/match.entity';
 import { Test } from '@nestjs/testing';
 import { AppModule } from '../../src/app.module';
 import { HttpStatus, INestApplication } from '@nestjs/common';
@@ -12,12 +8,16 @@ import { MockTeam } from '../shared/mockTeam';
 import { MockMatch, setMockMatchDatetime } from '../shared/mockMatch';
 import request from 'supertest';
 import { MockCreateFoulDto } from '../shared/mockFoul';
-import { Foul } from '../../src/entities/foul.entity';
 import dayjs from 'dayjs';
-import { UpdateMatchDto } from '../../src/domains/matches/dto/update-match.dto';
-import { MATCH_DURATION, OVERALL_GRADE_ENTRY_TIME_WINDOW } from '../../src/domains/matches/matches.service';
-import { Role } from '../../src/domains/users/constants/users.constants';
 import { getSignedJwt } from '../shared/jwt';
+import { Role } from 'src/modules/users/constants/users.constants';
+import { Foul } from 'src/entities/foul.entity';
+import { League } from 'src/entities/league.entity';
+import { User } from 'src/entities/user.entity';
+import { UpdateMatchDto } from 'src/modules/matches/dto/update-match.dto';
+import { MATCH_DURATION, OVERALL_GRADE_ENTRY_TIME_WINDOW } from 'src/modules/matches/matches.service';
+import { Team } from 'src/entities/team.entity';
+import { Match } from 'src/entities/match.entity';
 
 describe('e2e fouls', () => {
   const admin = MockUser({ role: Role.Admin, email: 'admin@mail.com', lastName: 'Doe1' });

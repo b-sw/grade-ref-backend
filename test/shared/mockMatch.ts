@@ -1,12 +1,12 @@
-import { CreateMatchDto } from '../../src/domains/matches/dto/create-match.dto';
-import { Team } from '../../src/entities/team.entity';
-import { User } from '../../src/entities/user.entity';
 import dayjs, { Dayjs } from 'dayjs';
-import { League } from '../../src/entities/league.entity';
 import { v4 as randomUuid } from 'uuid';
 import { getRepository } from 'typeorm';
-import { Match } from '../../src/entities/match.entity';
-import { uuid } from 'src/shared/constants/uuid.constant';
+import { CreateMatchDto } from 'src/modules/matches/dto/create-match.dto';
+import { League } from 'src/entities/league.entity';
+import { Team } from 'src/entities/team.entity';
+import { User } from 'src/entities/user.entity';
+import { Match } from 'src/entities/match.entity';
+import { uuid } from 'src/shared/types/uuid.type';
 
 export const MockCreateMatchDto = (homeTeam: Team, awayTeam: Team, referee: User, observer: User): CreateMatchDto => {
   return {

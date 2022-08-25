@@ -1,7 +1,7 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
-import { UsersService } from '../../domains/users/users.service';
-import { UserParams } from '../../domains/users/params/UserParams';
-import { OwnerGuard } from './owner.guard';
+import { UsersService } from 'src/modules/users/users.service';
+import { OwnerGuard } from 'src/shared/guards/owner.guard';
+import { UserParams } from 'src/modules/users/params/UserParams';
 
 @Injectable()
 export class SelfGuard extends OwnerGuard implements CanActivate {

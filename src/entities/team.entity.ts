@@ -1,6 +1,6 @@
 import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
-import { uuid } from '../shared/constants/uuid.constant';
-import { League } from './league.entity';
+import { League } from 'src/entities/league.entity';
+import { uuid } from 'src/shared/types/uuid.type';
 
 @Entity()
 export class Team {

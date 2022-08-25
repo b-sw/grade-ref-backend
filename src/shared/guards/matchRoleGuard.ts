@@ -1,12 +1,12 @@
 import { CanActivate, ExecutionContext, HttpException, HttpStatus, Injectable, mixin, Type } from '@nestjs/common';
-import { UsersService } from '../../domains/users/users.service';
-import { OwnerGuard } from './owner.guard';
-import { LeagueMatchParams } from '../../domains/matches/params/LeagueMatchParams';
-import { MatchesService } from '../../domains/matches/matches.service';
-import { Match } from '../../entities/match.entity';
-import { Role } from '../../domains/users/constants/users.constants';
-import { User } from '../../entities/user.entity';
-import { LeaguesService } from '../../domains/leagues/leagues.service';
+import { LeaguesService } from 'src/modules/leagues/leagues.service';
+import { LeagueMatchParams } from 'src/modules/matches/params/LeagueMatchParams';
+import { UsersService } from 'src/modules/users/users.service';
+import { OwnerGuard } from 'src/shared/guards/owner.guard';
+import { MatchesService } from 'src/modules/matches/matches.service';
+import { Role } from 'src/modules/users/constants/users.constants';
+import { Match } from 'src/entities/match.entity';
+import { User } from 'src/entities/user.entity';
 
 export const MatchRoleGuard = (roles: Role[]): Type<CanActivate> => {
   @Injectable()

@@ -1,10 +1,44 @@
 {
-  "moduleFileExtensions": ["js", "json", "ts"],
-  "rootDir": ".",
-  "testEnvironment": "node",
+  "rootDir": "..",
+  "roots": [
+    "<rootDir>",
+    "<rootDir>/src/entities/",
+    "<rootDir>/src/modules/auth/",
+    "<rootDir>/src/modules/aws/",
+    "<rootDir>/src/modules/features/",
+    "<rootDir>/src/modules/fouls/",
+    "<rootDir>/src/modules/health/",
+    "<rootDir>/src/modules/leagues/",
+    "<rootDir>/src/modules/matches/",
+    "<rootDir>/src/modules/teams/",
+    "<rootDir>/src/modules/users/"
+  ],
+  "modulePaths": [
+    "<rootDir>",
+    "<rootDir>/src/entities/",
+    "<rootDir>/src/modules/auth/",
+    "<rootDir>/src/modules/aws/",
+    "<rootDir>/src/modules/features/",
+    "<rootDir>/src/modules/fouls/",
+    "<rootDir>/src/modules/health/",
+    "<rootDir>/src/modules/leagues/",
+    "<rootDir>/src/modules/matches/",
+    "<rootDir>/src/modules/teams/",
+    "<rootDir>/src/modules/users/"
+  ],
+  "moduleDirectories": [
+    "node_modules",
+    "src"
+  ],
+  "moduleFileExtensions": [
+    "js",
+    "json",
+    "ts"
+  ],
   "testRegex": ".e2e-spec.ts$",
   "transform": {
     "^.+\\.(t|j)s$": "ts-jest"
   },
-  "moduleDirectories": ["node_modules", "src"]
+  "coverageDirectory": "../coverage",
+  "testEnvironment": "node"
 }

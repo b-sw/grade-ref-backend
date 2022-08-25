@@ -1,21 +1,21 @@
-import { User } from '../../src/entities/user.entity';
 import { MockUser } from '../shared/mockUser';
 import { v4 as randomUuid } from 'uuid';
-import { League } from '../../src/entities/league.entity';
 import { MockLeague } from '../shared/mockLeague';
-import { Team } from '../../src/entities/team.entity';
 import { MockTeam } from '../shared/mockTeam';
-import { Match } from '../../src/entities/match.entity';
 import { MockMatch } from '../shared/mockMatch';
 import { HttpStatus, INestApplication } from '@nestjs/common';
-import { Feature, FeatureType } from '../../src/entities/feature.entity';
 import { Test } from '@nestjs/testing';
 import { AppModule } from '../../src/app.module';
 import { getRepository } from 'typeorm';
 import request from 'supertest';
 import { MockCreateFeatureDto } from '../shared/mockFeature';
-import { Role } from '../../src/domains/users/constants/users.constants';
 import { getSignedJwt } from '../shared/jwt';
+import { Role } from 'src/modules/users/constants/users.constants';
+import { Feature, FeatureType } from 'src/entities/feature.entity';
+import { League } from 'src/entities/league.entity';
+import { User } from 'src/entities/user.entity';
+import { Team } from 'src/entities/team.entity';
+import { Match } from 'src/entities/match.entity';
 
 describe('e2e features', () => {
   const admin = MockUser({ role: Role.Admin, email: 'admin@mail.com', lastName: 'Doe1' });
