@@ -1,7 +1,7 @@
 import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
-import { uuid } from '../shared/constants/uuid.constant';
-import { Team } from './team.entity';
-import { Match } from './match.entity';
+import { Team } from 'src/entities/team.entity';
+import { Match } from 'src/entities/match.entity';
+import { uuid } from 'src/shared/types/uuid.type';
 
 export enum Card {
   Yellow = 'Yellow',

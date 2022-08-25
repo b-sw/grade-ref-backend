@@ -1,15 +1,15 @@
 import { Test } from '@nestjs/testing';
 import { HttpStatus, INestApplication } from '@nestjs/common';
-import { AppModule } from '../../src/app.module';
 import { getRepository } from 'typeorm';
-import { User } from '../../src/entities/user.entity';
 import * as jwt from 'jsonwebtoken';
-import { MockCreateUserDto, MockUser } from '../shared/mockUser';
-import { CreateUserDto } from '../../src/domains/users/dto/create-user.dto';
 import request from 'supertest';
-import { League } from '../../src/entities/league.entity';
+import { Role } from 'src/modules/users/constants/users.constants';
+import { League } from 'src/entities/league.entity';
+import { AppModule } from '../../src/app.module';
 import { MockLeague } from '../shared/mockLeague';
-import { Role } from '../../src/domains/users/constants/users.constants';
+import { CreateUserDto } from 'src/modules/users/dto/create-user.dto';
+import { MockCreateUserDto, MockUser } from '../shared/mockUser';
+import { User } from 'src/entities/user.entity';
 
 describe('e2e users', () => {
   const owner = MockUser({ role: Role.Owner, email: 'mock@mail.com' });

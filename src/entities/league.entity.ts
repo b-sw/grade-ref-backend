@@ -1,6 +1,6 @@
 import { Column, Entity, JoinTable, ManyToMany, PrimaryGeneratedColumn } from 'typeorm';
-import { User } from './user.entity';
-import { uuid } from '../shared/constants/uuid.constant';
+import { User } from 'src/entities/user.entity';
+import { uuid } from 'src/shared/types/uuid.type';
 
 @Entity()
 export class League {
@@ -16,15 +16,15 @@ export class League {
   @Column()
   country: string;
 
-  @ManyToMany(() => User, { cascade: true, onDelete: 'CASCADE'/*, eager: true*/ })
+  @ManyToMany(() => User, { cascade: true, onDelete: 'CASCADE' /*, eager: true*/ })
   @JoinTable()
   observers: User[];
 
-  @ManyToMany(() => User, { cascade: true, onDelete: 'CASCADE'/*, eager: true*/ })
+  @ManyToMany(() => User, { cascade: true, onDelete: 'CASCADE' /*, eager: true*/ })
   @JoinTable()
   referees: User[];
 
-  @ManyToMany(() => User, { cascade: true, onDelete: 'CASCADE'/*, eager: true*/ })
+  @ManyToMany(() => User, { cascade: true, onDelete: 'CASCADE' /*, eager: true*/ })
   @JoinTable()
   admins: User[];
 }

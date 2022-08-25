@@ -1,7 +1,7 @@
 import { CanActivate, ExecutionContext, HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { User } from '../../entities/user.entity';
-import { UsersService } from '../../domains/users/users.service';
-import { GradeMessage } from '../../domains/matches/dto/update-grade-sms.dto';
+import { UsersService } from 'src/modules/users/users.service';
+import { GradeMessage } from 'src/modules/matches/dto/update-grade-sms.dto';
+import { User } from 'src/entities/user.entity';
 
 @Injectable()
 export class MatchGradeGuard implements CanActivate {

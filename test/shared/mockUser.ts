@@ -1,7 +1,7 @@
-import { User } from '../../src/entities/user.entity';
 import { v4 as randomUuid } from 'uuid';
-import { CreateUserDto } from '../../src/domains/users/dto/create-user.dto';
-import { Role } from '../../src/domains/users/constants/users.constants';
+import { Role } from 'src/modules/users/constants/users.constants';
+import { CreateUserDto } from 'src/modules/users/dto/create-user.dto';
+import { User } from 'src/entities/user.entity';
 
 export const BaseCreateUserDto = (): CreateUserDto => {
   return {

@@ -1,6 +1,6 @@
 import dayjs from 'dayjs';
 import { HttpException, HttpStatus } from '@nestjs/common';
-import { MATCH_DURATION } from '../domains/matches/matches.service';
+import { MATCH_DURATION } from 'src/modules/matches/matches.service';
 
 export const validateEntryTime = (matchDate: Date, hours: number): void => {
   if (dayjs(matchDate).add(hours, 'hour').isBefore(dayjs())) {

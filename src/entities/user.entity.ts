@@ -1,6 +1,6 @@
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
-import { uuid } from '../shared/constants/uuid.constant';
-import { Role } from '../domains/users/constants/users.constants';
+import { uuid } from 'src/shared/types/uuid.type';
+import { Role } from 'src/modules/users/constants/users.constants';
 
 @Entity()
 export class User {

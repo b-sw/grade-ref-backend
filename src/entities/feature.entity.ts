@@ -1,7 +1,7 @@
 import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
-import { uuid } from '../shared/constants/uuid.constant';
-import { Match } from './match.entity';
-import { User } from './user.entity';
+import { User } from 'src/entities/user.entity';
+import { Match } from 'src/entities/match.entity';
+import { uuid } from 'src/shared/types/uuid.type';
 
 export enum FeatureType {
   Positive = 'Positive',

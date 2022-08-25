@@ -1,9 +1,9 @@
 import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
-import { uuid } from '../shared/constants/uuid.constant';
-import { User } from './user.entity';
-import { Team } from './team.entity';
 import { Type } from 'class-transformer';
-import { League } from './league.entity';
+import { League } from 'src/entities/league.entity';
+import { User } from 'src/entities/user.entity';
+import { Team } from 'src/entities/team.entity';
+import { uuid } from 'src/shared/types/uuid.type';
 
 @Entity()
 export class Match {

@@ -1,6 +1,6 @@
-import { League } from '../../src/entities/league.entity';
-import { CreateLeagueDto } from '../../src/domains/leagues/dto/create-league.dto';
 import { v4 as randomUuid } from 'uuid';
+import { League } from 'src/entities/league.entity';
+import { CreateLeagueDto } from 'src/modules/leagues/dto/create-league.dto';
 
 const BaseCreateLeagueDto: CreateLeagueDto = {
   name: 'Mock League',

@@ -1,16 +1,16 @@
 import { Test } from '@nestjs/testing';
 import { AppModule } from '../../src/app.module';
 import { HttpStatus, INestApplication } from '@nestjs/common';
-import { User } from '../../src/entities/user.entity';
 import { MockUser } from '../shared/mockUser';
 import { getRepository } from 'typeorm';
-import { League } from '../../src/entities/league.entity';
-import { Team } from '../../src/entities/team.entity';
 import { MockLeague } from '../shared/mockLeague';
 import { MockCreateTeamDto } from '../shared/mockTeam';
 import request from 'supertest';
-import { Role } from '../../src/domains/users/constants/users.constants';
 import { getSignedJwt } from '../shared/jwt';
+import { Role } from 'src/modules/users/constants/users.constants';
+import { League } from 'src/entities/league.entity';
+import { User } from 'src/entities/user.entity';
+import { Team } from 'src/entities/team.entity';
 
 describe('e2e teams', () => {
   const owner = MockUser({ role: Role.Owner, email: 'mock@mail.com', lastName: 'Doe' });

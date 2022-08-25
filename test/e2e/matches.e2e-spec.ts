@@ -1,8 +1,5 @@
 import { getRepository } from 'typeorm';
-import { User } from '../../src/entities/user.entity';
-import { League } from '../../src/entities/league.entity';
-import { Team } from '../../src/entities/team.entity';
-import { Match } from '../../src/entities/match.entity';
+import { User } from 'src/entities/user.entity';
 import { MockUser } from '../shared/mockUser';
 import { MockLeague } from '../shared/mockLeague';
 import { HttpStatus, INestApplication } from '@nestjs/common';
@@ -11,17 +8,20 @@ import { AppModule } from '../../src/app.module';
 import request from 'supertest';
 import { MockCreateMatchDto, setMockMatchDatetime } from '../shared/mockMatch';
 import { MockTeam } from '../shared/mockTeam';
-import { UpdateMatchDto } from 'src/domains/matches/dto/update-match.dto';
+import { UpdateMatchDto } from 'src/modules/matches/dto/update-match.dto';
 import dayjs from 'dayjs';
+import { getSignedJwt } from '../shared/jwt';
+import { Role } from 'src/modules/users/constants/users.constants';
+import { League } from 'src/entities/league.entity';
+import { MatchInfo } from 'src/modules/matches/types/match-info.type';
 import {
   GRADE_ENTRY_TIME_WINDOW,
   MATCH_DURATION,
   OVERALL_GRADE_ENTRY_TIME_WINDOW,
-} from '../../src/domains/matches/matches.service';
-import { ReportType } from '../../src/domains/matches/constants/matches.constants';
-import { Role } from '../../src/domains/users/constants/users.constants';
-import { getSignedJwt } from '../shared/jwt';
-import { MatchInfo } from '../../src/domains/matches/types/match-info.type';
+} from 'src/modules/matches/matches.service';
+import { Team } from 'src/entities/team.entity';
+import { ReportType } from 'src/modules/matches/constants/matches.constants';
+import { Match } from 'src/entities/match.entity';
 
 describe('e2e matches', () => {
   const owner = MockUser({ role: Role.Owner, email: 'mock@mail.com', lastName: 'Doe' });

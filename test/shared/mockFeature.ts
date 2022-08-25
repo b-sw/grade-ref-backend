@@ -1,5 +1,5 @@
-import { CreateFeatureDto } from '../../src/domains/features/dto/create-feature.dto';
-import { FeatureType } from '../../src/entities/feature.entity';
+import { FeatureType } from 'src/entities/feature.entity';
+import { CreateFeatureDto } from 'src/modules/features/dto/create-feature.dto';
 
 export const MockCreateFeatureDto = (type?: FeatureType): CreateFeatureDto => {
   return {
