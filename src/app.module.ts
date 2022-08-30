@@ -10,6 +10,7 @@ import { FoulsModule } from 'src/modules/fouls/fouls.module';
 import { FeaturesModule } from 'src/modules/features/features.module';
 import { TeamsModule } from 'src/modules/teams/teams.module';
 import { MatchesModule } from 'src/modules/matches/matches.module';
+import { VideoClipsModule } from './modules/video-clips/video-clips.module';
 
 @Module({
     imports: [
@@ -23,6 +24,7 @@ import { MatchesModule } from 'src/modules/matches/matches.module';
         FoulsModule,
         FeaturesModule,
         AWSModule,
+        VideoClipsModule,
     ],
     controllers: [],
     providers: [],
