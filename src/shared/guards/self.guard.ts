@@ -5,17 +5,17 @@ import { UserParams } from 'src/modules/users/params/UserParams';
 
 @Injectable()
 export class SelfGuard extends OwnerGuard implements CanActivate {
-  constructor(protected usersService: UsersService) {
-    super(usersService);
-  }
-
-  async canActivate(context: ExecutionContext): Promise<boolean> {
-    const request = context.switchToHttp().getRequest();
-    const params: UserParams = request.params;
-
-    if (params.userId === request.user.id) {
-      return true;
+    constructor(protected usersService: UsersService) {
+        super(usersService);
     }
-    return super.canActivate(context);
-  }
+
+    async canActivate(context: ExecutionContext): Promise<boolean> {
+        const request = context.switchToHttp().getRequest();
+        const params: UserParams = request.params;
+
+        if (params.userId === request.user.id) {
+            return true;
+        }
+        return super.canActivate(context);
+    }
 }

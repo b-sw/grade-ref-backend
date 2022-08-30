@@ -8,9 +8,9 @@ import { Feature } from 'src/entities/feature.entity';
 import { MatchesModule } from 'src/modules/matches/matches.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Feature]), UsersModule, MatchesModule, LeaguesModule],
-  controllers: [FeaturesController],
-  providers: [FeaturesService],
-  exports: [FeaturesService],
+    imports: [TypeOrmModule.forFeature([Feature]), UsersModule, MatchesModule, LeaguesModule],
+    controllers: [FeaturesController],
+    providers: [FeaturesService],
+    exports: [FeaturesService],
 })
 export class FeaturesModule {}

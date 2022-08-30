@@ -4,7 +4,7 @@ import { IsUUID } from 'class-validator';
 import { LeagueParams } from 'src/modules/leagues/params/LeagueParams';
 
 export class LeagueUserParams extends LeagueParams {
-  @ApiProperty({ type: String })
-  @IsUUID()
-  userId: uuid;
+    @ApiProperty({ type: String })
+    @IsUUID()
+    userId: uuid;
 }

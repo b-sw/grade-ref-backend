@@ -1,9 +1,9 @@
 export class UpdateGradeSmsDto {
-  message: GradeMessage;
+    message: GradeMessage;
 }
 
 export interface GradeMessage {
-  id: string;
-  msisdn: string;
-  msg: string;
+    id: string;
+    msisdn: string;
+    msg: string;
 }

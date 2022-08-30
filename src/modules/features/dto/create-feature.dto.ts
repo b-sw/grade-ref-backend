@@ -3,10 +3,10 @@ import { Length } from 'class-validator';
 import { FeatureType } from 'src/entities/feature.entity';
 
 export class CreateFeatureDto {
-  @ApiProperty()
-  type: FeatureType;
+    @ApiProperty()
+    type: FeatureType;
 
-  @ApiProperty()
-  @Length(5, 100)
-  description: string;
+    @ApiProperty()
+    @Length(5, 100)
+    description: string;
 }

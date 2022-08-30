@@ -4,16 +4,16 @@ import { uuid } from 'src/shared/types/uuid.type';
 
 @Entity()
 export class Team {
-  @PrimaryGeneratedColumn('uuid')
-  id: uuid;
+    @PrimaryGeneratedColumn('uuid')
+    id: uuid;
 
-  @Column({ unique: true })
-  name: string;
+    @Column({ unique: true })
+    name: string;
 
-  @Column()
-  leagueId: uuid;
+    @Column()
+    leagueId: uuid;
 
-  @ManyToOne(() => League, { cascade: true, onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'leagueId' })
-  league: League;
+    @ManyToOne(() => League, { cascade: true, onDelete: 'CASCADE' })
+    @JoinColumn({ name: 'leagueId' })
+    league: League;
 }

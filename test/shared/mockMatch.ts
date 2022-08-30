@@ -9,48 +9,48 @@ import { Match } from 'src/entities/match.entity';
 import { uuid } from 'src/shared/types/uuid.type';
 
 export const MockCreateMatchDto = (homeTeam: Team, awayTeam: Team, referee: User, observer: User): CreateMatchDto => {
-  return {
-    matchDate: new Date(dayjs().add(2, 'day').toDate()),
-    stadium: 'Mock stadium',
-    homeTeamId: homeTeam.id,
-    awayTeamId: awayTeam.id,
-    refereeId: referee.id,
-    observerId: observer.id,
-    refereeGrade: null,
-    refereeGradeDate: null,
-    refereeSmsId: null,
-    observerSmsId: null,
-    refereeNote: null,
-    overallGrade: null,
-    overallGradeDate: null,
-  };
+    return {
+        matchDate: new Date(dayjs().add(2, 'day').toDate()),
+        stadium: 'Mock stadium',
+        homeTeamId: homeTeam.id,
+        awayTeamId: awayTeam.id,
+        refereeId: referee.id,
+        observerId: observer.id,
+        refereeGrade: null,
+        refereeGradeDate: null,
+        refereeSmsId: null,
+        observerSmsId: null,
+        refereeNote: null,
+        overallGrade: null,
+        overallGradeDate: null,
+    };
 };
 
 export const MockMatch = (homeTeam: Team, awayTeam: Team, referee: User, observer: User, league: League): Match => {
-  const dto: CreateMatchDto = MockCreateMatchDto(homeTeam, awayTeam, referee, observer);
-  dto.overallGrade = 'Mock overall grade.';
-  dto.overallGradeDate = new Date();
+    const dto: CreateMatchDto = MockCreateMatchDto(homeTeam, awayTeam, referee, observer);
+    dto.overallGrade = 'Mock overall grade.';
+    dto.overallGradeDate = new Date();
 
-  return {
-    ...dto,
-    id: randomUuid(),
-    leagueId: league.id,
-    homeTeam: homeTeam,
-    awayTeam: awayTeam,
-    league: league,
-    referee: referee,
-    observer: observer,
-    userReadableKey: `${homeTeam.name} vs ${awayTeam.name}`,
-    tvReportKey: null,
-    mentorReportKey: null,
-    observerReportKey: null,
-    selfReportKey: null,
-  };
+    return {
+        ...dto,
+        id: randomUuid(),
+        leagueId: league.id,
+        homeTeam: homeTeam,
+        awayTeam: awayTeam,
+        league: league,
+        referee: referee,
+        observer: observer,
+        userReadableKey: `${homeTeam.name} vs ${awayTeam.name}`,
+        tvReportKey: null,
+        mentorReportKey: null,
+        observerReportKey: null,
+        selfReportKey: null,
+    };
 };
 
 export const setMockMatchDatetime = async (matchId: uuid, newDate: Dayjs): Promise<void> => {
-  const matchRepository = await getRepository(Match);
-  const match: Match = await matchRepository.findOne({ where: { id: matchId } });
-  match.matchDate = new Date(newDate.format('YYYY-MM-DD HH:mm:ss'));
-  await matchRepository.save(match);
+    const matchRepository = await getRepository(Match);
+    const match: Match = await matchRepository.findOne({ where: { id: matchId } });
+    match.matchDate = new Date(newDate.format('YYYY-MM-DD HH:mm:ss'));
+    await matchRepository.save(match);
 };

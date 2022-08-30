@@ -9,9 +9,9 @@ import { TeamsModule } from 'src/modules/teams/teams.module';
 import { Match } from 'src/entities/match.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Match]), LeaguesModule, forwardRef(() => UsersModule), TeamsModule, AWSModule],
-  controllers: [MatchesController],
-  providers: [MatchesService],
-  exports: [MatchesService],
+    imports: [TypeOrmModule.forFeature([Match]), LeaguesModule, forwardRef(() => UsersModule), TeamsModule, AWSModule],
+    controllers: [MatchesController],
+    providers: [MatchesService],
+    exports: [MatchesService],
 })
 export class MatchesModule {}

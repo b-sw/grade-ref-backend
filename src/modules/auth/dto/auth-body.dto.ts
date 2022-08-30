@@ -1,14 +1,14 @@
 import { ApiProperty } from '@nestjs/swagger';
 
 export class AuthBody {
-  @ApiProperty({ type: String })
-  googleToken: string;
+    @ApiProperty({ type: String })
+    googleToken: string;
 }
 
 export class AuthBodyDev {
-  @ApiProperty()
-  email: string;
+    @ApiProperty()
+    email: string;
 
-  @ApiProperty()
-  devPassword: string;
+    @ApiProperty()
+    devPassword: string;
 }

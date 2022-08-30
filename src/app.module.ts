@@ -12,20 +12,20 @@ import { TeamsModule } from 'src/modules/teams/teams.module';
 import { MatchesModule } from 'src/modules/matches/matches.module';
 
 @Module({
-  imports: [
-    TypeOrmModule.forRoot(process.env.NODE_ENV === 'test' ? e2eConfig : dbConfig),
-    UsersModule,
-    AuthModule,
-    TeamsModule,
-    MatchesModule,
-    LeaguesModule,
-    HealthModule,
-    FoulsModule,
-    FeaturesModule,
-    AWSModule,
-  ],
-  controllers: [],
-  providers: [],
-  exports: [],
+    imports: [
+        TypeOrmModule.forRoot(process.env.NODE_ENV === 'test' ? e2eConfig : dbConfig),
+        UsersModule,
+        AuthModule,
+        TeamsModule,
+        MatchesModule,
+        LeaguesModule,
+        HealthModule,
+        FoulsModule,
+        FeaturesModule,
+        AWSModule,
+    ],
+    controllers: [],
+    providers: [],
+    exports: [],
 })
 export class AppModule {}

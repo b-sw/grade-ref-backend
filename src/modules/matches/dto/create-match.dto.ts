@@ -4,55 +4,55 @@ import { gradeDtoRegex } from '../constants/matches.constants';
 import { uuid } from 'src/shared/types/uuid.type';
 
 export class CreateMatchDto {
-  @ApiProperty({ type: Date })
-  @IsDate()
-  matchDate: Date;
+    @ApiProperty({ type: Date })
+    @IsDate()
+    matchDate: Date;
 
-  @ApiProperty()
-  @Length(5, 50)
-  stadium: string;
+    @ApiProperty()
+    @Length(5, 50)
+    stadium: string;
 
-  @ApiProperty({ type: String })
-  @IsUUID()
-  homeTeamId: uuid;
+    @ApiProperty({ type: String })
+    @IsUUID()
+    homeTeamId: uuid;
 
-  @ApiProperty({ type: String })
-  @IsUUID()
-  awayTeamId: uuid;
+    @ApiProperty({ type: String })
+    @IsUUID()
+    awayTeamId: uuid;
 
-  @ApiProperty({ type: String })
-  @IsUUID()
-  refereeId: uuid;
+    @ApiProperty({ type: String })
+    @IsUUID()
+    refereeId: uuid;
 
-  @ApiProperty({ type: String })
-  @IsUUID()
-  observerId: uuid;
+    @ApiProperty({ type: String })
+    @IsUUID()
+    observerId: uuid;
 
-  @ApiProperty({ nullable: true })
-  @Matches(gradeDtoRegex, {
-    message: 'Grade must match regex',
-  })
-  refereeGrade: string;
+    @ApiProperty({ nullable: true })
+    @Matches(gradeDtoRegex, {
+        message: 'Grade must match regex',
+    })
+    refereeGrade: string;
 
-  @ApiProperty({ nullable: true })
-  @IsDate()
-  refereeGradeDate: Date;
+    @ApiProperty({ nullable: true })
+    @IsDate()
+    refereeGradeDate: Date;
 
-  @ApiProperty({ nullable: true })
-  refereeSmsId: string;
+    @ApiProperty({ nullable: true })
+    refereeSmsId: string;
 
-  @ApiProperty({ nullable: true })
-  observerSmsId: string;
+    @ApiProperty({ nullable: true })
+    observerSmsId: string;
 
-  @ApiProperty({ nullable: true })
-  @Length(5, 1000)
-  refereeNote: string;
+    @ApiProperty({ nullable: true })
+    @Length(5, 1000)
+    refereeNote: string;
 
-  @ApiProperty({ nullable: true })
-  @Length(5, 500)
-  overallGrade: string;
+    @ApiProperty({ nullable: true })
+    @Length(5, 500)
+    overallGrade: string;
 
-  @ApiProperty({ nullable: true })
-  @IsDate()
-  overallGradeDate: Date;
+    @ApiProperty({ nullable: true })
+    @IsDate()
+    overallGradeDate: Date;
 }
