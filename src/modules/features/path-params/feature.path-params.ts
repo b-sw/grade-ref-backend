@@ -4,7 +4,7 @@ import { LeagueMatchParams } from 'src/modules/matches/params/LeagueMatchParams'
 import { uuid } from 'src/shared/types/uuid.type';
 
 export class FeatureParams extends LeagueMatchParams {
-  @ApiProperty({ type: String })
-  @IsUUID()
-  featureId: uuid;
+    @ApiProperty({ type: String })
+    @IsUUID()
+    featureId: uuid;
 }

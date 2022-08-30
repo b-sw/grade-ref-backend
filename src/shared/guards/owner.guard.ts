@@ -5,16 +5,16 @@ import { User } from 'src/entities/user.entity';
 
 @Injectable()
 export class OwnerGuard implements CanActivate {
-  constructor(protected usersService: UsersService) {}
+    constructor(protected usersService: UsersService) {}
 
-  async canActivate(context: ExecutionContext): Promise<boolean> {
-    const request = context.switchToHttp().getRequest();
-    const owners: User[] = await this.usersService.getAllByRole(Role.Owner);
+    async canActivate(context: ExecutionContext): Promise<boolean> {
+        const request = context.switchToHttp().getRequest();
+        const owners: User[] = await this.usersService.getAllByRole(Role.Owner);
 
-    if (owners.some((owner) => owner.id === request.user.id)) {
-      return true;
-    } else {
-      throw new HttpException('Forbidden.', HttpStatus.FORBIDDEN);
+        if (owners.some((owner) => owner.id === request.user.id)) {
+            return true;
+        } else {
+            throw new HttpException('Forbidden.', HttpStatus.FORBIDDEN);
+        }
     }
-  }
 }

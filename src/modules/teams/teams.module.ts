@@ -7,9 +7,9 @@ import { Team } from 'src/entities/team.entity';
 import { LeaguesModule } from 'src/modules/leagues/leagues.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Team]), forwardRef(() => LeaguesModule), forwardRef(() => UsersModule)],
-  controllers: [TeamsController],
-  providers: [TeamsService],
-  exports: [TeamsService],
+    imports: [TypeOrmModule.forFeature([Team]), forwardRef(() => LeaguesModule), forwardRef(() => UsersModule)],
+    controllers: [TeamsController],
+    providers: [TeamsService],
+    exports: [TeamsService],
 })
 export class TeamsModule {}

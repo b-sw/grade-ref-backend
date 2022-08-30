@@ -15,594 +15,594 @@ import { Role } from 'src/modules/users/constants/users.constants';
 import { League } from 'src/entities/league.entity';
 import { MatchInfo } from 'src/modules/matches/types/match-info.type';
 import {
-  GRADE_ENTRY_TIME_WINDOW,
-  MATCH_DURATION,
-  OVERALL_GRADE_ENTRY_TIME_WINDOW,
+    GRADE_ENTRY_TIME_WINDOW,
+    MATCH_DURATION,
+    OVERALL_GRADE_ENTRY_TIME_WINDOW,
 } from 'src/modules/matches/matches.service';
 import { Team } from 'src/entities/team.entity';
 import { ReportType } from 'src/modules/matches/constants/matches.constants';
 import { Match } from 'src/entities/match.entity';
 
 describe('e2e matches', () => {
-  const owner = MockUser({ role: Role.Owner, email: 'mock@mail.com', lastName: 'Doe' });
-  const adminA = MockUser({ role: Role.Admin, email: 'admin@mail.com', lastName: 'Doe1' });
-  const adminB = MockUser({
-    role: Role.Admin,
-    email: 'adminB@mail.com',
-    lastName: 'Doe1a',
-  });
-  const refereeA = MockUser({ role: Role.Referee, email: 'ref@mail.com', lastName: 'Doe2' });
-  const refereeB = MockUser({
-    role: Role.Referee,
-    email: 'ref2@mail.com',
-    lastName: 'Doe2a',
-  });
-  const observerA = MockUser({
-    role: Role.Observer,
-    email: 'obs@mail.com',
-    phoneNumber: '669797907',
-    lastName: 'Doe3',
-  });
-  const observerB = MockUser({
-    role: Role.Observer,
-    email: 'obsB@mail.com',
-    lastName: 'Doe3a',
-  });
-  const league = MockLeague({
-    admins: [adminA],
-    referees: [refereeA],
-    observers: [observerA, observerB],
-  });
-  const users = [owner, adminA, adminB, refereeA, refereeB, observerA, observerB];
-
-  const teamA = MockTeam(league.id, league, 'FC Team A');
-  const teamB = MockTeam(league.id, league, 'FC Team B');
-
-  let match: Partial<Match>;
-  let matchInfo: MatchInfo;
-  let ownerJWT: string;
-  let adminAJWT: string;
-  let adminBJWT: string;
-  let refereeAJWT: string;
-  let refereeBJWT: string;
-  let observerAJWT: string;
-  let observerBJWT: string;
-  let app: INestApplication;
-
-  beforeAll(async () => {
-    const moduleFixture = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
-
-    app = moduleFixture.createNestApplication();
-    await app.init();
-
-    const usersRepository = await getRepository(User);
-    await Promise.all(users.map(async (user: User) => await usersRepository.save(user)));
-
-    const leagueRepository = await getRepository(League);
-    await leagueRepository.save(league);
-
-    const teamRepository = await getRepository(Team);
-    await teamRepository.save(teamA);
-    await teamRepository.save(teamB);
-
-    ownerJWT = getSignedJwt(owner);
-    adminAJWT = getSignedJwt(adminA);
-    adminBJWT = getSignedJwt(adminB);
-    refereeAJWT = getSignedJwt(refereeA);
-    refereeBJWT = getSignedJwt(refereeB);
-    observerAJWT = getSignedJwt(observerA);
-    observerBJWT = getSignedJwt(observerB);
-  });
-
-  afterAll(async () => {
-    await getRepository(User).clear();
-    await getRepository(League).clear();
-    await getRepository(Team).clear();
-    await getRepository(Match).clear();
-  });
-
-  it('should not create match for not league admin', async () => {
-    const dto = MockCreateMatchDto(teamA, teamB, refereeA, observerA);
-
-    await Promise.all(
-      [adminBJWT, observerAJWT, refereeAJWT].map(async (token) => {
-        const response = await request(app.getHttpServer())
-          .post(`/leagues/${league.id}/matches`)
-          .auth(token, { type: 'bearer' })
-          .send(dto);
-
-        expect(response.status).toBe(HttpStatus.FORBIDDEN);
-      }),
-    );
-  });
-
-  it('should create match for league admin', async () => {
-    const dto = MockCreateMatchDto(teamA, teamB, refereeA, observerA);
-
-    const response = await request(app.getHttpServer())
-      .post(`/leagues/${league.id}/matches`)
-      .auth(adminAJWT, { type: 'bearer' })
-      .send(dto);
-
-    match = {
-      ...dto,
-      id: expect.any(String),
-      userReadableKey: expect.any(String),
-      leagueId: league.id,
-      observerSmsId: expect.any(String),
-      mentorReportKey: null,
-      observerReportKey: null,
-      tvReportKey: null,
-      selfReportKey: null,
-    };
-    response.body.matchDate = new Date(response.body.matchDate);
-
-    expect(response.status).toBe(HttpStatus.CREATED);
-    expect(response.body).toMatchObject(match);
-
-    match.id = response.body.id;
-    match.userReadableKey = response.body.userReadableKey;
-    match.observerSmsId = response.body.observerSmsId;
-
-    matchInfo = {
-      id: match.id,
-      userReadableKey: match.userReadableKey,
-      matchDate: expect.any(Date),
-      stadium: match.stadium,
-      homeTeamId: teamA.id,
-      awayTeamId: teamB.id,
-      referee: refereeA.firstName + ' ' + refereeA.lastName,
-      observer: observerA.firstName + ' ' + observerA.lastName,
-      leagueId: league.id,
-    };
-
-    const dbMatch = await getRepository(Match).findOne({ where: { id: match.id } });
-    expect(match).toMatchObject(dbMatch);
-  });
-
-  it('should not update match for not league admin', async () => {
-    const dto = MockCreateMatchDto(teamB, teamA, refereeA, observerA);
-
-    await Promise.all(
-      [adminBJWT, observerAJWT, refereeAJWT].map(async (token) => {
-        const response = await request(app.getHttpServer())
-          .put(`/leagues/${league.id}/matches/${match.id}`)
-          .auth(token, { type: 'bearer' })
-          .send(dto);
-
-        expect(response.status).toBe(HttpStatus.FORBIDDEN);
-      }),
-    );
-  });
-
-  it('should not update match with invalid referee/observer assignment', async () => {
-    match.refereeId = refereeB.id;
-    const dto = MockCreateMatchDto(teamB, teamA, refereeB, observerA);
-
-    const response = await request(app.getHttpServer())
-      .put(`/leagues/${league.id}/matches/${match.id}`)
-      .auth(adminAJWT, { type: 'bearer' })
-      .send(dto);
-
-    expect(response.status).toBe(HttpStatus.BAD_REQUEST);
-  });
-
-  it('should update match for league admin', async () => {
-    const dto = MockCreateMatchDto(teamB, teamA, refereeB, observerA);
-
-    const mockLeague = await getRepository(League).findOne({
-      where: { id: league.id },
-      relations: ['admins', 'referees', 'observers'],
+    const owner = MockUser({ role: Role.Owner, email: 'mock@mail.com', lastName: 'Doe' });
+    const adminA = MockUser({ role: Role.Admin, email: 'admin@mail.com', lastName: 'Doe1' });
+    const adminB = MockUser({
+        role: Role.Admin,
+        email: 'adminB@mail.com',
+        lastName: 'Doe1a',
     });
-    mockLeague.referees.push(refereeB);
-    await getRepository(League).save(mockLeague);
+    const refereeA = MockUser({ role: Role.Referee, email: 'ref@mail.com', lastName: 'Doe2' });
+    const refereeB = MockUser({
+        role: Role.Referee,
+        email: 'ref2@mail.com',
+        lastName: 'Doe2a',
+    });
+    const observerA = MockUser({
+        role: Role.Observer,
+        email: 'obs@mail.com',
+        phoneNumber: '669797907',
+        lastName: 'Doe3',
+    });
+    const observerB = MockUser({
+        role: Role.Observer,
+        email: 'obsB@mail.com',
+        lastName: 'Doe3a',
+    });
+    const league = MockLeague({
+        admins: [adminA],
+        referees: [refereeA],
+        observers: [observerA, observerB],
+    });
+    const users = [owner, adminA, adminB, refereeA, refereeB, observerA, observerB];
 
-    const response = await request(app.getHttpServer())
-      .put(`/leagues/${league.id}/matches/${match.id}`)
-      .auth(adminAJWT, { type: 'bearer' })
-      .send(dto);
+    const teamA = MockTeam(league.id, league, 'FC Team A');
+    const teamB = MockTeam(league.id, league, 'FC Team B');
 
-    response.body.matchDate = new Date(response.body.matchDate);
-    match = { ...match, homeTeamId: teamB.id, awayTeamId: teamA.id, matchDate: expect.any(Date) };
-    match.userReadableKey = response.body.userReadableKey;
-    match.observerSmsId = response.body.observerSmsId;
+    let match: Partial<Match>;
+    let matchInfo: MatchInfo;
+    let ownerJWT: string;
+    let adminAJWT: string;
+    let adminBJWT: string;
+    let refereeAJWT: string;
+    let refereeBJWT: string;
+    let observerAJWT: string;
+    let observerBJWT: string;
+    let app: INestApplication;
 
-    matchInfo.homeTeamId = teamB.id;
-    matchInfo.awayTeamId = teamA.id;
-    matchInfo.referee = refereeB.firstName + ' ' + refereeB.lastName;
-    matchInfo.observer = observerA.firstName + ' ' + observerA.lastName;
-    matchInfo.userReadableKey = match.userReadableKey;
+    beforeAll(async () => {
+        const moduleFixture = await Test.createTestingModule({
+            imports: [AppModule],
+        }).compile();
 
-    expect(response.status).toBe(HttpStatus.OK);
-    expect(response.body).toMatchObject(match);
+        app = moduleFixture.createNestApplication();
+        await app.init();
 
-    const dbMatch = await getRepository(Match).findOne({ where: { id: match.id } });
-    expect(match).toMatchObject(dbMatch);
-  });
+        const usersRepository = await getRepository(User);
+        await Promise.all(users.map(async (user: User) => await usersRepository.save(user)));
 
-  it('should not get all matches in a league for not league admin', async () => {
-    await Promise.all(
-      [adminBJWT, observerAJWT, refereeAJWT].map(async (token) => {
-        const response = await request(app.getHttpServer())
-          .get(`/leagues/${league.id}/matches`)
-          .auth(token, { type: 'bearer' });
+        const leagueRepository = await getRepository(League);
+        await leagueRepository.save(league);
 
-        expect(response.status).toBe(HttpStatus.FORBIDDEN);
-      }),
-    );
-  });
+        const teamRepository = await getRepository(Team);
+        await teamRepository.save(teamA);
+        await teamRepository.save(teamB);
 
-  it('should get all matches in a league for league admin', async () => {
-    const response = await request(app.getHttpServer())
-      .get(`/leagues/${league.id}/matches`)
-      .auth(adminAJWT, { type: 'bearer' });
+        ownerJWT = getSignedJwt(owner);
+        adminAJWT = getSignedJwt(adminA);
+        adminBJWT = getSignedJwt(adminB);
+        refereeAJWT = getSignedJwt(refereeA);
+        refereeBJWT = getSignedJwt(refereeB);
+        observerAJWT = getSignedJwt(observerA);
+        observerBJWT = getSignedJwt(observerB);
+    });
 
-    expect(response.status).toBe(HttpStatus.OK);
-    response.body[0].matchDate = new Date(response.body[0].matchDate);
-    expect(response.body).toMatchObject([match]);
+    afterAll(async () => {
+        await getRepository(User).clear();
+        await getRepository(League).clear();
+        await getRepository(Team).clear();
+        await getRepository(Match).clear();
+    });
 
-    const matches = await getRepository(Match).find({ where: { leagueId: league.id } });
-    expect(response.body).toMatchObject(matches);
-  });
+    it('should not create match for not league admin', async () => {
+        const dto = MockCreateMatchDto(teamA, teamB, refereeA, observerA);
 
-  it.each([[Role.Admin], [Role.Referee], [Role.Observer]])('should get league match for match %s', async (role) => {
-    const tokens = {
-      [Role.Admin]: adminAJWT,
-      [Role.Referee]: refereeBJWT,
-      [Role.Observer]: observerAJWT,
-    };
+        await Promise.all(
+            [adminBJWT, observerAJWT, refereeAJWT].map(async (token) => {
+                const response = await request(app.getHttpServer())
+                    .post(`/leagues/${league.id}/matches`)
+                    .auth(token, { type: 'bearer' })
+                    .send(dto);
 
-    const response = await request(app.getHttpServer())
-      .get(`/leagues/${league.id}/matches/${match.id}`)
-      .auth(tokens[role], { type: 'bearer' });
+                expect(response.status).toBe(HttpStatus.FORBIDDEN);
+            }),
+        );
+    });
 
-    expect(response.status).toBe(HttpStatus.OK);
-    response.body.matchDate = new Date(response.body.matchDate);
-
-    if (role === Role.Referee) {
-      expect(response.body).toMatchObject({ ...matchInfo, observer: 'hidden' });
-    } else {
-      expect(response.body).toMatchObject(matchInfo);
-    }
-  });
-
-  it.each([[Role.Admin], [Role.Referee], [Role.Observer]])(
-    'should not get league match for other match $role',
-    async (role) => {
-      const tokens = {
-        [Role.Admin]: adminBJWT,
-        [Role.Referee]: refereeAJWT,
-        [Role.Observer]: observerBJWT,
-      };
-      const response = await request(app.getHttpServer())
-        .get(`/leagues/${league.id}/matches/${match.id}`)
-        .auth(tokens[role], { type: 'bearer' });
-
-      expect(response.status).toBe(HttpStatus.FORBIDDEN);
-    },
-  );
-
-  it.each([['6.0'], ['6.1'], ['9.9'], ['10.0'], ['10'], ['6'], ['7.6/8.0'], ['7.6/8.5'], ['7.9/8.0'], ['7.9/8.8']])(
-    'should update referee match grade for valid',
-    async (grade: string) => {
-      const dto = { refereeGrade: grade } as UpdateMatchDto;
-
-      const response = await request(app.getHttpServer())
-        .put(`/leagues/${league.id}/matches/${match.id}/grade`)
-        .auth(observerAJWT, { type: 'bearer' })
-        .send(dto);
-
-      expect(response.status).toBe(HttpStatus.OK);
-      response.body.matchDate = new Date(response.body.matchDate);
-      response.body.refereeGradeDate = new Date(response.body.refereeGradeDate);
-      match = { ...match, refereeGrade: grade, refereeGradeDate: expect.any(Date) };
-      matchInfo = { ...matchInfo, refereeGrade: grade, refereeGradeDate: expect.any(Date) };
-      expect(response.body).toMatchObject(matchInfo);
-    },
-  );
-
-  it.each([
-    ['5.9'],
-    ['6.'],
-    ['9.'],
-    ['10.1'],
-    ['10.'],
-    ['0.0'],
-    ['7.9/7.8'],
-    ['8.3/8.3'],
-    ['7.7/8.9'],
-    ['7.5/8.5'],
-    ['7.6/8.'],
-    ['8./8.3'],
-    ['7.8/8.31'],
-  ])('should not update referee match grade for invalid', async (grade: string) => {
-    const dto = { refereeGrade: grade } as UpdateMatchDto;
-
-    const response = await request(app.getHttpServer())
-      .put(`/leagues/${league.id}/matches/${match.id}/grade`)
-      .auth(observerAJWT, { type: 'bearer' })
-      .send(dto);
-
-    expect(response.status).toBe(HttpStatus.BAD_REQUEST);
-  });
-
-  it('should not update referee match grade if not match observer or league admin', async () => {
-    await Promise.all(
-      [refereeAJWT, observerBJWT].map(async (token) => {
-        const dto = { refereeGrade: '5.5' } as UpdateMatchDto;
+    it('should create match for league admin', async () => {
+        const dto = MockCreateMatchDto(teamA, teamB, refereeA, observerA);
 
         const response = await request(app.getHttpServer())
-          .put(`/leagues/${league.id}/matches/${match.id}/grade`)
-          .auth(token, { type: 'bearer' })
-          .send(dto);
+            .post(`/leagues/${league.id}/matches`)
+            .auth(adminAJWT, { type: 'bearer' })
+            .send(dto);
 
-        expect(response.status).toBe(HttpStatus.FORBIDDEN);
-      }),
+        match = {
+            ...dto,
+            id: expect.any(String),
+            userReadableKey: expect.any(String),
+            leagueId: league.id,
+            observerSmsId: expect.any(String),
+            mentorReportKey: null,
+            observerReportKey: null,
+            tvReportKey: null,
+            selfReportKey: null,
+        };
+        response.body.matchDate = new Date(response.body.matchDate);
+
+        expect(response.status).toBe(HttpStatus.CREATED);
+        expect(response.body).toMatchObject(match);
+
+        match.id = response.body.id;
+        match.userReadableKey = response.body.userReadableKey;
+        match.observerSmsId = response.body.observerSmsId;
+
+        matchInfo = {
+            id: match.id,
+            userReadableKey: match.userReadableKey,
+            matchDate: expect.any(Date),
+            stadium: match.stadium,
+            homeTeamId: teamA.id,
+            awayTeamId: teamB.id,
+            referee: refereeA.firstName + ' ' + refereeA.lastName,
+            observer: observerA.firstName + ' ' + observerA.lastName,
+            leagueId: league.id,
+        };
+
+        const dbMatch = await getRepository(Match).findOne({ where: { id: match.id } });
+        expect(match).toMatchObject(dbMatch);
+    });
+
+    it('should not update match for not league admin', async () => {
+        const dto = MockCreateMatchDto(teamB, teamA, refereeA, observerA);
+
+        await Promise.all(
+            [adminBJWT, observerAJWT, refereeAJWT].map(async (token) => {
+                const response = await request(app.getHttpServer())
+                    .put(`/leagues/${league.id}/matches/${match.id}`)
+                    .auth(token, { type: 'bearer' })
+                    .send(dto);
+
+                expect(response.status).toBe(HttpStatus.FORBIDDEN);
+            }),
+        );
+    });
+
+    it('should not update match with invalid referee/observer assignment', async () => {
+        match.refereeId = refereeB.id;
+        const dto = MockCreateMatchDto(teamB, teamA, refereeB, observerA);
+
+        const response = await request(app.getHttpServer())
+            .put(`/leagues/${league.id}/matches/${match.id}`)
+            .auth(adminAJWT, { type: 'bearer' })
+            .send(dto);
+
+        expect(response.status).toBe(HttpStatus.BAD_REQUEST);
+    });
+
+    it('should update match for league admin', async () => {
+        const dto = MockCreateMatchDto(teamB, teamA, refereeB, observerA);
+
+        const mockLeague = await getRepository(League).findOne({
+            where: { id: league.id },
+            relations: ['admins', 'referees', 'observers'],
+        });
+        mockLeague.referees.push(refereeB);
+        await getRepository(League).save(mockLeague);
+
+        const response = await request(app.getHttpServer())
+            .put(`/leagues/${league.id}/matches/${match.id}`)
+            .auth(adminAJWT, { type: 'bearer' })
+            .send(dto);
+
+        response.body.matchDate = new Date(response.body.matchDate);
+        match = { ...match, homeTeamId: teamB.id, awayTeamId: teamA.id, matchDate: expect.any(Date) };
+        match.userReadableKey = response.body.userReadableKey;
+        match.observerSmsId = response.body.observerSmsId;
+
+        matchInfo.homeTeamId = teamB.id;
+        matchInfo.awayTeamId = teamA.id;
+        matchInfo.referee = refereeB.firstName + ' ' + refereeB.lastName;
+        matchInfo.observer = observerA.firstName + ' ' + observerA.lastName;
+        matchInfo.userReadableKey = match.userReadableKey;
+
+        expect(response.status).toBe(HttpStatus.OK);
+        expect(response.body).toMatchObject(match);
+
+        const dbMatch = await getRepository(Match).findOne({ where: { id: match.id } });
+        expect(match).toMatchObject(dbMatch);
+    });
+
+    it('should not get all matches in a league for not league admin', async () => {
+        await Promise.all(
+            [adminBJWT, observerAJWT, refereeAJWT].map(async (token) => {
+                const response = await request(app.getHttpServer())
+                    .get(`/leagues/${league.id}/matches`)
+                    .auth(token, { type: 'bearer' });
+
+                expect(response.status).toBe(HttpStatus.FORBIDDEN);
+            }),
+        );
+    });
+
+    it('should get all matches in a league for league admin', async () => {
+        const response = await request(app.getHttpServer())
+            .get(`/leagues/${league.id}/matches`)
+            .auth(adminAJWT, { type: 'bearer' });
+
+        expect(response.status).toBe(HttpStatus.OK);
+        response.body[0].matchDate = new Date(response.body[0].matchDate);
+        expect(response.body).toMatchObject([match]);
+
+        const matches = await getRepository(Match).find({ where: { leagueId: league.id } });
+        expect(response.body).toMatchObject(matches);
+    });
+
+    it.each([[Role.Admin], [Role.Referee], [Role.Observer]])('should get league match for match %s', async (role) => {
+        const tokens = {
+            [Role.Admin]: adminAJWT,
+            [Role.Referee]: refereeBJWT,
+            [Role.Observer]: observerAJWT,
+        };
+
+        const response = await request(app.getHttpServer())
+            .get(`/leagues/${league.id}/matches/${match.id}`)
+            .auth(tokens[role], { type: 'bearer' });
+
+        expect(response.status).toBe(HttpStatus.OK);
+        response.body.matchDate = new Date(response.body.matchDate);
+
+        if (role === Role.Referee) {
+            expect(response.body).toMatchObject({ ...matchInfo, observer: 'hidden' });
+        } else {
+            expect(response.body).toMatchObject(matchInfo);
+        }
+    });
+
+    it.each([[Role.Admin], [Role.Referee], [Role.Observer]])(
+        'should not get league match for other match $role',
+        async (role) => {
+            const tokens = {
+                [Role.Admin]: adminBJWT,
+                [Role.Referee]: refereeAJWT,
+                [Role.Observer]: observerBJWT,
+            };
+            const response = await request(app.getHttpServer())
+                .get(`/leagues/${league.id}/matches/${match.id}`)
+                .auth(tokens[role], { type: 'bearer' });
+
+            expect(response.status).toBe(HttpStatus.FORBIDDEN);
+        },
     );
-  });
 
-  it('should not update referee match grade if late', async () => {
-    await setMockMatchDatetime(match.id, dayjs().subtract(4, 'day'));
-    const dto = { refereeGrade: '8.5' } as UpdateMatchDto;
+    it.each([['6.0'], ['6.1'], ['9.9'], ['10.0'], ['10'], ['6'], ['7.6/8.0'], ['7.6/8.5'], ['7.9/8.0'], ['7.9/8.8']])(
+        'should update referee match grade for valid',
+        async (grade: string) => {
+            const dto = { refereeGrade: grade } as UpdateMatchDto;
 
-    const response = await request(app.getHttpServer())
-      .put(`/leagues/${league.id}/matches/${match.id}/grade`)
-      .auth(observerAJWT, { type: 'bearer' })
-      .send(dto);
+            const response = await request(app.getHttpServer())
+                .put(`/leagues/${league.id}/matches/${match.id}/grade`)
+                .auth(observerAJWT, { type: 'bearer' })
+                .send(dto);
 
-    expect(response.status).toBe(HttpStatus.BAD_REQUEST);
-    expect(response.body.message).toBe(
-      `Time window of ${GRADE_ENTRY_TIME_WINDOW - MATCH_DURATION} hours for this entry has passed.`,
+            expect(response.status).toBe(HttpStatus.OK);
+            response.body.matchDate = new Date(response.body.matchDate);
+            response.body.refereeGradeDate = new Date(response.body.refereeGradeDate);
+            match = { ...match, refereeGrade: grade, refereeGradeDate: expect.any(Date) };
+            matchInfo = { ...matchInfo, refereeGrade: grade, refereeGradeDate: expect.any(Date) };
+            expect(response.body).toMatchObject(matchInfo);
+        },
     );
-    await setMockMatchDatetime(match.id, dayjs().add(2, 'day'));
-  });
 
-  it('should not update referee overall grade if not match observer or league admin', async () => {
-    await Promise.all(
-      [adminBJWT, refereeAJWT, observerBJWT].map(async (token) => {
+    it.each([
+        ['5.9'],
+        ['6.'],
+        ['9.'],
+        ['10.1'],
+        ['10.'],
+        ['0.0'],
+        ['7.9/7.8'],
+        ['8.3/8.3'],
+        ['7.7/8.9'],
+        ['7.5/8.5'],
+        ['7.6/8.'],
+        ['8./8.3'],
+        ['7.8/8.31'],
+    ])('should not update referee match grade for invalid', async (grade: string) => {
+        const dto = { refereeGrade: grade } as UpdateMatchDto;
+
+        const response = await request(app.getHttpServer())
+            .put(`/leagues/${league.id}/matches/${match.id}/grade`)
+            .auth(observerAJWT, { type: 'bearer' })
+            .send(dto);
+
+        expect(response.status).toBe(HttpStatus.BAD_REQUEST);
+    });
+
+    it('should not update referee match grade if not match observer or league admin', async () => {
+        await Promise.all(
+            [refereeAJWT, observerBJWT].map(async (token) => {
+                const dto = { refereeGrade: '5.5' } as UpdateMatchDto;
+
+                const response = await request(app.getHttpServer())
+                    .put(`/leagues/${league.id}/matches/${match.id}/grade`)
+                    .auth(token, { type: 'bearer' })
+                    .send(dto);
+
+                expect(response.status).toBe(HttpStatus.FORBIDDEN);
+            }),
+        );
+    });
+
+    it('should not update referee match grade if late', async () => {
+        await setMockMatchDatetime(match.id, dayjs().subtract(4, 'day'));
+        const dto = { refereeGrade: '8.5' } as UpdateMatchDto;
+
+        const response = await request(app.getHttpServer())
+            .put(`/leagues/${league.id}/matches/${match.id}/grade`)
+            .auth(observerAJWT, { type: 'bearer' })
+            .send(dto);
+
+        expect(response.status).toBe(HttpStatus.BAD_REQUEST);
+        expect(response.body.message).toBe(
+            `Time window of ${GRADE_ENTRY_TIME_WINDOW - MATCH_DURATION} hours for this entry has passed.`,
+        );
+        await setMockMatchDatetime(match.id, dayjs().add(2, 'day'));
+    });
+
+    it('should not update referee overall grade if not match observer or league admin', async () => {
+        await Promise.all(
+            [adminBJWT, refereeAJWT, observerBJWT].map(async (token) => {
+                const dto = { overallGrade: 'Mock overall grade.' } as UpdateMatchDto;
+
+                const response = await request(app.getHttpServer())
+                    .put(`/leagues/${league.id}/matches/${match.id}/overallGrade`)
+                    .auth(token, { type: 'bearer' })
+                    .send(dto);
+
+                expect(response.status).toBe(HttpStatus.FORBIDDEN);
+            }),
+        );
+    });
+
+    it('should update referee overall grade', async () => {
         const dto = { overallGrade: 'Mock overall grade.' } as UpdateMatchDto;
 
         const response = await request(app.getHttpServer())
-          .put(`/leagues/${league.id}/matches/${match.id}/overallGrade`)
-          .auth(token, { type: 'bearer' })
-          .send(dto);
+            .put(`/leagues/${league.id}/matches/${match.id}/overallGrade`)
+            .auth(observerAJWT, { type: 'bearer' })
+            .send(dto);
 
-        expect(response.status).toBe(HttpStatus.FORBIDDEN);
-      }),
-    );
-  });
+        expect(response.status).toBe(HttpStatus.OK);
+        response.body.matchDate = new Date(response.body.matchDate);
+        response.body.refereeGradeDate = new Date(response.body.refereeGradeDate);
+        response.body.overallGradeDate = new Date(response.body.overallGradeDate);
+        match = { ...match, overallGrade: dto.overallGrade, overallGradeDate: expect.any(Date) };
+        matchInfo = { ...matchInfo, overallGrade: dto.overallGrade, overallGradeDate: expect.any(Date) };
+        expect(response.body).toMatchObject(matchInfo);
+    });
 
-  it('should update referee overall grade', async () => {
-    const dto = { overallGrade: 'Mock overall grade.' } as UpdateMatchDto;
+    it('should not update referee overall grade if late', async () => {
+        await setMockMatchDatetime(match.id, dayjs().subtract(8, 'day'));
+        const dto = { overallGrade: 'Mock overall grade.' } as UpdateMatchDto;
 
-    const response = await request(app.getHttpServer())
-      .put(`/leagues/${league.id}/matches/${match.id}/overallGrade`)
-      .auth(observerAJWT, { type: 'bearer' })
-      .send(dto);
-
-    expect(response.status).toBe(HttpStatus.OK);
-    response.body.matchDate = new Date(response.body.matchDate);
-    response.body.refereeGradeDate = new Date(response.body.refereeGradeDate);
-    response.body.overallGradeDate = new Date(response.body.overallGradeDate);
-    match = { ...match, overallGrade: dto.overallGrade, overallGradeDate: expect.any(Date) };
-    matchInfo = { ...matchInfo, overallGrade: dto.overallGrade, overallGradeDate: expect.any(Date) };
-    expect(response.body).toMatchObject(matchInfo);
-  });
-
-  it('should not update referee overall grade if late', async () => {
-    await setMockMatchDatetime(match.id, dayjs().subtract(8, 'day'));
-    const dto = { overallGrade: 'Mock overall grade.' } as UpdateMatchDto;
-
-    const response = await request(app.getHttpServer())
-      .put(`/leagues/${league.id}/matches/${match.id}/overallGrade`)
-      .auth(observerAJWT, { type: 'bearer' })
-      .send(dto);
-
-    expect(response.status).toBe(HttpStatus.BAD_REQUEST);
-    expect(response.body.message).toBe(
-      `Time window of ${OVERALL_GRADE_ENTRY_TIME_WINDOW - MATCH_DURATION} hours for this entry has passed.`,
-    );
-
-    await setMockMatchDatetime(match.id, dayjs().add(2, 'day'));
-  });
-
-  it('should not delete match for not league admin', async () => {
-    await Promise.all(
-      [adminBJWT, refereeAJWT, observerBJWT].map(async (token) => {
         const response = await request(app.getHttpServer())
-          .delete(`/leagues/${league.id}/matches/${match.id}`)
-          .auth(token, { type: 'bearer' });
+            .put(`/leagues/${league.id}/matches/${match.id}/overallGrade`)
+            .auth(observerAJWT, { type: 'bearer' })
+            .send(dto);
 
-        expect(response.status).toBe(HttpStatus.FORBIDDEN);
-      }),
+        expect(response.status).toBe(HttpStatus.BAD_REQUEST);
+        expect(response.body.message).toBe(
+            `Time window of ${OVERALL_GRADE_ENTRY_TIME_WINDOW - MATCH_DURATION} hours for this entry has passed.`,
+        );
+
+        await setMockMatchDatetime(match.id, dayjs().add(2, 'day'));
+    });
+
+    it('should not delete match for not league admin', async () => {
+        await Promise.all(
+            [adminBJWT, refereeAJWT, observerBJWT].map(async (token) => {
+                const response = await request(app.getHttpServer())
+                    .delete(`/leagues/${league.id}/matches/${match.id}`)
+                    .auth(token, { type: 'bearer' });
+
+                expect(response.status).toBe(HttpStatus.FORBIDDEN);
+            }),
+        );
+    });
+
+    it.each`
+        role             | forbiddenResourceTypes
+        ${Role.Owner}    | ${[ReportType.Mentor, ReportType.Tv, ReportType.Observer, ReportType.Self]}
+        ${Role.Admin}    | ${[ReportType.Mentor, ReportType.Tv, ReportType.Observer, ReportType.Self]}
+        ${Role.Observer} | ${[ReportType.Observer]}
+        ${Role.Referee}  | ${[ReportType.Mentor, ReportType.Self]}
+    `(
+        'should not let $role upload $forbiddenResourceTypes reports for upcoming match',
+        async ({ role, forbiddenResourceTypes }) => {
+            const tokens = {
+                [Role.Admin]: adminAJWT,
+                [Role.Owner]: ownerJWT,
+                [Role.Referee]: refereeBJWT,
+                [Role.Observer]: observerAJWT,
+            };
+
+            await Promise.all(
+                forbiddenResourceTypes.map(async (reportType) => {
+                    const response = await request(app.getHttpServer())
+                        .post(`/leagues/${league.id}/matches/${match.id}/reports/${reportType}`)
+                        .auth(tokens[role], { type: 'bearer' })
+                        .send();
+
+                    expect(response.status).toBe(HttpStatus.BAD_REQUEST);
+                    expect(response.body.message).toBe(`Match is upcoming.`);
+                }),
+            );
+        },
     );
-  });
-
-  it.each`
-    role             | forbiddenResourceTypes
-    ${Role.Owner}    | ${[ReportType.Mentor, ReportType.Tv, ReportType.Observer, ReportType.Self]}
-    ${Role.Admin}    | ${[ReportType.Mentor, ReportType.Tv, ReportType.Observer, ReportType.Self]}
-    ${Role.Observer} | ${[ReportType.Observer]}
-    ${Role.Referee}  | ${[ReportType.Mentor, ReportType.Self]}
-  `(
-    'should not let $role upload $forbiddenResourceTypes reports for upcoming match',
-    async ({ role, forbiddenResourceTypes }) => {
-      const tokens = {
-        [Role.Admin]: adminAJWT,
-        [Role.Owner]: ownerJWT,
-        [Role.Referee]: refereeBJWT,
-        [Role.Observer]: observerAJWT,
-      };
-
-      await Promise.all(
-        forbiddenResourceTypes.map(async (reportType) => {
-          const response = await request(app.getHttpServer())
-            .post(`/leagues/${league.id}/matches/${match.id}/reports/${reportType}`)
-            .auth(tokens[role], { type: 'bearer' })
-            .send();
-
-          expect(response.status).toBe(HttpStatus.BAD_REQUEST);
-          expect(response.body.message).toBe(`Match is upcoming.`);
-        }),
-      );
-    },
-  );
-
-  it.each`
-    role            | forbiddenResourceTypes
-    ${Role.Referee} | ${[ReportType.Mentor, ReportType.Self]}
-  `(
-    'should not let $role download $forbiddenResourceTypes reports for upcoming match',
-    async ({ role, forbiddenResourceTypes }) => {
-      const tokens = {
-        [Role.Admin]: adminAJWT,
-        [Role.Owner]: ownerJWT,
-        [Role.Referee]: refereeBJWT,
-        [Role.Observer]: observerAJWT,
-      };
-
-      await Promise.all(
-        forbiddenResourceTypes.map(async (reportType) => {
-          const response = await request(app.getHttpServer())
-            .post(`/leagues/${league.id}/matches/${match.id}/reports/${reportType}`)
-            .auth(tokens[role], { type: 'bearer' })
-            .send();
-
-          expect(response.status).toBe(HttpStatus.BAD_REQUEST);
-          expect(response.body.message).toBe(`Match is upcoming.`);
-        }),
-      );
-    },
-  );
-
-  it.each`
-    role             | forbiddenResourceTypes
-    ${Role.Owner}    | ${[ReportType.Mentor, ReportType.Tv, ReportType.Observer, ReportType.Self]}
-    ${Role.Admin}    | ${[ReportType.Mentor, ReportType.Tv, ReportType.Observer, ReportType.Self]}
-    ${Role.Observer} | ${[ReportType.Observer]}
-    ${Role.Referee}  | ${[ReportType.Mentor, ReportType.Self]}
-  `(
-    'should not let $role remove $forbiddenResourceTypes reports for upcoming match',
-    async ({ role, forbiddenResourceTypes }) => {
-      const tokens = {
-        [Role.Admin]: adminAJWT,
-        [Role.Owner]: ownerJWT,
-        [Role.Referee]: refereeBJWT,
-        [Role.Observer]: observerAJWT,
-      };
-
-      await Promise.all(
-        forbiddenResourceTypes.map(async (reportType) => {
-          const response = await request(app.getHttpServer())
-            .delete(`/leagues/${league.id}/matches/${match.id}/reports/${reportType}`)
-            .auth(tokens[role], { type: 'bearer' })
-            .send();
-
-          expect(response.status).toBe(HttpStatus.BAD_REQUEST);
-          expect(response.body.message).toBe(`Match is upcoming.`);
-        }),
-      );
-    },
-  );
-
-  describe('match reports', () => {
-    beforeAll(async () => {
-      const matchRepository = getRepository(Match);
-      const mockMatch = await matchRepository.findOne({ where: { id: match.id } });
-      mockMatch.matchDate = dayjs().subtract(1, 'day').toDate();
-      await matchRepository.save(mockMatch);
-    });
 
     it.each`
-      role             | forbiddenResourceTypes
-      ${Role.Owner}    | ${[ReportType.Mentor, ReportType.Tv, ReportType.Observer, ReportType.Self]}
-      ${Role.Admin}    | ${[ReportType.Mentor, ReportType.Observer, ReportType.Self]}
-      ${Role.Referee}  | ${[ReportType.Observer, ReportType.Tv]}
-      ${Role.Observer} | ${[ReportType.Tv, ReportType.Mentor, ReportType.Self]}
-    `('should not let $role upload $forbiddenResourceTypes reports', async ({ role, forbiddenResourceTypes }) => {
-      const tokens = {
-        [Role.Admin]: adminAJWT,
-        [Role.Owner]: ownerJWT,
-        [Role.Referee]: refereeBJWT,
-        [Role.Observer]: observerAJWT,
-      };
+        role            | forbiddenResourceTypes
+        ${Role.Referee} | ${[ReportType.Mentor, ReportType.Self]}
+    `(
+        'should not let $role download $forbiddenResourceTypes reports for upcoming match',
+        async ({ role, forbiddenResourceTypes }) => {
+            const tokens = {
+                [Role.Admin]: adminAJWT,
+                [Role.Owner]: ownerJWT,
+                [Role.Referee]: refereeBJWT,
+                [Role.Observer]: observerAJWT,
+            };
 
-      await Promise.all(
-        forbiddenResourceTypes.map(async (reportType) => {
-          const response = await request(app.getHttpServer())
-            .post(`/leagues/${league.id}/matches/${match.id}/reports/${reportType}`)
-            .auth(tokens[role], { type: 'bearer' })
-            .send();
+            await Promise.all(
+                forbiddenResourceTypes.map(async (reportType) => {
+                    const response = await request(app.getHttpServer())
+                        .post(`/leagues/${league.id}/matches/${match.id}/reports/${reportType}`)
+                        .auth(tokens[role], { type: 'bearer' })
+                        .send();
 
-          expect(response.status).toBe(HttpStatus.FORBIDDEN);
-        }),
-      );
-    });
-
-    it.each`
-      role             | forbiddenResourceTypes
-      ${Role.Observer} | ${[ReportType.Tv, ReportType.Mentor, ReportType.Self]}
-    `('should not let $role download $forbiddenResourceTypes reports', async ({ role, forbiddenResourceTypes }) => {
-      const tokens = {
-        [Role.Admin]: adminAJWT,
-        [Role.Owner]: ownerJWT,
-        [Role.Referee]: refereeBJWT,
-        [Role.Observer]: observerAJWT,
-      };
-
-      await Promise.all(
-        forbiddenResourceTypes.map(async (reportType) => {
-          const response = await request(app.getHttpServer())
-            .post(`/leagues/${league.id}/matches/${match.id}/reports/${reportType}`)
-            .auth(tokens[role], { type: 'bearer' })
-            .send();
-
-          expect(response.status).toBe(HttpStatus.FORBIDDEN);
-        }),
-      );
-    });
+                    expect(response.status).toBe(HttpStatus.BAD_REQUEST);
+                    expect(response.body.message).toBe(`Match is upcoming.`);
+                }),
+            );
+        },
+    );
 
     it.each`
-      role             | forbiddenResourceTypes
-      ${Role.Owner}    | ${[ReportType.Mentor, ReportType.Observer, ReportType.Self, ReportType.Tv]}
-      ${Role.Admin}    | ${[ReportType.Mentor, ReportType.Observer, ReportType.Self]}
-      ${Role.Referee}  | ${[ReportType.Observer, ReportType.Tv]}
-      ${Role.Observer} | ${[ReportType.Tv, ReportType.Mentor, ReportType.Self]}
-    `('should not let $role remove $forbiddenResourceTypes reports ', async ({ role, forbiddenResourceTypes }) => {
-      const tokens = {
-        [Role.Admin]: adminAJWT,
-        [Role.Owner]: ownerJWT,
-        [Role.Referee]: refereeBJWT,
-        [Role.Observer]: observerAJWT,
-      };
+        role             | forbiddenResourceTypes
+        ${Role.Owner}    | ${[ReportType.Mentor, ReportType.Tv, ReportType.Observer, ReportType.Self]}
+        ${Role.Admin}    | ${[ReportType.Mentor, ReportType.Tv, ReportType.Observer, ReportType.Self]}
+        ${Role.Observer} | ${[ReportType.Observer]}
+        ${Role.Referee}  | ${[ReportType.Mentor, ReportType.Self]}
+    `(
+        'should not let $role remove $forbiddenResourceTypes reports for upcoming match',
+        async ({ role, forbiddenResourceTypes }) => {
+            const tokens = {
+                [Role.Admin]: adminAJWT,
+                [Role.Owner]: ownerJWT,
+                [Role.Referee]: refereeBJWT,
+                [Role.Observer]: observerAJWT,
+            };
 
-      await Promise.all(
-        forbiddenResourceTypes.map(async (reportType) => {
-          const response = await request(app.getHttpServer())
-            .delete(`/leagues/${league.id}/matches/${match.id}/reports/${reportType}`)
-            .auth(tokens[role], { type: 'bearer' })
-            .send();
+            await Promise.all(
+                forbiddenResourceTypes.map(async (reportType) => {
+                    const response = await request(app.getHttpServer())
+                        .delete(`/leagues/${league.id}/matches/${match.id}/reports/${reportType}`)
+                        .auth(tokens[role], { type: 'bearer' })
+                        .send();
 
-          expect(response.status).toBe(HttpStatus.FORBIDDEN);
-        }),
-      );
+                    expect(response.status).toBe(HttpStatus.BAD_REQUEST);
+                    expect(response.body.message).toBe(`Match is upcoming.`);
+                }),
+            );
+        },
+    );
+
+    describe('match reports', () => {
+        beforeAll(async () => {
+            const matchRepository = getRepository(Match);
+            const mockMatch = await matchRepository.findOne({ where: { id: match.id } });
+            mockMatch.matchDate = dayjs().subtract(1, 'day').toDate();
+            await matchRepository.save(mockMatch);
+        });
+
+        it.each`
+            role             | forbiddenResourceTypes
+            ${Role.Owner}    | ${[ReportType.Mentor, ReportType.Tv, ReportType.Observer, ReportType.Self]}
+            ${Role.Admin}    | ${[ReportType.Mentor, ReportType.Observer, ReportType.Self]}
+            ${Role.Referee}  | ${[ReportType.Observer, ReportType.Tv]}
+            ${Role.Observer} | ${[ReportType.Tv, ReportType.Mentor, ReportType.Self]}
+        `('should not let $role upload $forbiddenResourceTypes reports', async ({ role, forbiddenResourceTypes }) => {
+            const tokens = {
+                [Role.Admin]: adminAJWT,
+                [Role.Owner]: ownerJWT,
+                [Role.Referee]: refereeBJWT,
+                [Role.Observer]: observerAJWT,
+            };
+
+            await Promise.all(
+                forbiddenResourceTypes.map(async (reportType) => {
+                    const response = await request(app.getHttpServer())
+                        .post(`/leagues/${league.id}/matches/${match.id}/reports/${reportType}`)
+                        .auth(tokens[role], { type: 'bearer' })
+                        .send();
+
+                    expect(response.status).toBe(HttpStatus.FORBIDDEN);
+                }),
+            );
+        });
+
+        it.each`
+            role             | forbiddenResourceTypes
+            ${Role.Observer} | ${[ReportType.Tv, ReportType.Mentor, ReportType.Self]}
+        `('should not let $role download $forbiddenResourceTypes reports', async ({ role, forbiddenResourceTypes }) => {
+            const tokens = {
+                [Role.Admin]: adminAJWT,
+                [Role.Owner]: ownerJWT,
+                [Role.Referee]: refereeBJWT,
+                [Role.Observer]: observerAJWT,
+            };
+
+            await Promise.all(
+                forbiddenResourceTypes.map(async (reportType) => {
+                    const response = await request(app.getHttpServer())
+                        .post(`/leagues/${league.id}/matches/${match.id}/reports/${reportType}`)
+                        .auth(tokens[role], { type: 'bearer' })
+                        .send();
+
+                    expect(response.status).toBe(HttpStatus.FORBIDDEN);
+                }),
+            );
+        });
+
+        it.each`
+            role             | forbiddenResourceTypes
+            ${Role.Owner}    | ${[ReportType.Mentor, ReportType.Observer, ReportType.Self, ReportType.Tv]}
+            ${Role.Admin}    | ${[ReportType.Mentor, ReportType.Observer, ReportType.Self]}
+            ${Role.Referee}  | ${[ReportType.Observer, ReportType.Tv]}
+            ${Role.Observer} | ${[ReportType.Tv, ReportType.Mentor, ReportType.Self]}
+        `('should not let $role remove $forbiddenResourceTypes reports ', async ({ role, forbiddenResourceTypes }) => {
+            const tokens = {
+                [Role.Admin]: adminAJWT,
+                [Role.Owner]: ownerJWT,
+                [Role.Referee]: refereeBJWT,
+                [Role.Observer]: observerAJWT,
+            };
+
+            await Promise.all(
+                forbiddenResourceTypes.map(async (reportType) => {
+                    const response = await request(app.getHttpServer())
+                        .delete(`/leagues/${league.id}/matches/${match.id}/reports/${reportType}`)
+                        .auth(tokens[role], { type: 'bearer' })
+                        .send();
+
+                    expect(response.status).toBe(HttpStatus.FORBIDDEN);
+                }),
+            );
+        });
     });
-  });
 
-  it('should delete match', async () => {
-    const response = await request(app.getHttpServer())
-      .delete(`/leagues/${league.id}/matches/${match.id}`)
-      .auth(adminAJWT, { type: 'bearer' });
+    it('should delete match', async () => {
+        const response = await request(app.getHttpServer())
+            .delete(`/leagues/${league.id}/matches/${match.id}`)
+            .auth(adminAJWT, { type: 'bearer' });
 
-    expect(response.status).toBe(HttpStatus.OK);
-    response.body.matchDate = new Date(response.body.matchDate);
-    response.body.refereeGradeDate = new Date(response.body.refereeGradeDate);
-    response.body.overallGradeDate = new Date(response.body.overallGradeDate);
-    expect(response.body).toMatchObject(match);
+        expect(response.status).toBe(HttpStatus.OK);
+        response.body.matchDate = new Date(response.body.matchDate);
+        response.body.refereeGradeDate = new Date(response.body.refereeGradeDate);
+        response.body.overallGradeDate = new Date(response.body.overallGradeDate);
+        expect(response.body).toMatchObject(match);
 
-    const dbMatch = await getRepository(Match).findOne({ where: { id: match.id } });
-    expect(dbMatch).toBeUndefined();
-  });
+        const dbMatch = await getRepository(Match).findOne({ where: { id: match.id } });
+        expect(dbMatch).toBeUndefined();
+    });
 });

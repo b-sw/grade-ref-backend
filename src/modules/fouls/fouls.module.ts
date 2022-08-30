@@ -8,9 +8,9 @@ import { FoulsService } from 'src/modules/fouls/fouls.service';
 import { MatchesModule } from 'src/modules/matches/matches.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Foul]), UsersModule, MatchesModule, LeaguesModule],
-  controllers: [FoulsController],
-  providers: [FoulsService],
-  exports: [FoulsService],
+    imports: [TypeOrmModule.forFeature([Foul]), UsersModule, MatchesModule, LeaguesModule],
+    controllers: [FoulsController],
+    providers: [FoulsService],
+    exports: [FoulsService],
 })
 export class FoulsModule {}

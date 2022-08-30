@@ -6,17 +6,17 @@ import { User } from 'src/entities/user.entity';
 
 @Injectable()
 export class AdminGuard extends OwnerGuard implements CanActivate {
-  constructor(protected usersService: UsersService) {
-    super(usersService);
-  }
-
-  async canActivate(context: ExecutionContext): Promise<boolean> {
-    const request = context.switchToHttp().getRequest();
-    const admins: User[] = await this.usersService.getAllByRole(Role.Admin);
-
-    if (admins.some((admin) => admin.id === request.user.id)) {
-      return true;
+    constructor(protected usersService: UsersService) {
+        super(usersService);
     }
-    return await super.canActivate(context);
-  }
+
+    async canActivate(context: ExecutionContext): Promise<boolean> {
+        const request = context.switchToHttp().getRequest();
+        const admins: User[] = await this.usersService.getAllByRole(Role.Admin);
+
+        if (admins.some((admin) => admin.id === request.user.id)) {
+            return true;
+        }
+        return await super.canActivate(context);
+    }
 }

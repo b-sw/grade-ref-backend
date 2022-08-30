@@ -4,32 +4,32 @@ import { Match } from 'src/entities/match.entity';
 import { uuid } from 'src/shared/types/uuid.type';
 
 export enum FeatureType {
-  Positive = 'Positive',
-  Negative = 'Negative',
+    Positive = 'Positive',
+    Negative = 'Negative',
 }
 
 @Entity()
 export class Feature {
-  @PrimaryGeneratedColumn('uuid')
-  id: uuid;
+    @PrimaryGeneratedColumn('uuid')
+    id: uuid;
 
-  @Column()
-  type: FeatureType;
+    @Column()
+    type: FeatureType;
 
-  @Column()
-  description: string;
+    @Column()
+    description: string;
 
-  @Column()
-  refereeId: uuid;
+    @Column()
+    refereeId: uuid;
 
-  @Column()
-  matchId: uuid;
+    @Column()
+    matchId: uuid;
 
-  @ManyToOne(() => User, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'refereeId' })
-  referee: User;
+    @ManyToOne(() => User, { onDelete: 'CASCADE' })
+    @JoinColumn({ name: 'refereeId' })
+    referee: User;
 
-  @ManyToOne(() => Match, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'matchId' })
-  match: Match;
+    @ManyToOne(() => Match, { onDelete: 'CASCADE' })
+    @JoinColumn({ name: 'matchId' })
+    match: Match;
 }

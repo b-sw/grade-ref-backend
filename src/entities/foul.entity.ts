@@ -4,41 +4,41 @@ import { Match } from 'src/entities/match.entity';
 import { uuid } from 'src/shared/types/uuid.type';
 
 export enum Card {
-  Yellow = 'Yellow',
-  Red = 'Red',
+    Yellow = 'Yellow',
+    Red = 'Red',
 }
 
 @Entity()
 export class Foul {
-  @PrimaryGeneratedColumn('uuid')
-  id: uuid;
+    @PrimaryGeneratedColumn('uuid')
+    id: uuid;
 
-  @Column()
-  minute: number;
+    @Column()
+    minute: number;
 
-  @Column()
-  card: Card;
+    @Column()
+    card: Card;
 
-  @Column()
-  playerNumber: number;
+    @Column()
+    playerNumber: number;
 
-  @Column()
-  description: string;
+    @Column()
+    description: string;
 
-  @Column()
-  valid: boolean;
+    @Column()
+    valid: boolean;
 
-  @Column()
-  teamId: uuid;
+    @Column()
+    teamId: uuid;
 
-  @Column()
-  matchId: uuid;
+    @Column()
+    matchId: uuid;
 
-  @ManyToOne(() => Team, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'teamId' })
-  team: Team;
+    @ManyToOne(() => Team, { onDelete: 'CASCADE' })
+    @JoinColumn({ name: 'teamId' })
+    team: Team;
 
-  @ManyToOne(() => Match, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'matchId' })
-  match: Match;
+    @ManyToOne(() => Match, { onDelete: 'CASCADE' })
+    @JoinColumn({ name: 'matchId' })
+    match: Match;
 }

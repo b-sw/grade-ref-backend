@@ -7,9 +7,9 @@ import { TeamsModule } from 'src/modules/teams/teams.module';
 import { LeaguesController } from 'src/modules/leagues/leagues.controller';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([League]), forwardRef(() => UsersModule), forwardRef(() => TeamsModule)],
-  controllers: [LeaguesController],
-  providers: [LeaguesService],
-  exports: [LeaguesService],
+    imports: [TypeOrmModule.forFeature([League]), forwardRef(() => UsersModule), forwardRef(() => TeamsModule)],
+    controllers: [LeaguesController],
+    providers: [LeaguesService],
+    exports: [LeaguesService],
 })
 export class LeaguesModule {}

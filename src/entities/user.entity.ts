@@ -4,21 +4,21 @@ import { Role } from 'src/modules/users/constants/users.constants';
 
 @Entity()
 export class User {
-  @PrimaryGeneratedColumn('uuid')
-  id: uuid;
+    @PrimaryGeneratedColumn('uuid')
+    id: uuid;
 
-  @Column({ unique: true })
-  email: string;
+    @Column({ unique: true })
+    email: string;
 
-  @Column()
-  role: Role;
+    @Column()
+    role: Role;
 
-  @Column({ unique: true })
-  phoneNumber: string;
+    @Column({ unique: true })
+    phoneNumber: string;
 
-  @Column()
-  firstName: string;
+    @Column()
+    firstName: string;
 
-  @Column({ unique: true })
-  lastName: string;
+    @Column({ unique: true })
+    lastName: string;
 }
