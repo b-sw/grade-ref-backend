@@ -13,18 +13,26 @@ export class VideoClipsController {
 
     @Get('leagues/:leagueId/matches/:matchId/video-clips/:videoClipId')
     @ApiOperation({ summary: 'Get videoClip by id' })
-    getVideoClipById(@Param() params: VideoClipParams): Promise<VideoClip> {}
+    getVideoClipById(@Param() params: VideoClipParams): Promise<VideoClip> {
+        return Promise.resolve(new VideoClip())
+    }
 
     @Get('leagues/:leagueId/matches/:matchId/video-clips')
     @ApiOperation({ summary: 'Get videoClips by matchId' })
-    getMatchVideoClips(@Param() params: LeagueMatchParams): Promise<VideoClip[]> {}
+    getMatchVideoClips(@Param() params: LeagueMatchParams): Promise<VideoClip[]> {
+        return Promise.resolve([])
+    }
 
     @Post('leagues/:leagueId/matches/:matchId/video-clips')
     @UseInterceptors(FileInterceptor('video-clip'))
     @ApiOperation({ summary: 'Upload videoClip' })
-    uploadVideoClip(@Param() params: LeagueMatchParams, @UploadedFile() file): Promise<VideoClip> {}
+    uploadVideoClip(@Param() params: LeagueMatchParams, @UploadedFile() file): Promise<VideoClip> {
+        return Promise.resolve(new VideoClip())
+    }
 
     @Delete('leagues/:leagueId/matches/:matchId/video-clips/:videoClipId')
     @ApiOperation({ summary: 'Delete videoClip' })
-    removeVideoClip(@Param() params: VideoClipParams): Promise<VideoClip> {}
+    removeVideoClip(@Param() params: VideoClipParams): Promise<VideoClip> {
+        return Promise.resolve(new VideoClip())
+    }
 }
