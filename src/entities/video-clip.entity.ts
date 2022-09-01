@@ -1,8 +1,9 @@
-import { Column, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { uuid } from 'src/shared/types/uuid.type';
 import { Type } from 'class-transformer';
 import { Match } from 'src/entities/match.entity';
 
+@Entity()
 export class VideoClip {
     @PrimaryGeneratedColumn('uuid')
     id: uuid;

@@ -6,6 +6,7 @@ import { User } from 'src/entities/user.entity';
 import { Team } from 'src/entities/team.entity';
 import { Feature } from 'src/entities/feature.entity';
 import { Match } from 'src/entities/match.entity';
+import { VideoClip } from 'src/entities/video-clip.entity';
 import { config } from 'dotenv';
 
 config();
@@ -15,7 +16,7 @@ config();
     It causes db schema to sync if it detects there's a mismatch between db schema and entities.
     This behaviour may lead to an automatic table drop.
  */
-const entities = [User, Team, Match, League, Foul, Feature];
+const entities = [User, Team, Match, League, Foul, Feature, VideoClip];
 
 const dbConfig: MysqlConnectionOptions = {
     type: 'mariadb',
