@@ -8,6 +8,7 @@ import { VideoClip } from 'src/entities/video-clip.entity';
 import { S3Service } from 'src/modules/aws/s3.service';
 import { S3Bucket, S3FileKeyDateFormat } from 'src/modules/aws/constants/aws.constants';
 import dayjs from 'dayjs';
+import { getNotNull } from 'src/shared/getters';
 
 @ApiTags('video-clips')
 @Controller('')
@@ -19,8 +20,9 @@ export class VideoClipsController {
 
     @Get('leagues/:leagueId/matches/:matchId/video-clips/:videoClipId')
     @ApiOperation({ summary: 'Get videoClip by id' })
-    getVideoClipById(@Param() params: VideoClipParams): Promise<VideoClip> {
-        return Promise.resolve(new VideoClip())
+    async getVideoClipById(@Param() params: VideoClipParams): Promise<string> {
+        const video = getNotNull(await this.videoClipsService.findOneById(params.videoClipId))
+        return this.s3Service.getPresignedUrl(S3Bucket.VideoClipsBucket, video.path)
     }
 
     @Get('leagues/:leagueId/matches/:matchId/video-clips')

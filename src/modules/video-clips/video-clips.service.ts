@@ -10,8 +10,8 @@ export class VideoClipsService {
         @InjectRepository(VideoClip) private videosRepository: Repository<VideoClip>,
     ) {}
 
-    findOneById(): Promise<VideoClip> {
-        return Promise.resolve(new VideoClip())
+    findOneById(videoId: uuid): Promise<VideoClip> {
+        return this.videosRepository.findOne(videoId)
     }
 
     findAllByMatchId(): Promise<VideoClip[]> {
