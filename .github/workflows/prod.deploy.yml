@@ -53,3 +53,4 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_BUCKET_MATCHES: ${{ secrets.AWS_BUCKET_MATCHES }}
           AWS_BUCKET_REPORTS: ${{ secrets.AWS_BUCKET_REPORTS }}
+          AWS_BUCKET_VIDEO_CLIPS: ${{ secrets.AWS_BUCKET_VIDEO_CLIPS }}
