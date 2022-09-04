@@ -28,8 +28,8 @@ export class VideoClipsService {
         return this.videosRepository.save(video)
     }
 
-    remove(): Promise<VideoClip> {
-        return Promise.resolve(new VideoClip())
+    remove(videoId: uuid) {
+        this.videosRepository.delete(videoId)
     }
 
 }

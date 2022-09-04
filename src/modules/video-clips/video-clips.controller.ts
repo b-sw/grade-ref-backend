@@ -48,7 +48,10 @@ export class VideoClipsController {
 
     @Delete('leagues/:leagueId/matches/:matchId/video-clips/:videoClipId')
     @ApiOperation({ summary: 'Delete videoClip' })
-    removeVideoClip(@Param() params: VideoClipParams): Promise<VideoClip> {
-        return Promise.resolve(new VideoClip())
+    async removeVideoClip(@Param() params: VideoClipParams) {
+        const video = getNotNull(await this.videoClipsService.findOneById(params.videoClipId));
+
+        this.s3Service.delete(S3Bucket.VideoClipsBucket, video.path)
+        this.videoClipsService.remove(params.videoClipId)
     }
 }

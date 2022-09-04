@@ -7,6 +7,8 @@ export class S3Service {
     private static readonly S3_REGION = 'eu-west-1';
     private static readonly S3_UPLOADED_FILE_BUFFER_MESSAGE = 'S3 Uploaded file buffer';
     private static readonly S3_UPLOAD_ERROR_MESSAGE = 'S3 Upload error';
+    private static readonly S3_DELETE_FILE_MESSAGE = 'S3 Delete file';
+    private static readonly S3_DELETE_ERROR_MESSAGE = 'S3 Delete error'
 
     private s3: S3;
 
@@ -34,6 +36,25 @@ export class S3Service {
             this.s3.upload(uploadParams, (error, data) => {
                 if (error) {
                     Logger.error(error, S3Service.S3_UPLOAD_ERROR_MESSAGE);
+                    reject(error.message);
+                }
+                resolve(data);
+            });
+        });
+    }
+
+    async delete(s3Bucket: S3Bucket, fileKey: string) {
+        Logger.log(fileKey, S3Service.S3_DELETE_FILE_MESSAGE);
+
+        const deleteParams = {
+            Bucket: S3BucketNames[s3Bucket],
+            Key: fileKey,
+        };
+
+        return new Promise((resolve, reject) => {
+            this.s3.deleteObject(deleteParams, (error, data) => {
+                if (error) {
+                    Logger.error(error, S3Service.S3_DELETE_ERROR_MESSAGE);
                     reject(error.message);
                 }
                 resolve(data);
