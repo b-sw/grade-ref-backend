@@ -1,17 +1,21 @@
-import { Controller, Delete, Get, Logger, Param, Post, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { Controller, Delete, Get, Param, Post, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
 import { VideoClipsService } from './video-clips.service';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { VideoClipParams } from './params/video-clip.params';
 import { LeagueMatchParams } from 'src/modules/matches/params/LeagueMatchParams';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { VideoClip } from 'src/entities/video-clip.entity';
 import { S3Service } from 'src/modules/aws/s3.service';
 import { S3Bucket, S3FileKeyDateFormat } from 'src/modules/aws/constants/aws.constants';
-import dayjs from 'dayjs';
 import { getNotNull } from 'src/shared/getters';
+import { JwtAuthGuard } from 'src/modules/auth/guards/jwt-auth.guard';
+import { MatchRoleGuard } from 'src/shared/guards/matchRoleGuard';
+import { Role } from 'src/modules/users/constants/users.constants';
+import dayjs from 'dayjs';
 
 @ApiTags('video-clips')
 @Controller('')
+@ApiBearerAuth()
 export class VideoClipsController {
     constructor(
         private readonly videoClipsService: VideoClipsService,
@@ -19,6 +23,7 @@ export class VideoClipsController {
     ) {}
 
     @Get('leagues/:leagueId/matches/:matchId/video-clips/:videoClipId')
+    @UseGuards(JwtAuthGuard, MatchRoleGuard([Role.Admin, Role.Referee, Role.Observer]))
     @ApiOperation({ summary: 'Get videoClip by id' })
     async getVideoClipById(@Param() params: VideoClipParams): Promise<string> {
         const video = getNotNull(await this.videoClipsService.findOneById(params.videoClipId))
@@ -26,12 +31,14 @@ export class VideoClipsController {
     }
 
     @Get('leagues/:leagueId/matches/:matchId/video-clips')
+    @UseGuards(JwtAuthGuard, MatchRoleGuard([Role.Admin, Role.Referee, Role.Observer]))
     @ApiOperation({ summary: 'Get videoClips by matchId' })
     getMatchVideoClips(@Param() params: LeagueMatchParams): Promise<VideoClip[]> {
         return this.videoClipsService.findAllByMatchId(params.matchId)
     }
 
     @Post('leagues/:leagueId/matches/:matchId/video-clips')
+    @UseGuards(JwtAuthGuard, MatchRoleGuard([Role.Admin, Role.Referee]))
     @UseInterceptors(FileInterceptor('videoclip'))
     @ApiOperation({ summary: 'Upload videoClip' })
     async uploadVideoClip(@Param() params: LeagueMatchParams, @UploadedFile() file): Promise<VideoClip> {
@@ -47,6 +54,7 @@ export class VideoClipsController {
     }
 
     @Delete('leagues/:leagueId/matches/:matchId/video-clips/:videoClipId')
+    @UseGuards(JwtAuthGuard, MatchRoleGuard([Role.Admin, Role.Referee]))
     @ApiOperation({ summary: 'Delete videoClip' })
     async removeVideoClip(@Param() params: VideoClipParams) {
         const video = getNotNull(await this.videoClipsService.findOneById(params.videoClipId));
