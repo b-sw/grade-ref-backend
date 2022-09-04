@@ -28,7 +28,7 @@ export class VideoClipsController {
     @Get('leagues/:leagueId/matches/:matchId/video-clips')
     @ApiOperation({ summary: 'Get videoClips by matchId' })
     getMatchVideoClips(@Param() params: LeagueMatchParams): Promise<VideoClip[]> {
-        return Promise.resolve([])
+        return this.videoClipsService.findAllByMatchId(params.matchId)
     }
 
     @Post('leagues/:leagueId/matches/:matchId/video-clips')

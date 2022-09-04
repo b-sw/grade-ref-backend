@@ -14,8 +14,8 @@ export class VideoClipsService {
         return this.videosRepository.findOne(videoId)
     }
 
-    findAllByMatchId(): Promise<VideoClip[]> {
-        return Promise.resolve([])
+    findAllByMatchId(matchId: uuid): Promise<VideoClip[]> {
+        return this.videosRepository.find( {where: { matchId: matchId }})
     }
 
     upload(name: string, matchId: uuid, uploadDate: Date, path: string): Promise<VideoClip> {
